@@ -115,3 +115,12 @@ Sign-in and saved data use the Firebase project `project-monarch1`.
 
 Replace `www/index.html` with the new version on GitHub. The website and the
 Android app rebuild on their own.
+
+## Logo photos
+
+The five photos in the logo are placeholders from Unsplash (free Unsplash
+License): woman running (photo-1480179087180), painting (photo-1554996823),
+journal and coffee (photo-1637689113621), notebook and pencil
+(photo-1483546416237), salad bowl (photo-1512621776951). Before a public
+store release, replace them with images you own or generate, since stock
+photos of identifiable people are not suitable for a trademark logo.
