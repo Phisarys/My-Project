@@ -207,12 +207,7 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
       <button class="tab s-profile" type="button" role="tab" id="authUp" data-auth="up" aria-selected="false"><b>Create account</b><small>I'm new here</small></button>
     </nav>
     <div class="authpanel stack">
-      <div class="stack" style="gap:8px">
-        <button class="btn ghost" type="button" id="ssoGoogle" data-sso="Google">Sign in with Google</button>
-        <button class="btn ghost" type="button" id="ssoApple" data-sso="Apple">Sign in with Apple</button>
-        <p class="err" id="ssoMsg" role="status" hidden></p>
-      </div>
-      <div class="or"><span>or use email</span></div>
+      <p class="err" id="ssoMsg" role="status" hidden></p>
       <form id="formIn" class="stack" novalidate>
         <div class="f"><label for="inEmail">Email</label><input id="inEmail" type="email" autocomplete="username" required></div>
         <div class="f"><label for="inPw">Password</label><input id="inPw" type="password" autocomplete="current-password" required></div>
@@ -383,7 +378,7 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
     ['inErr','upErr','ssoMsg'].forEach(function(id){document.getElementById(id).hidden=true;});}
   function showErr(id,msg){var el=document.getElementById(id);el.textContent=msg;el.hidden=!msg;}
   var val=function(id){return document.getElementById(id).value;};
-  function busy(on){['formIn','formUp'].forEach(function(id){var bt=document.querySelector('#'+id+' .btn');bt.disabled=on;});document.getElementById('ssoGoogle').disabled=on;}
+  function busy(on){['formIn','formUp'].forEach(function(id){var bt=document.querySelector('#'+id+' .btn');bt.disabled=on;});}
   async function prep(){
     await fbReady();
     var keep=document.getElementById('keepIn').checked;ls.set(KEY+'-keep',keep?'1':'0');
@@ -406,31 +401,6 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
     try{await prep();var r=await fb.auth().createUserWithEmailAndPassword(email,pw);await enter(r.user);}
     catch(e){showErr('upErr',authMsg(e));}
     busy(false);
-  }
-  var standalone=function(){return !!(window.navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));};
-  /* Google opens a pop-up window. Phones only allow that straight from the tap,
-     so nothing may be awaited before signInWithPopup is called. Firebase is
-     loaded when the page opens so it is ready by the time someone taps. */
-  function doGoogle(){
-    if(window.Capacitor)return showErr('ssoMsg','Google sign-in is not available inside the Android app yet. Use email and a password here. The same account works on the website too.');
-    if(!fb){
-      showErr('ssoMsg','Getting Google sign-in ready…');
-      fbReady().then(function(){showErr('ssoMsg','Ready. Tap “Sign in with Google” again.');},function(e){showErr('ssoMsg',authMsg(e));});
-      return;
-    }
-    var keep=document.getElementById('keepIn').checked;ls.set(KEY+'-keep',keep?'1':'0');
-    var P=fb.auth.Auth.Persistence;
-    fb.auth().setPersistence(keep?P.LOCAL:P.NONE).catch(function(){});
-    showErr('ssoMsg','Opening Google… If nothing appears, check for a new window or tab.');busy(true);
-    fb.auth().signInWithPopup(new fb.auth.GoogleAuthProvider())
-      .then(function(r){showErr('ssoMsg','');return enter(r.user);})
-      .catch(function(e){
-        var c=(e&&e.code)||'', m=authMsg(e);
-        if(standalone()&&/popup-blocked|operation-not-supported|web-storage-unsupported|network-request-failed|internal-error/.test(c))
-          m='Google sign-in could not open from the Home Screen app. Open the website in Safari and sign in with Google there, or use “Forgot your password?” with your Google email to add a password you can use here.';
-        showErr('ssoMsg',m);
-      })
-      .then(function(){busy(false);});
   }
   async function doForgot(){
     var email=val('inEmail').trim();
@@ -653,7 +623,6 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
 
   document.addEventListener('click',function(ev){
     var au=ev.target.closest('[data-auth]'); if(au){authMode(au.dataset.auth);return;}
-    var sso=ev.target.closest('[data-sso]'); if(sso){if(sso.dataset.sso==='Google')doGoogle();else showErr('ssoMsg','Sign in with Apple is not connected yet. Use Google or email for now.');return;}
     if(ev.target.id==='btnForgot'){doForgot();return;}
     if(!user)return;
     var tab=ev.target.closest('[data-tab]');

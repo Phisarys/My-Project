@@ -66,8 +66,7 @@ New builds install over the old one and keep your entries.
   API key, add it to Codemagic as `appstore-key`, generate a distribution
   certificate and fetch a provisioning profile in Codemagic, then run the
   workflow. Guide: https://docs.codemagic.io/yaml-quick-start/building-an-ionic-app/
-- **Before any public store release:** a privacy policy, and a working or
-  removed "Sign in with Apple" button (Apple rejects buttons that do nothing).
+- **Before any public store release:** a privacy policy.
 
 ## Accounts and online storage
 
@@ -75,8 +74,9 @@ Sign-in and saved data use the Firebase project `project-monarch1`.
 
 - **Sign-in methods** are switched on in the Firebase console under
   Authentication > Sign-in method (Email/Password, and Google if wanted).
-- **Google sign-in on the website** also needs `phisarys.github.io` added
-  under Authentication > Settings > Authorized domains.
+- **Google and Apple sign-in buttons were removed** (October 2026) because
+  Google sign-in could not open from the iPhone Home Screen app. Email and
+  password is the only way to sign in for now.
 - **Database rules:** paste the contents of `firestore.rules` into Firestore
   Database > Rules and publish. They let each person read and write only
   their own record. Without them nothing can be saved.
