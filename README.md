@@ -1,0 +1,95 @@
+# Daily Five (working name)
+
+One project that produces three things from the same files:
+
+1. **A public website** anyone can open from a link and pin to their phone's
+   Home Screen, where it opens full screen like an app (iPhone and Android).
+2. **An Android app** you can install on any Android phone for free.
+3. **An iPhone App Store app** (later; needs the paid Apple membership).
+
+Everything is built in the cloud by GitHub. You do not need a Mac or any
+software on your computer.
+
+Status: the app's web files were tested in a phone-sized browser, including
+the Home Screen tip and offline support. The cloud builds (website publish and
+Android build) have NOT been run yet, because they need your GitHub account.
+The first run may need a small fix; if a build shows a red X, send the log to
+Claude.
+
+## Part A: website and Android app (free)
+
+### 1. Put the project on GitHub
+1. Create a free account at github.com.
+2. Create a new repository. Make it **Public** (free website hosting needs a
+   public repository; the code is visible, but no one's entries are, because
+   entries stay on each person's own phone).
+3. Upload everything in this folder, including the hidden `.github` folder.
+   Easiest way without tools: on the new repository page choose "uploading an
+   existing file" and drag the folder contents in. If the `.github` folder
+   does not upload, ask Claude to push the project for you instead.
+
+### 2. Turn on the website
+In the repository: Settings > Pages > Build and deployment > Source: choose
+**GitHub Actions**. Then open the Actions tab and run the "Website" workflow
+(or upload any change). When it finishes with a green check, your site is at
+
+    https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/
+
+That link is what you share.
+
+### 3. Pin it on a phone
+- **iPhone:** open the link in Safari, tap the Share button, then "Add to Home
+  Screen". The site shows this tip on its first screen.
+- **Android:** open the link in Chrome and tap "Install app" when offered.
+
+Each person's account and entries live on their own phone. The Home Screen
+version on an iPhone keeps its own data, separate from Safari.
+
+### 4. Get the Android app
+The "Android app" workflow runs automatically. When it finishes, open the
+repository's **Releases** page on an Android phone and download
+`daily-five.apk`, then open it. Android asks once for permission to install
+apps from your browser.
+
+New builds install over the old one and keep your entries.
+
+## Part B: later, for the stores
+
+- **Google Play:** one-time US$25 developer account. New personal accounts
+  must run a closed test with 12 testers for 14 days before going public.
+  The store needs a private release signing key, not the test key in this
+  project (`resources/debug.keystore`, which is public and for testing only).
+- **Apple App Store:** yearly Apple Developer membership. `codemagic.yaml`
+  and `scripts/ios-setup.sh` are ready for a cloud Mac build to TestFlight.
+  Steps: register an App ID and app with Apple, create an App Store Connect
+  API key, add it to Codemagic as `appstore-key`, generate a distribution
+  certificate and fetch a provisioning profile in Codemagic, then run the
+  workflow. Guide: https://docs.codemagic.io/yaml-quick-start/building-an-ionic-app/
+- **Before any public store release:** real online accounts (so entries
+  survive a new phone), working or removed Google/Apple sign-in buttons, a
+  privacy policy, and account deletion.
+
+## Names to change before a store release
+
+- `appName` in `capacitor.config.json`, and `short_name` in
+  `www/manifest.webmanifest`: the name under the icon. "Daily Five" is a
+  placeholder; about 12 characters fit.
+- `appId` in `capacitor.config.json` and `bundle_identifier` in
+  `codemagic.yaml`: `com.example.dailyfive` is a placeholder. It becomes
+  permanent once the app is uploaded to a store.
+
+## What is in here
+
+| Path | What it is |
+|---|---|
+| `www/` | The app itself, plus the website's icons and offline support |
+| `.github/workflows/` | The two cloud build recipes (website, Android) |
+| `assets/`, `resources/` | Icon and splash images, and the Android test key |
+| `scripts/` | Small helpers the builds run |
+| `capacitor.config.json` | App name and ID |
+| `codemagic.yaml` | iPhone build recipe for later |
+
+## Updating the app
+
+Replace `www/index.html` with the new version on GitHub. The website and the
+Android app rebuild on their own.

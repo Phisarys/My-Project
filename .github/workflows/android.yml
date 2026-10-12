@@ -1,0 +1,49 @@
+# Builds the Android app and posts the install file (.apk) on the
+# repository's Releases page, where it can be downloaded to a phone.
+name: Android app
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm install
+      - run: npm run prepare-web
+      - name: Generate the Android project
+        run: npx cap add android
+      - name: App icon and splash screen
+        run: bash scripts/android-setup.sh
+      - name: Use the project's test signing key
+        run: |
+          mkdir -p ~/.android
+          cp resources/debug.keystore ~/.android/debug.keystore
+      - name: Build
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+          cp app/build/outputs/apk/debug/app-debug.apk ../daily-five.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: daily-five-apk
+          path: daily-five.apk
+      - name: Post to Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete android-latest --yes --cleanup-tag || true
+          gh release create android-latest daily-five.apk \
+            --title "Android app (latest test build)" \
+            --notes "Download daily-five.apk on an Android phone and open it to install. Test build number ${{ github.run_number }}."

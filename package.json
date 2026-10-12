@@ -1,0 +1,19 @@
+{
+  "name": "daily-five",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Fitness/Hobby/Better Habit/Schoolwork/Nutrition - website, Android app and iPhone app from one set of files",
+  "scripts": {
+    "prepare-web": "node scripts/prepare.js"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
+    "@fontsource/atkinson-hyperlegible": "^5.0.0",
+    "@fontsource/bricolage-grotesque": "^5.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0"
+  }
+}

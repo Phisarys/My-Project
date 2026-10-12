@@ -1,0 +1,47 @@
+# Builds the iPhone app on a cloud Mac and sends it to TestFlight.
+# Two values must match what you set up with Apple and Codemagic:
+#   1. app_store_connect: the name you gave your Apple API key in Codemagic
+#   2. bundle_identifier: your app's bundle ID (also in capacitor.config.json)
+workflows:
+  ios-testflight:
+    name: iPhone app to TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: appstore-key
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.example.dailyfive
+      node: 22
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Install dependencies
+        script: npm install
+      - name: Bundle fonts into the web files
+        script: npm run prepare-web
+      - name: Generate the iPhone project
+        script: npx cap add ios
+      - name: Add permissions and app icon
+        script: bash scripts/ios-setup.sh
+      - name: Apply code signing
+        script: xcode-project use-profiles
+      - name: Set build number
+        script: |
+          cd "$CM_BUILD_DIR/ios/App"
+          agvtool new-version -all "$BUILD_NUMBER"
+      - name: Build the app
+        script: |
+          cd "$CM_BUILD_DIR/ios/App"
+          if [ -d App.xcworkspace ]; then
+            xcode-project build-ipa --workspace App.xcworkspace --scheme App
+          else
+            xcode-project build-ipa --project App.xcodeproj --scheme App
+          fi
+    artifacts:
+      - ios/App/build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

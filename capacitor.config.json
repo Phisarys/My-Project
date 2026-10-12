@@ -1,0 +1,9 @@
+{
+  "appId": "com.example.dailyfive",
+  "appName": "Daily Five",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#eaeef5"
+  }
+}
