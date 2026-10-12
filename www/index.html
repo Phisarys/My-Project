@@ -407,12 +407,30 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
     catch(e){showErr('upErr',authMsg(e));}
     busy(false);
   }
-  async function doGoogle(){
+  var standalone=function(){return !!(window.navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));};
+  /* Google opens a pop-up window. Phones only allow that straight from the tap,
+     so nothing may be awaited before signInWithPopup is called. Firebase is
+     loaded when the page opens so it is ready by the time someone taps. */
+  function doGoogle(){
     if(window.Capacitor)return showErr('ssoMsg','Google sign-in is not available inside the Android app yet. Use email and a password here. The same account works on the website too.');
-    showErr('ssoMsg','');busy(true);
-    try{await prep();var r=await fb.auth().signInWithPopup(new fb.auth.GoogleAuthProvider());await enter(r.user);}
-    catch(e){showErr('ssoMsg',authMsg(e));}
-    busy(false);
+    if(!fb){
+      showErr('ssoMsg','Getting Google sign-in ready…');
+      fbReady().then(function(){showErr('ssoMsg','Ready. Tap “Sign in with Google” again.');},function(e){showErr('ssoMsg',authMsg(e));});
+      return;
+    }
+    var keep=document.getElementById('keepIn').checked;ls.set(KEY+'-keep',keep?'1':'0');
+    var P=fb.auth.Auth.Persistence;
+    fb.auth().setPersistence(keep?P.LOCAL:P.NONE).catch(function(){});
+    showErr('ssoMsg','Opening Google… If nothing appears, check for a new window or tab.');busy(true);
+    fb.auth().signInWithPopup(new fb.auth.GoogleAuthProvider())
+      .then(function(r){showErr('ssoMsg','');return enter(r.user);})
+      .catch(function(e){
+        var c=(e&&e.code)||'', m=authMsg(e);
+        if(standalone()&&/popup-blocked|operation-not-supported|web-storage-unsupported|network-request-failed|internal-error/.test(c))
+          m='Google sign-in could not open from the Home Screen app. Open the website in Safari and sign in with Google there, or use “Forgot your password?” with your Google email to add a password you can use here.';
+        showErr('ssoMsg',m);
+      })
+      .then(function(){busy(false);});
   }
   async function doForgot(){
     var email=val('inEmail').trim();
@@ -687,6 +705,7 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
   document.addEventListener('change',function(ev){if(ev.target.id==='photoInput'&&user)setPhoto(ev.target.files[0]);});
   render();
   document.getElementById('keepIn').checked=ls.get(KEY+'-keep')==='1';
+  if(!window.Capacitor)fbReady().catch(function(){});
   /* If this device was told to stay signed in, pick the session back up. */
   if(ls.get(KEY+'-keep')==='1'){
     showErr('ssoMsg','Signing you in…');
