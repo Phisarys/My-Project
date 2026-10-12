@@ -5,3 +5,4 @@ www/fonts/*.woff2
 *.ipa
 *.apk
 .DS_Store
+www/vendor/

@@ -20,3 +20,17 @@ for (const [pkg, file] of wanted) {
     console.warn('font not found, app will use the system font instead:', file);
   }
 }
+
+// Sign-in and online storage (Firebase). If a file is missing the app loads
+// it from Google's servers instead.
+const vendor = path.join(__dirname, '..', 'www', 'vendor');
+fs.mkdirSync(vendor, { recursive: true });
+for (const file of ['firebase-app-compat.js', 'firebase-auth-compat.js', 'firebase-firestore-compat.js']) {
+  const src = path.join(__dirname, '..', 'node_modules', 'firebase', file);
+  if (fs.existsSync(src)) {
+    fs.copyFileSync(src, path.join(vendor, file));
+    console.log('copied', file);
+  } else {
+    console.warn('not found, app will load it from the internet instead:', file);
+  }
+}

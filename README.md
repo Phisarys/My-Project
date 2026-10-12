@@ -22,7 +22,7 @@ Claude.
 1. Create a free account at github.com.
 2. Create a new repository. Make it **Public** (free website hosting needs a
    public repository; the code is visible, but no one's entries are, because
-   entries stay on each person's own phone).
+   entries are stored in each person's private online record).
 3. Upload everything in this folder, including the hidden `.github` folder.
    Easiest way without tools: on the new repository page choose "uploading an
    existing file" and drag the folder contents in. If the `.github` folder
@@ -42,8 +42,9 @@ That link is what you share.
   Screen". The site shows this tip on its first screen.
 - **Android:** open the link in Chrome and tap "Install app" when offered.
 
-Each person's account and entries live on their own phone. The Home Screen
-version on an iPhone keeps its own data, separate from Safari.
+Accounts are online: the same email and password work on the website, the
+Android app and any other phone, and a person's profile and entries follow
+them. See "Accounts and online storage" below.
 
 ### 4. Get the Android app
 The "Android app" workflow runs automatically. When it finishes, open the
@@ -65,9 +66,24 @@ New builds install over the old one and keep your entries.
   API key, add it to Codemagic as `appstore-key`, generate a distribution
   certificate and fetch a provisioning profile in Codemagic, then run the
   workflow. Guide: https://docs.codemagic.io/yaml-quick-start/building-an-ionic-app/
-- **Before any public store release:** real online accounts (so entries
-  survive a new phone), working or removed Google/Apple sign-in buttons, a
-  privacy policy, and account deletion.
+- **Before any public store release:** a privacy policy, and a working or
+  removed "Sign in with Apple" button (Apple rejects buttons that do nothing).
+
+## Accounts and online storage
+
+Sign-in and saved data use the Firebase project `project-monarch1`.
+
+- **Sign-in methods** are switched on in the Firebase console under
+  Authentication > Sign-in method (Email/Password, and Google if wanted).
+- **Google sign-in on the website** also needs `phisarys.github.io` added
+  under Authentication > Settings > Authorized domains.
+- **Database rules:** paste the contents of `firestore.rules` into Firestore
+  Database > Rules and publish. They let each person read and write only
+  their own record. Without them nothing can be saved.
+- Each person has one record holding their profile, photo and entries.
+  Deleting an account in the app erases that record.
+- The Firebase settings inside `www/index.html` are not secret; the database
+  rules are what protect the data.
 
 ## Names to change before a store release
 

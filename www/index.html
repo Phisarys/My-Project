@@ -170,6 +170,10 @@ button.col:hover .bar{opacity:1}
 .authpanel{margin-top:-1px}
 .or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:.86rem}
 .or::before,.or::after{content:"";flex:1;border-top:1px solid var(--line)}
+.link{background:none;border:0;padding:0;color:var(--muted);text-decoration:underline;cursor:pointer;font:inherit;font-size:.9rem;align-self:flex-start}
+.keep{display:flex;align-items:center;gap:8px;font-size:.92rem}
+.keep input{width:20px;height:20px;flex:none;padding:0}
+.btn[disabled]{opacity:.6;cursor:default}
 #ssoMsg{color:var(--ink);background:var(--sunk);border:1px solid var(--line);border-radius:7px;padding:10px 12px}
 #app{width:100%;max-width:none;min-width:0;margin:0}
 .stack{display:flex;flex-direction:column;gap:14px}
@@ -214,6 +218,7 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
         <div class="f"><label for="inPw">Password</label><input id="inPw" type="password" autocomplete="current-password" required></div>
         <p class="err" id="inErr" role="alert" hidden></p>
         <button class="btn">Sign in</button>
+        <button class="link" type="button" id="btnForgot">Forgot your password?</button>
       </form>
       <form id="formUp" class="stack" novalidate hidden>
         <div class="f"><label for="upEmail">Email</label><input id="upEmail" type="email" autocomplete="username" required></div>
@@ -222,7 +227,8 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
         <p class="err" id="upErr" role="alert" hidden></p>
         <button class="btn">Create account</button>
       </form>
-      <p class="note">This is a preview version. Your account and entries are kept only on this device, so you can't sign in from another phone or computer yet, and a forgotten password can't be recovered. Use a password you don't use anywhere else.</p>
+      <label class="keep" for="keepIn"><input type="checkbox" id="keepIn"> Keep me signed in on this device</label>
+      <p class="note">Your account works on any phone or computer. Sign in the same way and your profile and entries follow you.</p>
     </div>
   </section>
   <div id="app" class="wrap" hidden>
@@ -295,59 +301,140 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
     return s;
   }
 
-  var state=null, canSave=true, user=null, accounts={}, dataKey=null, mem={}, flash='', photoErr='', armedAcct=false;
+  var state=null, canSave=true, user=null, uidv=null, prof=null, dataKey=null, mem={}, flash='', photoErr='', acctErr='', armedAcct=false;
+  var fb=null, fbP=null, cloudOk=true, pushT=null, pushing=false, dirty=false, syncMsg='';
+  var FB_CONFIG={apiKey:"AIzaSyBclq-OPz_Ubs0e9PTwSmBeXWsT7uftCsE",authDomain:"project-monarch1.firebaseapp.com",projectId:"project-monarch1",storageBucket:"project-monarch1.firebasestorage.app",messagingSenderId:"196203054964",appId:"1:196203054964:web:59ed45a4bd5dfaf63fce21"};
+  var FB_FILES=['firebase-app-compat.js','firebase-auth-compat.js','firebase-firestore-compat.js'], FB_CDN='https://www.gstatic.com/firebasejs/10.14.1/';
   var ls={get:function(k){try{return localStorage.getItem(k);}catch(e){canSave=false;return null;}},set:function(k,v){try{localStorage.setItem(k,v);}catch(e){canSave=false;}},del:function(k){try{localStorage.removeItem(k);}catch(e){}}};
-  try{accounts=JSON.parse(ls.get(KEY+'-accounts')||'{}')||{};}catch(e){accounts={};}
-  function saveAccounts(){ls.set(KEY+'-accounts',JSON.stringify(accounts));}
-  function loadState(){
-    var raw=ls.get(dataKey)||mem[dataKey]||null, legacy=false;
-    if(!raw&&Object.keys(accounts).length===1){raw=ls.get(KEY);legacy=!!raw;}
-    state=null;
-    if(raw){try{state=Object.assign(blank(),JSON.parse(raw));state.goals=Object.assign(blank().goals,state.goals||{});}catch(e){state=null;}}
-    if(!state)state=seed();
-    if(state.example&&!state.seed2){state.fitness=seedFitness();state.seed2=true;}
-    if(legacy)ls.del(KEY);
+  var old={}; try{old=JSON.parse(ls.get(KEY+'-accounts')||'{}')||{};}catch(e){old={};}
+  function parseState(raw){
+    var st=null;
+    if(raw){try{st=Object.assign(blank(),JSON.parse(raw));st.goals=Object.assign(blank().goals,st.goals||{});}catch(e){st=null;}}
+    if(st&&st.example&&!st.seed2){st.fitness=seedFitness();st.seed2=true;}
+    return st;
   }
-  function save(){if(!state)return;var j=JSON.stringify(state);mem[dataKey]=j;ls.set(dataKey,j);
-    document.getElementById('saveNote').textContent=canSave?'Your account and entries are saved on this device.':'Saved data is blocked, so your account and entries last only until you close the app.';}
+  function cachePut(){if(!dataKey)return;var j=JSON.stringify({state:state,profile:prof});mem[dataKey]=j;ls.set(dataKey,j);}
+  function setNote(){document.getElementById('saveNote').textContent=syncMsg||'Your profile and entries are saved to your account.';}
+  function schedulePush(){dirty=true;clearTimeout(pushT);pushT=setTimeout(pushNow,1200);}
+  function pushNow(){
+    clearTimeout(pushT);
+    if(!uidv||!fb||!cloudOk||!dirty||pushing)return Promise.resolve();
+    pushing=true;dirty=false;
+    return fb.firestore().collection('users').doc(uidv).set({profile:prof,data:JSON.stringify(state),updated:Date.now()})
+      .then(function(){syncMsg='';},function(){dirty=true;syncMsg='Your latest changes could not be saved to your account yet. They are kept on this device and will be sent when the connection is back.';})
+      .then(function(){pushing=false;setNote();if(dirty){clearTimeout(pushT);pushT=setTimeout(pushNow,syncMsg?15000:1200);}});
+  }
+  function saveAccounts(){cachePut();schedulePush();}
+  function save(){if(!state)return;cachePut();schedulePush();setNote();}
+  window.addEventListener('online',function(){if(dirty)pushNow();});
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'&&dirty)pushNow();});
 
-  /* ---------- accounts ---------- */
-  var hex=function(buf){return Array.prototype.map.call(new Uint8Array(buf),function(x){return pad(x.toString(16)).slice(-2);}).join('');};
-  var unhex=function(h){var a=new Uint8Array(h.length/2);for(var i=0;i<a.length;i++)a[i]=parseInt(h.substr(i*2,2),16);return a;};
-  function newSalt(){var a=new Uint8Array(16);try{crypto.getRandomValues(a);}catch(e){for(var i=0;i<16;i++)a[i]=Math.floor(Math.random()*256);}return hex(a.buffer);}
-  function weakHash(str){var h1=2166136261,h2=5381;for(var i=0;i<str.length;i++){var c=str.charCodeAt(i);h1=Math.imul(h1^c,16777619);h2=(Math.imul(h2,33)^c)|0;}return 'f1:'+(h1>>>0).toString(16)+(h2>>>0).toString(16);}
-  async function hashPw(pw,salt){
-    try{var key=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);
-      var bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:unhex(salt),iterations:150000,hash:'SHA-256'},key,256);return 'p1:'+hex(bits);}
-    catch(e){return weakHash(salt+pw);}
+  /* ---------- accounts (Firebase) ---------- */
+  function loadScript(src){return new Promise(function(res,rej){var el=document.createElement('script');el.src=src;el.onload=res;el.onerror=function(){el.remove();rej(new Error('load'));};document.head.appendChild(el);});}
+  function fbReady(){
+    if(fbP)return fbP;
+    fbP=FB_FILES.reduce(function(pr,f){return pr.then(function(){return loadScript('vendor/'+f).catch(function(){return loadScript(FB_CDN+f);});});},Promise.resolve())
+      .then(function(){if(!firebase.apps.length)firebase.initializeApp(FB_CONFIG);fb=firebase;return fb;});
+    fbP.catch(function(){fbP=null;});
+    return fbP;
   }
-  var profile=function(){return accounts[user].profile;};
+  function withTimeout(pr,ms){return new Promise(function(res,rej){var t=setTimeout(function(){rej(new Error('timeout'));},ms);pr.then(function(v){clearTimeout(t);res(v);},function(e){clearTimeout(t);rej(e);});});}
+  function authMsg(e){
+    var c=(e&&e.code)||'';
+    if(/invalid-credential|wrong-password|user-not-found|invalid-email|invalid-login/.test(c))return 'That email and password don\'t match an account.';
+    if(/email-already-in-use/.test(c))return 'There is already an account with that email. Sign in instead.';
+    if(/weak-password/.test(c))return 'Use a stronger password with 8 characters or more.';
+    if(/too-many-requests/.test(c))return 'Too many tries. Wait a few minutes and try again.';
+    if(/operation-not-allowed/.test(c))return 'This way of signing in is not switched on yet. Use email and a password.';
+    if(/unauthorized-domain/.test(c))return 'This website is not approved for that sign-in yet. Use email and a password.';
+    if(/popup-blocked/.test(c))return 'The sign-in window was blocked. Allow pop-ups for this site and try again.';
+    if(/popup-closed|cancelled-popup/.test(c))return '';
+    if(/account-exists-with-different-credential/.test(c))return 'That email already has an account. Sign in with email and password.';
+    if(/requires-recent-login/.test(c))return 'For security, sign out, sign in again, and then delete your account.';
+    return 'Can\'t reach the sign-in service. Check your internet connection and try again.';
+  }
+  var profile=function(){return prof;};
   var displayName=function(){var p=profile();return p.nick||p.first||user.split('@')[0];};
   function avatar(size){var p=profile(), st='style="width:'+size+'px;height:'+size+'px;font-size:'+Math.round(size*.4)+'px"';
     if(p.photo&&p.photo.indexOf('data:image/')===0)return '<img class="av" '+st+' src="'+esc(p.photo)+'" alt="">';
     var ini=((p.first||p.nick||user).charAt(0)+(p.last||'').charAt(0)).toUpperCase();return '<span class="av" '+st+' aria-hidden="true">'+esc(ini)+'</span>';}
-  function login(email,isNew){user=email;dataKey=KEY+'-u-'+accounts[email].id;loadState();if(isNew)active='profile';
-    ['formIn','formUp'].forEach(function(id){document.getElementById(id).reset();});save();render();}
+  async function enter(u){
+    uidv=u.uid;user=u.email||'your account';dataKey=KEY+'-c-'+uidv;prof={first:'',last:'',nick:'',photo:''};state=null;cloudOk=true;syncMsg='';dirty=false;
+    var doc=null, reached=true, create=false;
+    try{doc=await withTimeout(fb.firestore().collection('users').doc(uidv).get(),9000);}catch(e){reached=false;}
+    if(doc&&doc.exists){var d=doc.data()||{};state=parseState(d.data);Object.assign(prof,d.profile||{});}
+    else{
+      var c=null;try{c=JSON.parse(ls.get(dataKey)||mem[dataKey]||'null');}catch(e){c=null;}
+      var o=old[(u.email||'').toLowerCase()];
+      if(c){state=parseState(JSON.stringify(c.state));Object.assign(prof,c.profile||{});}
+      else if(o){state=parseState(ls.get(KEY+'-u-'+o.id));Object.assign(prof,o.profile||{});}
+      else if(u.displayName){var parts=String(u.displayName).trim().split(/\s+/);prof.first=parts[0]||'';prof.last=parts.slice(1).join(' ');}
+      create=reached;
+    }
+    if(!state)state=seed();
+    if(!reached){cloudOk=false;syncMsg='Your account could not be reached, so changes made now will not be saved. Check your connection and reload.';}
+    if(!prof.first&&!prof.nick)active='profile';
+    ['formIn','formUp'].forEach(function(id){document.getElementById(id).reset();});
+    cachePut();if(create)schedulePush();
+    render();setNote();
+  }
   function authMode(m){document.getElementById('formIn').hidden=m!=='in';document.getElementById('formUp').hidden=m!=='up';
     document.getElementById('authIn').setAttribute('aria-selected',m==='in');document.getElementById('authUp').setAttribute('aria-selected',m==='up');
-    ['inErr','upErr'].forEach(function(id){document.getElementById(id).hidden=true;});}
-  function showErr(id,msg){var el=document.getElementById(id);el.textContent=msg;el.hidden=false;}
+    ['inErr','upErr','ssoMsg'].forEach(function(id){document.getElementById(id).hidden=true;});}
+  function showErr(id,msg){var el=document.getElementById(id);el.textContent=msg;el.hidden=!msg;}
   var val=function(id){return document.getElementById(id).value;};
+  function busy(on){['formIn','formUp'].forEach(function(id){var bt=document.querySelector('#'+id+' .btn');bt.disabled=on;});document.getElementById('ssoGoogle').disabled=on;}
+  async function prep(){
+    await fbReady();
+    var keep=document.getElementById('keepIn').checked;ls.set(KEY+'-keep',keep?'1':'0');
+    var P=fb.auth.Auth.Persistence;await fb.auth().setPersistence(keep?P.LOCAL:P.NONE);
+  }
   async function doSignIn(){
-    var email=val('inEmail').trim().toLowerCase(), a=accounts[email];
+    var email=val('inEmail').trim();
     if(!email||!val('inPw'))return showErr('inErr','Enter your email and password.');
-    if(!a||(await hashPw(val('inPw'),a.salt))!==a.hash)return showErr('inErr','That email and password don\'t match an account on this device.');
-    login(email,false);
+    showErr('inErr','');busy(true);
+    try{await prep();var r=await fb.auth().signInWithEmailAndPassword(email,val('inPw'));await enter(r.user);}
+    catch(e){showErr('inErr',authMsg(e));}
+    busy(false);
   }
   async function doSignUp(){
-    var email=val('upEmail').trim().toLowerCase(), pw=val('upPw');
+    var email=val('upEmail').trim(), pw=val('upPw');
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return showErr('upErr','Enter a valid email address.');
-    if(accounts[email])return showErr('upErr','There is already an account with that email on this device. Sign in instead.');
     if(pw.length<8)return showErr('upErr','Use a password with 8 characters or more.');
     if(pw!==val('upPw2'))return showErr('upErr','The two passwords don\'t match.');
-    var salt=newSalt();
-    accounts[email]={id:uid(),salt:salt,hash:await hashPw(pw,salt),profile:{first:'',last:'',nick:'',photo:''}};
-    saveAccounts();login(email,true);
+    showErr('upErr','');busy(true);
+    try{await prep();var r=await fb.auth().createUserWithEmailAndPassword(email,pw);await enter(r.user);}
+    catch(e){showErr('upErr',authMsg(e));}
+    busy(false);
+  }
+  async function doGoogle(){
+    if(window.Capacitor)return showErr('ssoMsg','Google sign-in is not available inside the Android app yet. Use email and a password here. The same account works on the website too.');
+    showErr('ssoMsg','');busy(true);
+    try{await prep();var r=await fb.auth().signInWithPopup(new fb.auth.GoogleAuthProvider());await enter(r.user);}
+    catch(e){showErr('ssoMsg',authMsg(e));}
+    busy(false);
+  }
+  async function doForgot(){
+    var email=val('inEmail').trim();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return showErr('inErr','Type your email above first, then tap "Forgot your password?" again.');
+    try{await fbReady();await fb.auth().sendPasswordResetEmail(email);showErr('inErr','If there is an account for that email, a reset link is on its way. Check your spam folder too.');}
+    catch(e){showErr('inErr',authMsg(e));}
+  }
+  function leave(mode){user=null;uidv=null;state=null;prof=null;dataKey=null;dirty=false;clearTimeout(pushT);authMode(mode);render();}
+  async function doSignOut(){
+    try{await withTimeout(pushNow(),6000);}catch(e){}
+    try{await fb.auth().signOut();}catch(e){}
+    leave('in');
+  }
+  async function doDelete(){
+    var key=dataKey;
+    try{
+      clearTimeout(pushT);dirty=false;
+      await fb.firestore().collection('users').doc(uidv).delete();
+      try{await fb.auth().currentUser.delete();}
+      catch(e){dirty=true;pushNow();throw e;}
+      ls.del(key);delete mem[key];leave('up');
+    }catch(e){acctErr=/requires-recent-login/.test((e&&e.code)||'')?authMsg(e):'Your account could not be deleted just now. Check your connection and try again.';render();}
   }
   function setPhoto(file){
     photoErr='';
@@ -370,7 +457,8 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
     o+='<div class="profilehead">'+avatar(104)+'<div class="block"><div class="row"><input class="vh" type="file" id="photoInput" accept="image/*"><label class="btn small" for="photoInput">'+(p.photo?'Change photo':'Add a photo')+'</label>'+(p.photo?'<button class="btn small ghost" type="button" data-act="rmPhoto" id="btnRmPhoto">Remove photo</button>':'')+'</div><span class="sub">Pick any picture from your device. It is cropped to a square.</span>'+(photoErr?'<p class="err" role="alert">'+esc(photoErr)+'</p>':'')+'</div></div>';
     photoErr='';
     o+='<form class="add" data-form="profile">'+field('pfFirst','First name','required maxlength="40" autocomplete="given-name" value="'+esc(p.first)+'"')+field('pfLast','Last name','required maxlength="40" autocomplete="family-name" value="'+esc(p.last)+'"')+field('pfNick','Nickname','maxlength="24" autocomplete="nickname" placeholder="What should we call you?" value="'+esc(p.nick)+'"')+'<button class="btn">Save profile</button></form>';
-    o+='<div class="block"><h3>Account</h3><span class="sub">Signed in as '+esc(user)+'</span><div class="row"><button class="btn small ghost" type="button" data-act="signout" id="btnSignOut">Sign out</button><button class="btn small ghost" type="button" data-act="delAcct" id="btnDelAcct">'+(armedAcct?'Tap again to delete your account and entries':'Delete account')+'</button></div></div>';
+    o+='<div class="block"><h3>Account</h3><span class="sub">Signed in as '+esc(user)+'</span>'+(acctErr?'<p class="err" role="alert">'+esc(acctErr)+'</p>':'')+'<div class="row"><button class="btn small ghost" type="button" data-act="signout" id="btnSignOut">Sign out</button><button class="btn small ghost" type="button" data-act="delAcct" id="btnDelAcct">'+(armedAcct?'Tap again to delete your account and entries':'Delete account')+'</button></div></div>';
+    acctErr='';
     return o;
   }
 
@@ -547,7 +635,8 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
 
   document.addEventListener('click',function(ev){
     var au=ev.target.closest('[data-auth]'); if(au){authMode(au.dataset.auth);return;}
-    var sso=ev.target.closest('[data-sso]'); if(sso){showErr('ssoMsg',sso.dataset.sso+' sign-in is not connected yet. It will work once this app is on its own website or in the app stores. For now, sign in or create an account with email below.');return;}
+    var sso=ev.target.closest('[data-sso]'); if(sso){if(sso.dataset.sso==='Google')doGoogle();else showErr('ssoMsg','Sign in with Apple is not connected yet. Use Google or email for now.');return;}
+    if(ev.target.id==='btnForgot'){doForgot();return;}
     if(!user)return;
     var tab=ev.target.closest('[data-tab]');
     if(tab){active=tab.dataset.tab;try{localStorage.setItem(KEY+'-tab',active);}catch(e){}try{history.replaceState(null,'','#'+active);}catch(e){}render();var el=document.getElementById('tab-'+active);if(el){el.focus();el.scrollIntoView({block:'nearest',inline:'nearest'});}return;}
@@ -556,8 +645,8 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
     if(a!=='erase'&&eraseArmed){eraseArmed=false;document.getElementById('btnErase').textContent='Erase my entries';}
     if(a!=='eraseYear')armedYear=false;
     if(a!=='delAcct')armedAcct=false;
-    if(a==='signout'){save();user=null;state=null;authMode('in');render();return;}
-    if(a==='delAcct'){if(!armedAcct){armedAcct=true;render();return;}armedAcct=false;ls.del(dataKey);delete mem[dataKey];delete accounts[user];saveAccounts();user=null;state=null;authMode('up');render();return;}
+    if(a==='signout'){doSignOut();return;}
+    if(a==='delAcct'){if(!armedAcct){armedAcct=true;render();return;}armedAcct=false;doDelete();return;}
     if(a==='rmPhoto'){profile().photo='';saveAccounts();flash='Photo removed.';render();return;}
     if(a==='month'){fitMonth=+b.dataset.m;render();var mb=document.getElementById('mon-'+fitMonth);if(mb)mb.focus();return;}
     if(a==='year'){if(b.dataset.y){fitYear=+b.dataset.y;fitMonth=null;}render();return;}
@@ -597,6 +686,12 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
 
   document.addEventListener('change',function(ev){if(ev.target.id==='photoInput'&&user)setPhoto(ev.target.files[0]);});
   render();
+  document.getElementById('keepIn').checked=ls.get(KEY+'-keep')==='1';
+  /* If this device was told to stay signed in, pick the session back up. */
+  if(ls.get(KEY+'-keep')==='1'){
+    showErr('ssoMsg','Signing you in…');
+    fbReady().then(function(){var stop=fb.auth().onAuthStateChanged(function(u){stop();if(u&&!user){enter(u).then(function(){showErr('ssoMsg','');});}else showErr('ssoMsg','');});},function(){showErr('ssoMsg','');});
+  }
 })();
 </script>
 <script>
