@@ -65,7 +65,13 @@ New builds install over the old one and keep your entries.
   Steps: register an App ID and app with Apple, create an App Store Connect
   API key, add it to Codemagic as `appstore-key`, generate a distribution
   certificate and fetch a provisioning profile in Codemagic, then run the
-  workflow. Guide: https://docs.codemagic.io/yaml-quick-start/building-an-ionic-app/
+  workflow.
+- **Apple Watch / Apple Health:** the iPhone app reads workouts from Apple
+  Health (where Apple Watch saves them) and logs them in Fitness. When you
+  register the App ID, tick the **HealthKit** capability *before* creating
+  the provisioning profile, or the build will fail to sign. Apple also
+  requires a privacy policy for apps that read Health data. The website and
+  Android app cannot read Apple Health. Guide: https://docs.codemagic.io/yaml-quick-start/building-an-ionic-app/
 - **Before any public store release:** a privacy policy.
 
 ## Accounts and online storage

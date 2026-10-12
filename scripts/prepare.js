@@ -35,3 +35,13 @@ for (const file of ['firebase-app-compat.js', 'firebase-auth-compat.js', 'fireba
     console.warn('not found, app will load it from the internet instead:', file);
   }
 }
+
+// Capacitor runtime, used only inside the iPhone and Android apps to reach
+// native features such as Apple Health.
+const capSrc = path.join(__dirname, '..', 'node_modules', '@capacitor', 'core', 'dist', 'capacitor.js');
+if (fs.existsSync(capSrc)) {
+  fs.copyFileSync(capSrc, path.join(vendor, 'capacitor.js'));
+  console.log('copied capacitor.js');
+} else {
+  console.warn('capacitor.js not found');
+}

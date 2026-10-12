@@ -251,6 +251,13 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
 .lane .chev svg{width:20px;height:20px}
 .lane:hover{border-color:color-mix(in srgb,var(--sec) 45%,transparent)}
 
+/* ---- Apple Health card ---- */
+.healthcard .hk{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--sec);background:color-mix(in srgb,var(--sec) 16%,transparent);flex:none}
+.healthcard .hk svg{width:24px;height:24px}
+.healthcard strong{font-family:var(--display);font-size:1.25rem;text-transform:uppercase;letter-spacing:.02em}
+.healthnote{display:flex;align-items:center;gap:8px;margin:0}
+.healthnote svg{width:18px;height:18px;flex:none}
+
 /* ---- dock ---- */
 .dock{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));width:min(560px,calc(100% - 24px));border-radius:24px;padding:6px;display:grid;grid-template-columns:repeat(6,1fr);gap:2px;z-index:20;box-shadow:0 14px 40px rgba(0,3,16,.6);background:rgba(10,17,42,.82)}
 .dock button{background:none;border:0;border-radius:18px;padding:8px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--faint);cursor:pointer;font-size:.66rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;min-width:0}
@@ -453,6 +460,7 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
     ['formIn','formUp'].forEach(function(id){document.getElementById(id).reset();});
     cachePut();if(create)schedulePush();
     render();setNote();
+    maybeAutoHealth();
   }
   function authMode(m){document.getElementById('formIn').hidden=m!=='in';document.getElementById('formUp').hidden=m!=='up';
     document.getElementById('authIn').setAttribute('aria-selected',m==='in');document.getElementById('authUp').setAttribute('aria-selected',m==='up');
@@ -543,6 +551,7 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
     school:'<svg'+SVGA+'><path d="M2 9l10-5 10 5-10 5z" fill="currentColor" fill-opacity=".22" stroke="none"/><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5M22 9v6"/></svg>',
     nutrition:'<svg'+SVGA+'><path d="M17 21V3c-2.2 1.4-3.3 4-3.3 7.2V14H17" fill="currentColor" fill-opacity=".22" stroke="none"/><path d="M7 3v18M4.5 3v5a2.5 2.5 0 0 0 5 0V3M17 21V3c-2.2 1.4-3.3 4-3.3 7.2V14H17"/></svg>',
     chev:'<svg'+SVGA+'><path d="M9 6l6 6-6 6"/></svg>',
+    watch:'<svg'+SVGA+'><rect x="6" y="6" width="12" height="12" rx="3"/><path d="M9 6l.6-3h4.8l.6 3M9 18l.6 3h4.8l.6-3M12 9.5V12l1.5 1.5"/></svg>',
     back:'<svg'+SVGA+'><path d="M15 6l-6 6 6 6"/></svg>',
     trophy:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 3h10v2h3v3a4 4 0 0 1-4 4h-.4A5 5 0 0 1 13 14.9V18h3v3H8v-3h3v-3.1A5 5 0 0 1 8.4 12H8a4 4 0 0 1-4-4V5h3V3zm0 4H6v1a2 2 0 0 0 1 1.7V7zm10 0v2.7A2 2 0 0 0 18 8V7h-1z"/></svg>'
   };
@@ -629,6 +638,74 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
       B('m6','Half the year','Active in 6 different months',mo,6,'months'),
       B('m12','All twelve','Active in every month of the year',mo,12,'months')];
   }
+  /* ---------- Apple Health / Apple Watch (iPhone app only) ---------- */
+  var healthBusy=false, healthMsg='', healthLastAuto=0;
+  var isNative=function(){return !!(window.Capacitor&&(window.Capacitor.isNativePlatform?window.Capacitor.isNativePlatform():window.Capacitor.platform&&window.Capacitor.platform!=='web'));};
+  var isIOSApp=function(){var C=window.Capacitor;return isNative()&&((C.getPlatform&&C.getPlatform())||C.platform)==='ios';};
+  var isIOSWeb=function(){return !isNative()&&/iphone|ipad|ipod/i.test(navigator.userAgent);};
+  var healthP=null;
+  function healthApi(){
+    if(healthP)return healthP;
+    healthP=(window.Capacitor&&window.Capacitor.registerPlugin?Promise.resolve():loadScript('vendor/capacitor.js').catch(function(){})).then(function(){
+      var C=window.Capacitor;if(!C)return null;
+      if(C.Plugins&&C.Plugins.Health&&C.Plugins.Health.queryWorkouts)return C.Plugins.Health;
+      if(C.registerPlugin)return C.registerPlugin('Health');
+      if(C.nativePromise)return {isAvailable:function(o){return C.nativePromise('Health','isAvailable',o||{});},requestAuthorization:function(o){return C.nativePromise('Health','requestAuthorization',o);},queryWorkouts:function(o){return C.nativePromise('Health','queryWorkouts',o);}};
+      return null;
+    });
+    return healthP;
+  }
+  var WORKOUT_NAMES={running:'Run',walking:'Walk',hiking:'Hike',cycling:'Bike ride',bikingStationary:'Indoor cycling',swimming:'Swim',swimmingPool:'Swim',swimmingOpenWater:'Open water swim',yoga:'Yoga',pilates:'Pilates',traditionalStrengthTraining:'Strength training',functionalStrengthTraining:'Strength training',strengthTraining:'Strength training',weightlifting:'Strength training',coreTraining:'Core training',highIntensityIntervalTraining:'HIIT',crossTraining:'Cross training',mixedCardio:'Cardio',elliptical:'Elliptical',rowing:'Rowing',stairClimbing:'Stair climbing',stairs:'Stair climbing',dance:'Dance',cardioDance:'Dance',socialDance:'Dance',dancing:'Dance',jumpRope:'Jump rope',boxing:'Boxing',kickboxing:'Kickboxing',basketball:'Basketball',soccer:'Soccer',tennis:'Tennis',pickleball:'Pickleball',golf:'Golf',climbing:'Climbing',martialArts:'Martial arts',cooldown:'Cooldown',flexibility:'Stretching'};
+  function workoutName(t){if(WORKOUT_NAMES[t])return WORKOUT_NAMES[t];var w=String(t||'Workout').replace(/([a-z])([A-Z])/g,'$1 $2').toLowerCase();return w.charAt(0).toUpperCase()+w.slice(1);}
+  async function healthSync(firstTime,quiet){
+    if(healthBusy||!state)return;
+    var H=await healthApi();
+    if(!H){if(!quiet){healthMsg='Apple Health is not available in this version of the app.';render();}return;}
+    healthBusy=true;if(!quiet){healthMsg='';render();}
+    try{
+      if(firstTime){
+        var av=await H.isAvailable();
+        if(av&&av.available===false)throw {msg:'Apple Health is not available on this device.'};
+        await H.requestAuthorization({read:['workouts']});
+      }
+      var h=state.health||{}, now=new Date();
+      var since=h.last?new Date(new Date(h.last).getTime()-3*864e5):new Date(now.getFullYear(),0,1);
+      var found=[], anchor, pages=0;
+      do{var r=await H.queryWorkouts({startDate:since.toISOString(),endDate:now.toISOString(),limit:200,ascending:true,anchor:anchor});found=found.concat((r&&r.workouts)||[]);anchor=r&&r.anchor;pages++;}while(anchor&&pages<25);
+      var have={};state.fitness.forEach(function(e){if(e.hid)have[e.hid]=1;});
+      var yr=now.getFullYear(), had={};badges(yr).forEach(function(x){if(x.won)had[x.id]=1;});
+      var added=0;
+      found.forEach(function(w){
+        var hid=w.platformId||(w.startDate+'|'+w.workoutType), mins=Math.round((+w.duration||0)/60);
+        if(have[hid]||mins<1||!w.startDate)return;
+        var e={id:uid(),date:iso(new Date(w.startDate)),activity:workoutName(w.workoutType),min:Math.min(mins,600),effort:'Moderate',src:'health',hid:hid};
+        if(w.totalDistance)e.km=Math.round(w.totalDistance/100)/10;
+        state.fitness.push(e);have[hid]=1;added++;
+      });
+      state.health={on:true,last:now.toISOString()};
+      var fresh=badges(yr).filter(function(x){return x.won&&!had[x.id];}).map(function(x){return x.name;});
+      if(fresh.length)state.congrats=fresh;
+      healthMsg=added?'Added '+added+' workout'+(added===1?'':'s')+' from Apple Health.':(firstTime?'Connected. No new workouts yet. If you expected some, allow access in the Health app: Sharing, Apps, then this app.':'You are up to date.');
+      save();
+    }catch(e){healthMsg=(e&&e.msg)||'Apple Health could not be read. Check access in the Health app: Sharing, Apps, then this app.';}
+    healthBusy=false;render();
+  }
+  function maybeAutoHealth(){
+    if(isIOSApp()&&state&&state.health&&state.health.on&&Date.now()-healthLastAuto>5*60000){healthLastAuto=Date.now();healthSync(false,true);}
+  }
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&user)maybeAutoHealth();});
+  function vHealth(){
+    if(isIOSApp()){
+      var h=state.health||{}, n=state.fitness.filter(function(e){return e.src==='health';}).length;
+      var o='<div class="card s-fitness healthcard"><div class="head"><span class="hk">'+ICON.watch+'</span><div class="grow"><strong>Apple Watch &amp; Health</strong><span class="sub">'+(h.on?'Connected. '+n+' workout'+(n===1?'':'s')+' imported'+(h.last?', last checked '+dayLong(iso(new Date(h.last))):'')+'.':'Log runs and workouts from your Apple Watch automatically.')+'</span></div></div>';
+      o+='<div class="row"><button class="btn small" type="button" data-act="'+(h.on?'healthSync':'healthConnect')+'" id="btnHealth"'+(healthBusy?' disabled':'')+'>'+(healthBusy?'Checking…':(h.on?'Sync now':'Connect Apple Health'))+'</button></div>';
+      if(healthMsg)o+='<p class="sub" role="status">'+esc(healthMsg)+'</p>';
+      return o+'</div>';
+    }
+    if(isIOSWeb())return '<p class="sub healthnote">'+ICON.watch+' Automatic Apple Watch logging will come with the App Store version of this app.</p>';
+    return '';
+  }
+
   function vFitness(){
     var t=today(), cy=+t.slice(0,4);
     var years={}; years[cy]=1; state.fitness.forEach(function(e){years[yearOf(e)]=1;});
@@ -643,7 +720,7 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
     var o='<div><h2>Fitness</h2><p class="lede">Every workout is kept for the whole year, month by month. A new log starts each January, and past years stay here to look back on.</p></div>';
     if(state.congrats&&state.congrats.length)o+='<div class="congrats" role="status">'+TROPHY+'<p><strong>Congratulations!</strong> You earned '+state.congrats.map(function(n){return '<strong>'+esc(n)+'</strong>';}).join(' and ')+'.</p><button class="x" type="button" data-act="dismiss" aria-label="Dismiss">×</button></div>';
     o+='<form class="add" data-form="fitness">'+field('fitActivity','Activity','required maxlength="40" list="fitList" placeholder="Run, swim, yoga"','wide')+'<datalist id="fitList"><option>Run</option><option>Walk</option><option>Bike ride</option><option>Strength training</option><option>Swim</option><option>Yoga</option><option>Basketball</option></datalist>'
-      +field('fitMin','Minutes','type="number" min="1" max="600" required inputmode="numeric"')+sel('fitEffort','Effort',['Easy','Moderate','Hard'])+field('fitDate','Date','type="date" value="'+t+'" max="'+t+'" required')+'<button class="btn">Log workout</button></form>';
+      +field('fitMin','Minutes','type="number" min="1" max="600" required inputmode="numeric"')+sel('fitEffort','Effort',['Easy','Moderate','Hard'])+field('fitDate','Date','type="date" value="'+t+'" max="'+t+'" required')+'<button class="btn">Log workout</button></form>'+vHealth();
     if(fitYear===cy)o+='<div class="meters">'+meter('This week: active minutes, last 7 days',fitWeek(),state.goals.fitMin,'min')+'</div>';
     o+='<div class="block"><div class="headrow"><div class="yearnav"><button class="btn small ghost" type="button" data-act="year" data-y="'+(years[yi-1]||'')+'" id="yrPrev" aria-label="Previous year"'+(yi>0?'':' disabled')+'>‹</button><strong>'+fitYear+'</strong><button class="btn small ghost" type="button" data-act="year" data-y="'+(years[yi+1]||'')+'" id="yrNext" aria-label="Next year"'+(yi<years.length-1?'':' disabled')+'>›</button></div><span class="sub">'+(fitYear===cy?'Year so far':'Full year')+'</span></div>';
     var stat=function(l,f,u){return '<div class="stat"><span class="label">'+l+'</span><span class="fig">'+f+' <i>'+u+'</i></span></div>';};
@@ -654,7 +731,7 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
     o+='<div class="block"><h3>Trophies <span class="sub">'+won+' of '+bs.length+' earned in '+fitYear+'</span></h3><div class="badges">'+bs.map(function(x){
       return '<div class="badge'+(x.won?' won':'')+'">'+TROPHY+'<strong>'+x.name+'</strong><span>'+x.desc+'</span>'+(x.won?'<span>Earned</span>':'<div class="track" role="img" aria-label="'+x.val+' of '+x.goal+' '+x.unit+'"><div style="width:'+Math.round(x.val/x.goal*100)+'%"></div></div><span>'+x.val+' of '+x.goal+' '+x.unit+'</span>')+'</div>';}).join('')+'</div></div>';
     var mm=pad(fitMonth+1), list=E.filter(function(e){return e.date.slice(5,7)===mm;}).sort(byDateDesc);
-    o+='<div class="block"><h3>'+MON[fitMonth]+' '+fitYear+' <span class="sub">'+list.length+' workout'+(list.length===1?'':'s')+', '+hrs(per[fitMonth])+' hr</span></h3>'+(list.length?'<ul class="list">'+list.map(function(e){return '<li><div class="grow"><strong>'+esc(e.activity)+'</strong><span class="sub">'+(e.date===t?'Today':dayLong(e.date))+' · '+esc(e.effort)+'</span></div><span class="num">'+e.min+' min</span><button class="x" type="button" data-act="del" data-k="fitness" data-id="'+e.id+'" aria-label="Delete '+esc(e.activity)+'">×</button></li>';}).join('')+'</ul>':'<p class="empty">No workouts logged in '+MON[fitMonth]+' '+fitYear+'.</p>')+'</div>';
+    o+='<div class="block"><h3>'+MON[fitMonth]+' '+fitYear+' <span class="sub">'+list.length+' workout'+(list.length===1?'':'s')+', '+hrs(per[fitMonth])+' hr</span></h3>'+(list.length?'<ul class="list">'+list.map(function(e){return '<li><div class="grow"><strong>'+esc(e.activity)+'</strong><span class="sub">'+(e.date===t?'Today':dayLong(e.date))+' · '+(e.src==='health'?'Apple Health'+(e.km?' · '+e.km+' km':''):esc(e.effort))+'</span></div><span class="num">'+e.min+' min</span><button class="x" type="button" data-act="del" data-k="fitness" data-id="'+e.id+'" aria-label="Delete '+esc(e.activity)+'">×</button></li>';}).join('')+'</ul>':'<p class="empty">No workouts logged in '+MON[fitMonth]+' '+fitYear+'.</p>')+'</div>';
     if(E.length)o+='<div><button class="btn small ghost" type="button" data-act="eraseYear" id="btnYear">'+(armedYear?'Tap again to erase all '+fitYear+' workouts':'Reset the '+fitYear+' log')+'</button></div>';
     return o;
   }
@@ -758,6 +835,8 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
     if(a!=='eraseYear')armedYear=false;
     if(a!=='delAcct')armedAcct=false;
     if(a==='signout'){doSignOut();return;}
+    if(a==='healthConnect'){healthSync(true,false);return;}
+    if(a==='healthSync'){healthSync(false,false);return;}
     if(a==='delAcct'){if(!armedAcct){armedAcct=true;render();return;}armedAcct=false;doDelete();return;}
     if(a==='rmPhoto'){profile().photo='';saveAccounts();flash='Photo removed.';render();return;}
     if(a==='month'){fitMonth=+b.dataset.m;render();var mb=document.getElementById('mon-'+fitMonth);if(mb)mb.focus();return;}
