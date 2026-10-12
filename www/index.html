@@ -260,7 +260,7 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
     <button class="btn small ghost" type="button" data-act="keep" id="btnKeep">Keep them</button>
   </div>
   <main id="panel"></main>
-  <footer>
+  <footer id="acctFooter">
     <p id="saveNote">Your account and entries are saved on this device.</p>
     <button class="btn small ghost" type="button" data-act="erase" id="btnErase">Erase my entries</button>
   </footer>
@@ -333,7 +333,7 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
     return st;
   }
   function cachePut(){if(!dataKey)return;var j=JSON.stringify({state:state,profile:prof});mem[dataKey]=j;ls.set(dataKey,j);}
-  function setNote(){document.getElementById('saveNote').textContent=syncMsg||'Your profile and entries are saved to your account.';}
+  function setNote(){document.getElementById('saveNote').textContent=syncMsg||'Your profile and entries are saved to your account.';var f=document.getElementById('acctFooter');if(f)f.hidden=!(active==='profile'||syncMsg);}
   function schedulePush(){dirty=true;clearTimeout(pushT);pushT=setTimeout(pushNow,1200);}
   function pushNow(){
     clearTimeout(pushT);
@@ -638,6 +638,7 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
     greet.textContent='Hi, '+displayName();
     chip.innerHTML=avatar(52);
     document.getElementById('banner').hidden=!state.example;
+    setNote();
     if(active==='home'){panel.className='home';panel.innerHTML=vHome();}
     else{panel.className='s-'+active;panel.innerHTML='<button class="back" type="button" data-tab="home" id="btnBack">\u2039 All sections</button>'+VIEWS[active]();}
     var sc=panel.querySelector('.scroll'); if(sc)sc.scrollLeft=sc.scrollWidth;
