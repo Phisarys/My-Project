@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="format-detection" content="telephone=no">
+<meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#17203a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -361,6 +362,7 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
   function authMsg(e){
     var c=(e&&e.code)||'';
     if(/invalid-credential|wrong-password|user-not-found|invalid-email|invalid-login/.test(c))return 'That email and password don\'t match an account.';
+    if(/admin-restricted-operation/.test(c))return 'New accounts are closed. Ask the person who runs this app for access.';
     if(/email-already-in-use/.test(c))return 'There is already an account with that email. Sign in instead.';
     if(/weak-password/.test(c))return 'Use a stronger password with 8 characters or more.';
     if(/too-many-requests/.test(c))return 'Too many tries. Wait a few minutes and try again.';
