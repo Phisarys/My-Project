@@ -6,8 +6,9 @@ const path = require('path');
 const out = path.join(__dirname, '..', 'www', 'fonts');
 fs.mkdirSync(out, { recursive: true });
 const wanted = [
-  ['@fontsource/bricolage-grotesque', 'bricolage-grotesque-latin-500-normal.woff2'],
-  ['@fontsource/bricolage-grotesque', 'bricolage-grotesque-latin-700-normal.woff2'],
+  ['@fontsource/barlow-condensed', 'barlow-condensed-latin-600-normal.woff2'],
+  ['@fontsource/barlow-condensed', 'barlow-condensed-latin-700-normal.woff2'],
+  ['@fontsource/barlow-condensed', 'barlow-condensed-latin-800-italic.woff2'],
   ['@fontsource/atkinson-hyperlegible', 'atkinson-hyperlegible-latin-400-normal.woff2'],
   ['@fontsource/atkinson-hyperlegible', 'atkinson-hyperlegible-latin-700-normal.woff2'],
 ];

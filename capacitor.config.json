@@ -4,6 +4,9 @@
   "webDir": "www",
   "ios": {
     "contentInset": "never",
-    "backgroundColor": "#eaeef5"
+    "backgroundColor": "#070d22"
+  },
+  "android": {
+    "backgroundColor": "#070d22"
   }
 }
