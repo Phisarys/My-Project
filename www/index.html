@@ -262,6 +262,14 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
 .healthnote{display:flex;align-items:center;gap:8px;margin:0}
 .healthnote svg{width:18px;height:18px;flex:none}
 
+/* ---- legal ---- */
+.disclaimer{margin:6px 0 0;font-size:.8rem;color:var(--faint)}
+details.legal summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px}
+details.legal summary::-webkit-details-marker{display:none}
+details.legal summary::after{content:"+";color:var(--muted);font-size:1.2rem}
+details.legal[open] summary::after{content:"\2212"}
+details.legal p{margin:0}
+
 /* ---- dock ---- */
 .dock{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));width:min(560px,calc(100% - 24px));border-radius:24px;padding:6px;display:grid;grid-template-columns:repeat(6,1fr);gap:2px;z-index:20;box-shadow:0 14px 40px rgba(0,3,16,.6);background:rgba(10,17,42,.82)}
 .dock button{background:none;border:0;border-radius:18px;padding:8px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--faint);cursor:pointer;font-size:.66rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;min-width:0}
@@ -312,6 +320,7 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
         <div class="f"><label for="upEmail">Email</label><input id="upEmail" type="email" autocomplete="username" required></div>
         <div class="f"><label for="upPw">Password (8 characters or more)</label><input id="upPw" type="password" autocomplete="new-password" minlength="8" required></div>
         <div class="f"><label for="upPw2">Password again</label><input id="upPw2" type="password" autocomplete="new-password" required></div>
+        <label class="keep" for="upAge"><input type="checkbox" id="upAge" required> I am 13 or older</label>
         <p class="err" id="upErr" role="alert" hidden></p>
         <button class="btn">Create account</button>
       </form>
@@ -490,6 +499,7 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return showErr('upErr','Enter a valid email address.');
     if(pw.length<8)return showErr('upErr','Use a password with 8 characters or more.');
     if(pw!==val('upPw2'))return showErr('upErr','The two passwords don\'t match.');
+    if(!document.getElementById('upAge').checked)return showErr('upErr','Daily Five is for people 13 and older. Please confirm your age to continue.');
     showErr('upErr','');busy(true);
     try{await prep();var r=await fb.auth().createUserWithEmailAndPassword(email,pw);await enter(r.user);}
     catch(e){showErr('upErr',authMsg(e));}
@@ -539,6 +549,11 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
     photoErr='';
     o+='<form class="add" data-form="profile">'+field('pfFirst','First name','required maxlength="40" autocomplete="given-name" value="'+esc(p.first)+'"')+field('pfLast','Last name','required maxlength="40" autocomplete="family-name" value="'+esc(p.last)+'"')+field('pfNick','Nickname','maxlength="24" autocomplete="nickname" placeholder="What should we call you?" value="'+esc(p.nick)+'"')+'<button class="btn">Save profile</button></form>';
     o+='<div class="block"><h3>Account</h3><span class="sub">Signed in as '+esc(user)+'</span>'+(acctErr?'<p class="err" role="alert">'+esc(acctErr)+'</p>':'')+'<div class="row"><button class="btn small ghost" type="button" data-act="signout" id="btnSignOut">Sign out</button><button class="btn small ghost" type="button" data-act="delAcct" id="btnDelAcct">'+(armedAcct?'Tap again to delete your account and entries':'Delete account')+'</button></div></div>';
+    o+='<details class="block legal"><summary><h3>Legal and credits</h3></summary>'
+      +'<p class="sub">Daily Five is a personal tracking app. It does not give medical, dietary or professional advice.</p>'
+      +'<p class="sub">Your profile and entries are stored in Google Firebase, private to your account. Delete account above erases them. In the iPhone app, workouts are read from Apple Health only with your permission, are never written back, and are never used for advertising or shared.</p>'
+      +'<p class="sub"><strong>Open-source software used:</strong> Barlow Condensed and Atkinson Hyperlegible fonts (SIL Open Font License 1.1); Firebase JavaScript SDK (Apache License 2.0); Capacitor (MIT License); Capgo Capacitor Health (Mozilla Public License 2.0). Logo, icons and illustrations are original to Daily Five.</p>'
+      +'</details>';
     acctErr='';
     return o;
   }
@@ -721,7 +736,7 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
     var max=Math.max.apply(null,per.concat([60])), mins=sum(E,function(e){return e.min;});
     var days={};E.forEach(function(e){days[e.date]=1;});
     var best=per.indexOf(Math.max.apply(null,per)), yi=years.indexOf(fitYear);
-    var o='<div><h2>Fitness</h2><p class="lede">Every workout is kept for the whole year, month by month. A new log starts each January, and past years stay here to look back on.</p></div>';
+    var o='<div><h2>Fitness</h2><p class="lede">Every workout is kept for the whole year, month by month. A new log starts each January, and past years stay here to look back on.</p><p class="sub disclaimer">For general fitness tracking only, not medical advice. Check with a doctor before starting a new exercise programme.</p></div>';
     if(state.congrats&&state.congrats.length)o+='<div class="congrats" role="status">'+TROPHY+'<p><strong>Congratulations!</strong> You earned '+state.congrats.map(function(n){return '<strong>'+esc(n)+'</strong>';}).join(' and ')+'.</p><button class="x" type="button" data-act="dismiss" aria-label="Dismiss">×</button></div>';
     o+='<form class="add" data-form="fitness">'+field('fitActivity','Activity','required maxlength="40" list="fitList" placeholder="Run, swim, yoga"','wide')+'<datalist id="fitList"><option>Run</option><option>Walk</option><option>Bike ride</option><option>Strength training</option><option>Swim</option><option>Yoga</option><option>Basketball</option></datalist>'
       +field('fitMin','Minutes','type="number" min="1" max="600" required inputmode="numeric"')+sel('fitEffort','Effort',['Easy','Moderate','Hard'])+field('fitDate','Date','type="date" value="'+t+'" max="'+t+'" required')+'<button class="btn">Log workout</button></form>'+vHealth();
@@ -789,7 +804,7 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
   function vNutrition(){
     var t=today(), meals=state.meals.filter(function(m){return m.date===t;}), g=state.goals, w=state.water[t]||0;
     var kcal=sum(meals,function(m){return m.kcal;});
-    var o='<div><h2>Nutrition</h2><p class="lede">Log what you eat and drink today. Calories and protein are optional, so fill in only what you know.</p></div>';
+    var o='<div><h2>Nutrition</h2><p class="lede">Log what you eat and drink today. Calories and protein are optional, so fill in only what you know.</p><p class="sub disclaimer">For general tracking only, not medical or dietary advice. Targets are yours to set; talk to a doctor or dietitian for personal guidance.</p></div>';
     o+='<div class="meters">'+meter('Water',w,g.water,'glasses')+meter('Protein',sum(meals,function(m){return m.protein;}),g.protein,'g')+meter('Fruit and vegetables',sum(meals,function(m){return m.produce;}),g.produce,'servings')+'</div>';
     var gl='';for(var i=1;i<=Math.max(g.water,w);i++)gl+='<button class="glass'+(i<=w?' on':'')+'" type="button" data-act="water" data-n="'+i+'" aria-pressed="'+(i<=w)+'" aria-label="Glass '+i+'"></button>';
     o+='<div class="block"><span class="label">Tap a glass each time you finish one</span><div class="glasses">'+gl+'</div></div>';
