@@ -97,8 +97,8 @@ Sign-in and saved data use the Firebase project `project-monarch1`.
   `www/manifest.webmanifest`: the name under the icon. "Daily Five" is a
   placeholder; about 12 characters fit.
 - `appId` in `capacitor.config.json` and `bundle_identifier` in
-  `codemagic.yaml`: `com.example.dailyfive` is a placeholder. It becomes
-  permanent once the app is uploaded to a store.
+  `codemagic.yaml`: set to `com.phisarys.dailyfive`. It becomes permanent
+  once the app is uploaded to a store, so do not change it after that.
 
 ## What is in here
 

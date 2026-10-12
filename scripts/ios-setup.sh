@@ -11,6 +11,8 @@ set_string NSCameraUsageDescription "'Take a photo to use as your profile pictur
 set_string NSPhotoLibraryUsageDescription "'Choose a photo to use as your profile picture.'"
 set_string NSHealthShareUsageDescription "'Reads your workouts from Apple Health and Apple Watch so they are logged in Fitness automatically.'"
 set_string NSHealthUpdateUsageDescription "'Only used if you choose to save a workout to Apple Health.'"
+# Only standard HTTPS encryption is used, so TestFlight needs no export paperwork.
+/usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST" 2>/dev/null || /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PLIST"
 
 # HealthKit entitlement (the App ID must also have HealthKit switched on, and
 # the provisioning profile must be created after that).
