@@ -9,7 +9,7 @@ set_string () {
 }
 # Name shown under the icon on the home screen.
 set_string CFBundleDisplayName FiveArc
-set_string NSCameraUsageDescription "'Take a photo to use as your profile picture.'"
+set_string NSCameraUsageDescription "'Take a profile photo and scan food barcodes to fill in calories.'"
 set_string NSPhotoLibraryUsageDescription "'Choose a photo to use as your profile picture.'"
 set_string NSHealthShareUsageDescription "'Reads your workouts from Apple Health and Apple Watch so they are logged in Fitness automatically.'"
 # The app only reads from Apple Health, so it asks for no permission to write.
