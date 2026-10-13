@@ -203,6 +203,16 @@ ul.list li{display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px;
 .card .hours{font-family:var(--display);font-weight:700;font-size:2rem;line-height:1;font-variant-numeric:tabular-nums;color:var(--sec)}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .row input{flex:1 1 5rem}
+.wkstart{display:flex;flex-direction:column;gap:6px}
+.wkrow{display:flex;gap:10px;align-items:center}
+.wkrow select{flex:1;min-width:0}
+.wklive{flex-direction:row;align-items:center;gap:12px;flex-wrap:wrap;border-color:color-mix(in srgb,var(--c-fitness) 45%,var(--line))}
+.wklive .grow{display:flex;flex-direction:column;min-width:0;flex:1 1 8rem}
+.wklive .grow strong{overflow-wrap:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wklive .timer{font-size:2.2rem;line-height:1.05}
+.wkbtns{display:flex;align-items:center;gap:14px;width:100%}
+.wkbtns .btn{flex:1}
+.wkbtns .link{align-self:center;min-height:44px}
 .timer{font-family:var(--display);font-size:1.5rem;font-variant-numeric:tabular-nums;font-weight:700;color:var(--sec)}
 .glasses{display:grid;grid-template-columns:repeat(var(--n,8),minmax(0,40px));gap:6px}
 .glass{width:100%;height:46px;border:2px solid rgba(255,255,255,.25);border-top-width:1px;border-radius:4px 4px 12px 12px;background:transparent;cursor:pointer;padding:0;transition:background .15s ease}
@@ -1327,6 +1337,19 @@ details.legal p{margin:0}
     +'<feFlood flood-color="#fff"/><feComposite in2="d" operator="in" result="edge"/><feMerge><feMergeNode in="edge"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
   var wkN=0;
   function wkIcon(a,live){var k=wkKind(a), n=++wkN;return '<span class="wico wk-'+k+(live?' go':'')+'"'+(live?' data-live="1"':'')+' aria-hidden="true"><svg viewBox="0 0 48 48" >'+(WK_DEFS+WK[k]).replace(/(["#])wk([GS])(["\)])/g,'$1wk$2'+n+'$3')+'</svg></span>';}
+  /* ---------- Live workout timer: pick a workout, Start, then Stop to log it ---------- */
+  var WK_PICK=['Run','Walk','Bike ride','Strength training','Swim','Yoga','Basketball','Dance','Other workout'];
+  function vWorkoutTimer(){
+    var w=state.wtimer;
+    if(w)return '<div class="card s-fitness wklive" role="group" aria-label="Workout in progress">'+wkIcon(w.activity,true)+'<div class="grow"><strong>'+esc(w.activity)+'</strong><span class="timer" id="wtick" role="timer">'+clock(Date.now()-w.start)+'</span></div>'
+      +'<div class="wkbtns"><button class="btn small" type="button" data-act="wkStop" id="btnWkStop">Stop and log</button><button class="link" type="button" data-act="wkCancel" id="btnWkCancel">Cancel</button></div></div>';
+    return '<form class="wkstart" data-form="wkStart"><label class="label" for="wkPick">Time a workout</label><div class="wkrow"><select id="wkPick" name="wkPick">'+WK_PICK.map(function(x){return '<option'+(x===wkLast?' selected':'')+'>'+x+'</option>';}).join('')+'</select><button class="btn small" id="btnWkStart">Start</button></div></form>';
+  }
+  var wkLast='Run';
+  function addWorkout(e){var fy=+e.date.slice(0,4), had={};badges(fy).forEach(function(x){if(x.won)had[x.id]=1;});
+    state.fitness.push(e);
+    var fresh=badges(fy).filter(function(x){return x.won&&!had[x.id];}).map(function(x){return x.name;});
+    state.congrats=fresh.length?fresh:null;fitYear=fy;fitMonth=+e.date.slice(5,7)-1;}
   function vFitness(){
     var t=today(), cy=+t.slice(0,4);
     var years={}; years[cy]=1; state.fitness.forEach(function(e){years[yearOf(e)]=1;});
@@ -1341,6 +1364,7 @@ details.legal p{margin:0}
     var o='<div><h2>Fitness</h2><p class="lede">Log workouts and watch your year add up.</p></div>';
     if(state.congrats&&state.congrats.length)o+='<div class="congrats" role="status">'+TROPHY+'<p><strong>Congratulations!</strong> You earned '+state.congrats.map(function(n){return '<strong>'+esc(n)+'</strong>';}).join(' and ')+'.</p><button class="x" type="button" data-act="dismiss" aria-label="Dismiss">×</button></div>';
     if(fitYear===cy)o+='<div class="meters">'+meter('This week: active minutes, last 7 days',fitWeek(),state.goals.fitMin,'min')+'</div>';
+    if(fitYear===cy)o+=vWorkoutTimer();
     o+=adder('fitness','Log a workout','<form class="add" data-form="fitness">'+field('fitActivity','Activity','required maxlength="40" list="fitList" placeholder="Run, swim, yoga"','wide')+'<datalist id="fitList"><option>Run</option><option>Walk</option><option>Bike ride</option><option>Strength training</option><option>Swim</option><option>Yoga</option><option>Basketball</option></datalist>'
       +field('fitMin','Minutes','type="number" min="1" max="600" required inputmode="numeric"')+sel('fitEffort','Effort',['Easy','Moderate','Hard'])+field('fitDate','Date','type="date" value="'+t+'" max="'+t+'" required')+'<button class="btn">Log workout</button></form>')+vHealth();
     var top=o;o='';
@@ -1617,7 +1641,9 @@ details.legal p{margin:0}
     commit();window.scrollTo(0,0);
     if(!examples)cheer('profile','You\'re all set. Here\'s your first day.',110);
   }
-  function tick(){var el=document.getElementById('tick');if(!el||!state||!state.timer)return;var s=Math.floor((Date.now()-state.timer.start)/1000),m=Math.floor(s/60);el.textContent=(m>=60?Math.floor(m/60)+':'+pad(m%60):m)+':'+pad(s%60);}
+  function clock(ms){var s=Math.max(0,Math.floor(ms/1000)),m=Math.floor(s/60);return (m>=60?Math.floor(m/60)+':'+pad(m%60):m)+':'+pad(s%60);}
+  function tick(){if(!state)return;var el=document.getElementById('tick');if(el&&state.timer)el.textContent=clock(Date.now()-state.timer.start);
+    var w=document.getElementById('wtick');if(w&&state.wtimer)w.textContent=clock(Date.now()-state.wtimer.start);}
   setInterval(tick,1000);
   function commit(){save();render();remSync();}
   var eraseArmed=false;
@@ -1675,6 +1701,8 @@ details.legal p{margin:0}
     else if(a==='del'){editing=null;offerUndo('Deleted.',JSON.stringify(state));state[b.dataset.k]=state[b.dataset.k].filter(function(x){return x.id!==id;});}
     else if(a==='delHobby'){editing=null;hobOpen=null;offerUndo('Hobby deleted.',JSON.stringify(state));state.hobbies=state.hobbies.filter(function(x){return x.id!==id;});state.hobbyLog=state.hobbyLog.filter(function(x){return x.hobbyId!==id;});if(state.timer&&state.timer.hobbyId===id)state.timer=null;}
     else if(a==='start'){state.timer={hobbyId:id,start:Date.now()};}
+    else if(a==='wkStop'){var wt=state.wtimer;if(wt){if(WK_PICK.indexOf(wt.activity)>=0)wkLast=wt.activity;var sd=iso(new Date(wt.start));if(sd>t)sd=t;addWorkout({id:uid(),date:sd,activity:wt.activity,min:Math.min(600,Math.max(1,Math.round((Date.now()-wt.start)/60000))),effort:'Moderate'});state.wtimer=null;haptic('success');}}
+    else if(a==='wkCancel'){if(state.wtimer){offerUndo('Workout cancelled.',JSON.stringify(state));state.wtimer=null;}}
     else if(a==='stop'){if(state.timer){state.hobbyLog.push({id:uid(),hobbyId:state.timer.hobbyId,date:t,min:Math.max(1,Math.round((Date.now()-state.timer.start)/60000)),note:'Timed session'});state.timer=null;}}
     else if(a==='tick'){var hb=state.habits.filter(function(x){return x.id===id;})[0];if(hb){if(hb.days[b.dataset.d])delete hb.days[b.dataset.d];else{hb.days[b.dataset.d]=true;haptic();}}}
     else if(a==='done'){var as=state.school.filter(function(x){return x.id===id;})[0];if(as){as.done=!as.done;as.doneAt=as.done?t:null;if(as.done)haptic();}}
@@ -1708,10 +1736,8 @@ details.legal p{margin:0}
         haptic('success');
       }
       editing=null;commit();var sb=document.getElementById('ed-'+ei);if(sb)try{sb.focus({preventScroll:true});}catch(e){}return;}
-    if(kind==='fitness'){if(!v('fitActivity')||!num(v('fitMin')))return;var fd=v('fitDate')||t, fy=+fd.slice(0,4), had={};badges(fy).forEach(function(x){if(x.won)had[x.id]=1;});
-      state.fitness.push({id:uid(),date:fd,activity:v('fitActivity'),min:num(v('fitMin'),600),effort:v('fitEffort')});
-      var fresh=badges(fy).filter(function(x){return x.won&&!had[x.id];}).map(function(x){return x.name;});
-      state.congrats=fresh.length?fresh:null;fitYear=fy;fitMonth=+fd.slice(5,7)-1;}
+    if(kind==='wkStart'){var wa=v('wkPick')||'Run';wkLast=wa;state.wtimer={activity:wa==='Other workout'?'Workout':wa,start:Date.now()};haptic();commit();var sb2=document.getElementById('btnWkStop');if(sb2)try{sb2.focus({preventScroll:true});}catch(e){}return;}
+    if(kind==='fitness'){if(!v('fitActivity')||!num(v('fitMin')))return;addWorkout({id:uid(),date:v('fitDate')||t,activity:v('fitActivity'),min:num(v('fitMin'),600),effort:v('fitEffort')});}
     else if(kind==='hobby'){if(!v('hobName'))return;state.hobbies.push({id:uid(),name:v('hobName')});}
     else if(kind==='hobbyLog'){if(!num(v('min')))return;state.hobbyLog.push({id:uid(),hobbyId:f.dataset.id,date:t,min:num(v('min'),600),note:v('note')});}
     else if(kind==='habit'){if(!v('habName'))return;state.habits.push({id:uid(),name:v('habName'),days:{}});}
