@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@capacitor/android": "^8.0.0",
+    "@capacitor/app": "8.1.1",
     "@capacitor/barcode-scanner": "3.1.2",
     "@capacitor/core": "^8.0.0",
     "@capacitor/haptics": "8.0.2",

@@ -233,6 +233,7 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
 .switch .tog{width:44px;height:26px;border-radius:99px;background:var(--line);position:relative;flex:none;transition:background .15s ease}
 .switch .tog::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--ink);transition:transform .15s ease}
 .switch[aria-pressed="true"] .tog{background:var(--c-habit)}.switch[aria-pressed="true"] .tog::after{transform:translateX(18px);background:#fff}
+a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
 .quick .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:6px 14px 6px 8px;border-radius:99px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font:inherit;font-size:.92rem;cursor:pointer;max-width:100%}
 .chip i{width:24px;height:24px;border-radius:8px;border:2px solid rgba(255,255,255,.25);display:grid;place-items:center;font-style:normal;font-weight:800;font-size:.8rem;flex:none;color:var(--on-sec)}
@@ -744,6 +745,24 @@ details.legal p{margin:0}
     var light=v==='light'||(v==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches);
     var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',light?'#eef1f8':'#070d22');}
   themeApply();try{matchMedia('(prefers-color-scheme: light)').addEventListener('change',themeApply);}catch(e){}
+  /* ---------- Feedback: opens an email with the app version filled in ---------- */
+  var FEEDBACK_TO='phisarys911@gmail.com', appInfo=null;
+  function appVersion(){
+    if(appInfo)return Promise.resolve(appInfo);
+    var C=window.Capacitor, A=isNative()&&C&&(C.Plugins&&C.Plugins.App&&C.Plugins.App.getInfo?C.Plugins.App:(C.registerPlugin?C.registerPlugin('App'):null));
+    var p=A?withTimeout(A.getInfo(),3000).then(function(i){return {v:i.version+' ('+i.build+')',where:'iPhone app'};},function(){return {v:'unknown',where:'iPhone app'};}):Promise.resolve({v:'website',where:'website'});
+    return p.then(function(i){appInfo=i;return i;});
+  }
+  function feedbackHref(){
+    var i=appInfo||{v:'unknown',where:isNative()?'iPhone app':'website'}, ios=(navigator.userAgent.match(/OS (\d+)_(\d+)(?:_(\d+))? like Mac OS X/)||[]);
+    var sys=ios[1]?'iOS '+ios[1]+'.'+ios[2]+(ios[3]?'.'+ios[3]:''):navigator.platform||'unknown';
+    var body='What happened, or what would make FiveArc better?\n\n\n\n---\nPlease keep this part so the problem can be found faster.\nFiveArc version: '+i.v+'\nUsing: '+i.where+'\nSystem: '+sys+'\nAccount: '+(guest?'none (entries on this device only)':'signed in');
+    return 'mailto:'+FEEDBACK_TO+'?subject='+encodeURIComponent('FiveArc feedback, '+(i.where==='website'?'website':'version '+i.v))+'&body='+encodeURIComponent(body);
+  }
+  function vFeedback(){
+    if(!appInfo)appVersion().then(function(){var a=document.getElementById('btnFeedback');if(a)a.href=feedbackHref();});
+    return '<div class="block"><h3>Feedback</h3><span class="sub">Found a bug or have an idea? It goes straight to the person who makes FiveArc.</span><div class="row"><a class="btn small" id="btnFeedback" href="'+esc(feedbackHref())+'">Send feedback</a></div><span class="sub">Opens an email to '+FEEDBACK_TO+' with your app version filled in.</span></div>';
+  }
   function vTheme(){var v=themeGet();
     return '<div class="block"><h3>Appearance</h3><span class="sub">Automatic follows your iPhone\'s light or dark setting.</span><div class="seg" role="group" aria-label="Appearance">'
       +[['auto','Automatic'],['light','Light'],['dark','Dark']].map(function(x){return '<button type="button" data-act="theme" data-v="'+x[0]+'" id="theme-'+x[0]+'" aria-pressed="'+(v===x[0])+'">'+x[1]+'</button>';}).join('')+'</div></div>';}
@@ -754,14 +773,14 @@ details.legal p{margin:0}
     o+='<div class="profilehead">'+avatar(104)+'<div class="block"><div class="row"><input class="vh" type="file" id="photoInput" accept="image/*"><label class="btn small" for="photoInput">'+(p.photo?'Change photo':'Add a photo')+'</label>'+(p.photo?'<button class="btn small ghost" type="button" data-act="rmPhoto" id="btnRmPhoto">Remove photo</button>':'')+'</div><span class="sub">Pick any picture from your device. It is cropped to a square.</span>'+(photoErr?'<p class="err" role="alert">'+esc(photoErr)+'</p>':'')+'</div></div>';
     photoErr='';
     o+='<form class="add" data-form="profile">'+field('pfFirst','First name','required maxlength="40" autocomplete="given-name" value="'+esc(p.first)+'"')+field('pfLast','Last name','required maxlength="40" autocomplete="family-name" value="'+esc(p.last)+'"')+field('pfNick','Nickname','maxlength="24" autocomplete="nickname" placeholder="What should we call you?" value="'+esc(p.nick)+'"')+'<button class="btn">Save profile</button></form>';
-    o+=vReminder()+vTheme();
+    o+=vReminder()+vTheme()+vFeedback();
     if(guest)o+='<div class="block"><h3>Account</h3><span class="sub">You\'re using FiveArc without an account. Your entries are only on this device, so they\'re lost if you delete the app. Create an account to back them up and use them on other devices.</span><div class="row"><button class="btn small" type="button" data-act="guestUp" id="btnGuestUp">Create an account</button><button class="btn small ghost" type="button" data-act="guestIn" id="btnGuestIn">Sign in</button></div></div>';
     else o+='<div class="block"><h3>Account</h3><span class="sub">Signed in as '+esc(user)+'</span>'+(acctErr?'<p class="err" role="alert">'+esc(acctErr)+'</p>':'')+'<div class="row"><button class="btn small ghost" type="button" data-act="signout" id="btnSignOut">Sign out</button><button class="btn small ghost" type="button" data-act="delAcct" id="btnDelAcct">'+(armedAcct?'Tap again to delete your account and entries':'Delete account')+'</button></div></div>';
     o+='<details class="block legal"><summary><h3>Legal and credits</h3></summary>'
       +'<p class="sub">FiveArc is a personal tracking app. It does not give medical, dietary or professional advice.</p>'
       +'<p class="sub doclinks"><a href="https://fivearc.app/privacy" target="_blank" rel="noopener">Privacy Policy</a> · <a href="https://fivearc.app/terms" target="_blank" rel="noopener">Terms of Use</a></p>'
       +'<p class="sub">With an account, your profile and entries are stored in Google Firebase, private to your account, and Delete account above erases them. Without an account, they stay on this device only. In the iPhone app, workouts are read from Apple Health only with your permission, are never written back, and are never used for advertising or shared.</p>'
-      +'<p class="sub"><strong>Open-source software used:</strong> Barlow Condensed and Atkinson Hyperlegible fonts (SIL Open Font License 1.1); Firebase JavaScript SDK (Apache License 2.0); Capacitor, Capacitor Local Notifications and Capacitor Barcode Scanner (MIT License); Capgo Capacitor Health and Capgo Capacitor Age Range (Mozilla Public License 2.0). Food data from Open Food Facts (Open Database License). Logo, icons and illustrations are original to FiveArc.</p>'
+      +'<p class="sub"><strong>Open-source software used:</strong> Barlow Condensed and Atkinson Hyperlegible fonts (SIL Open Font License 1.1); Firebase JavaScript SDK (Apache License 2.0); Capacitor, Capacitor App, Capacitor Haptics, Capacitor Local Notifications and Capacitor Barcode Scanner (MIT License); Capgo Capacitor Health and Capgo Capacitor Age Range (Mozilla Public License 2.0). Food data from Open Food Facts (Open Database License). Logo, icons and illustrations are original to FiveArc.</p>'
       +'</details>';
     acctErr='';
     return o;
