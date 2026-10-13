@@ -157,17 +157,16 @@ label.btn{display:inline-flex;align-items:center}
 /* ---- lists ---- */
 /* ---- workout icons: chunky sticker figures with a white cut edge (see WK_DEFS) ---- */
 .wico{flex:none;width:48px;height:48px;border-radius:14px;display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent;
-  background:radial-gradient(circle at 50% 35%,rgba(var(--wt),.2),rgba(var(--wt),.08) 70%);border:1px solid rgba(var(--wt),.25)}
-/* figure colours: --w1..--w3 gradient top to bottom, --wf far-side limbs, --wt tile tint (r,g,b) */
-.wico{--w1:#ffb08a;--w2:#ff6a45;--w3:#f04a2a;--wf:#b23a1e;--wt:255,106,69}
-.wico svg{width:44px;height:44px;fill:none;stroke:var(--g);stroke-width:3.8;stroke-linecap:round;stroke-linejoin:round;overflow:hidden}
+  background:rgba(var(--wt),.14);border:1px solid rgba(var(--wt),.28)}
+/* figure colours: --w2 main, --wf far-side limbs, --wt tile tint (r,g,b) */
+.wico{--w2:#ff5a2e;--wf:#c2360f;--wt:255,90,46}
+.wico svg{width:44px;height:44px;fill:none;stroke:var(--w2);stroke-width:3.8;stroke-linecap:round;stroke-linejoin:round;overflow:hidden}
 .wico *{transform-box:view-box}
-.wico .f{fill:var(--g);stroke:none} .wico .torso{stroke-width:5.6} .wico .far{stroke:var(--wf)} .wico .far .f{fill:var(--wf)}
+.wico .f{fill:var(--w2);stroke:none} .wico .torso{stroke-width:5.6} .wico .far{stroke:var(--wf)} .wico .far .f{fill:var(--wf)}
 .wico .frame{stroke-width:2.8} .wico .thin{stroke-width:1.5} .wico .seat{stroke-width:3.2} .wico .plate{stroke-width:3.6}
-.wico .ball{fill:var(--w2);stroke:none} .wico .seam{stroke:var(--wf);stroke-width:1.1}
-.wico .gnd{stroke:var(--w2);stroke-width:1.8;opacity:.45} .wico .wave{stroke:var(--w2);stroke-width:2.6;opacity:.85} .wico .glow{fill:var(--w2);opacity:.1}
+.wico .ball{fill:var(--wf);stroke:none} .wico .seam{stroke:#fff;stroke-width:1.1}
+.wico .gnd{stroke:var(--w2);stroke-width:1.8;opacity:.45} .wico .wave{stroke:var(--w2);stroke-width:2.6;opacity:.85}
 .wico:not(.go) *{animation-play-state:paused!important}
-.wico.go{box-shadow:0 0 0 3px rgba(var(--wt),.12)}
 @keyframes wkSw{0%,100%{transform:rotate(calc(-1*var(--a)))}50%{transform:rotate(var(--a))}}
 @keyframes wkRise{0%,100%{transform:rotate(var(--from))}50%{transform:rotate(var(--to))}}
 @keyframes wkBob{0%,50%,100%{transform:translateY(0)}25%,75%{transform:translateY(-1.5px)}}
@@ -177,7 +176,6 @@ label.btn{display:inline-flex;align-items:center}
 @keyframes wkPu{0%,15%,100%{transform:rotate(30deg)}50%,65%{transform:rotate(-78deg)}}
 @keyframes wkPf{0%,15%,100%{transform:rotate(-120deg)}50%,65%{transform:rotate(-2deg)}}
 @keyframes wkWave{to{transform:translateX(-12px)}}
-@keyframes wkGlow{0%,100%{transform:scale(.75);opacity:.06}50%{transform:scale(1.05);opacity:.18}}
 @keyframes wkBall{0%{transform:translateY(0);animation-timing-function:ease-in}50%{transform:translateY(10px);animation-timing-function:ease-out}100%{transform:translateY(0)}}
 @keyframes wkTh{0%{transform:rotate(28.6deg)}12.5%{transform:rotate(49.7deg)}25%{transform:rotate(63.5deg)}37.5%{transform:rotate(61.5deg)}50%{transform:rotate(51.5deg)}62.5%{transform:rotate(34.9deg)}75%{transform:rotate(16.7deg)}87.5%{transform:rotate(14.0deg)}100%{transform:rotate(28.6deg)}}
 @keyframes wkSh{0%{transform:rotate(70.7deg)}12.5%{transform:rotate(43.6deg)}25%{transform:rotate(35.0deg)}37.5%{transform:rotate(55.9deg)}50%{transform:rotate(84.3deg)}62.5%{transform:rotate(107.2deg)}75%{transform:rotate(112.9deg)}87.5%{transform:rotate(97.5deg)}100%{transform:rotate(70.7deg)}}
@@ -1250,8 +1248,7 @@ details.legal p{margin:0}
       bike:road('.4s')+stk('<g class="frame"><circle cx="10.5" cy="35" r="6.5"/><circle cx="37.5" cy="35" r="6.5"/>'+pl('10.5,35 22,35 18.5,23 10.5,35')+ln(22,35,31.5,23.5)+ln(18.5,23.5,31.5,23.5)+ln(31.5,23.5,37.5,35)+pl('31.5,23.5 32,19.5 35,19.5')+'</g>'
         +spokes(10.5,35)+spokes(37.5,35)+leg('-.4s','far')+g('22px 35px','wkSpin .8s linear infinite',ln(22,35,22,38.6),'thin')
         +ln(16,22.5,22,22.5,'seat')+ln(19.5,21.5,27,14.5,'torso')+head(32,7,3.8)+pl('28,13.5 31,17 34.5,19.5')+leg('0s')),
-      yoga:'<circle class="glow" cx="24" cy="22" r="17" style="transform-origin:24px 22px;animation:wkGlow 3.2s ease-in-out infinite"/>'
-        +stk('<g class="far">'+pl('24,26 31,32 25,34.5')+'</g>'+ln(24,26,24,42)+ln(24,16,24,26,'torso')+head(24,6.5)
+      yoga:''+stk('<g class="far">'+pl('24,26 31,32 25,34.5')+'</g>'+ln(24,26,24,42)+ln(24,16,24,26,'torso')+head(24,6.5)
         +'<g style="--from:-140deg;--to:-30deg;transform-origin:24px 14px;animation:wkRise 3.2s ease-in-out infinite">'+ln(24,14,24,4)+'</g>'
         +'<g style="--from:140deg;--to:30deg;transform-origin:24px 14px;animation:wkRise 3.2s ease-in-out infinite">'+ln(24,14,24,4)+'</g>'),
       swim:stk(g('0 0','wkBob 1.6s ease-in-out infinite',g('30px 25px','wkSpin 1.6s linear -.8s infinite',ln(30,25,30,16),'far')
@@ -1270,13 +1267,11 @@ details.legal p{margin:0}
         +ln(24,15.5,24,27,'torso')+head(24,6.5)
         +'<g style="--from:20deg;--to:150deg;transform-origin:24px 15px;animation:wkRise .8s ease-in-out infinite">'+ln(24,15,24,26)+'</g>'))
     };})();
-  /* Sticker defs: a warm gradient for the figure, and a filter that adds a white cut edge and a soft drop shadow. Ids are made unique per icon. */
-  var WK_DEFS='<defs><linearGradient id="wkG" gradientUnits="userSpaceOnUse" x1="0" y1="2" x2="0" y2="46"><stop offset="0" style="stop-color:var(--w1)"/><stop offset=".55" style="stop-color:var(--w2)"/><stop offset="1" style="stop-color:var(--w3)"/></linearGradient>'
-    +'<filter id="wkS" filterUnits="userSpaceOnUse" x="-4" y="-4" width="56" height="56"><feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="d"/>'
-    +'<feGaussianBlur in="d" stdDeviation="1" result="b"/><feOffset in="b" dy="1.2" result="o"/><feFlood flood-color="#000" flood-opacity=".35"/><feComposite in2="o" operator="in" result="sh"/>'
-    +'<feFlood flood-color="#fff"/><feComposite in2="d" operator="in" result="edge"/><feMerge><feMergeNode in="sh"/><feMergeNode in="edge"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
+  /* Sticker edge: a crisp white cut line around the figure. Ids are made unique per icon. */
+  var WK_DEFS='<defs><filter id="wkS" filterUnits="userSpaceOnUse" x="-4" y="-4" width="56" height="56"><feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="d"/>'
+    +'<feFlood flood-color="#fff"/><feComposite in2="d" operator="in" result="edge"/><feMerge><feMergeNode in="edge"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
   var wkN=0;
-  function wkIcon(a,live){var k=wkKind(a), n=++wkN;return '<span class="wico wk-'+k+(live?' go':'')+'"'+(live?' data-live="1"':'')+' aria-hidden="true"><svg viewBox="0 0 48 48" style="--g:url(#wkG'+n+')">'+(WK_DEFS+WK[k]).replace(/(["#])wk([GS])(["\)])/g,'$1wk$2'+n+'$3')+'</svg></span>';}
+  function wkIcon(a,live){var k=wkKind(a), n=++wkN;return '<span class="wico wk-'+k+(live?' go':'')+'"'+(live?' data-live="1"':'')+' aria-hidden="true"><svg viewBox="0 0 48 48" >'+(WK_DEFS+WK[k]).replace(/(["#])wk([GS])(["\)])/g,'$1wk$2'+n+'$3')+'</svg></span>';}
   function vFitness(){
     var t=today(), cy=+t.slice(0,4);
     var years={}; years[cy]=1; state.fitness.forEach(function(e){years[yearOf(e)]=1;});
