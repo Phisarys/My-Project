@@ -157,15 +157,17 @@ label.btn{display:inline-flex;align-items:center}
 /* ---- lists ---- */
 /* ---- workout icons: chunky sticker figures with a white cut edge (see WK_DEFS) ---- */
 .wico{flex:none;width:48px;height:48px;border-radius:14px;display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent;
-  background:radial-gradient(circle at 50% 35%,rgba(255,106,69,.2),rgba(255,106,69,.08) 70%);border:1px solid rgba(255,106,69,.25)}
+  background:radial-gradient(circle at 50% 35%,rgba(var(--wt),.2),rgba(var(--wt),.08) 70%);border:1px solid rgba(var(--wt),.25)}
+/* figure colours: --w1..--w3 gradient top to bottom, --wf far-side limbs, --wt tile tint (r,g,b) */
+.wico{--w1:#ffb08a;--w2:#ff6a45;--w3:#f04a2a;--wf:#b23a1e;--wt:255,106,69}
 .wico svg{width:44px;height:44px;fill:none;stroke:var(--g);stroke-width:3.8;stroke-linecap:round;stroke-linejoin:round;overflow:hidden}
 .wico *{transform-box:view-box}
-.wico .f{fill:var(--g);stroke:none} .wico .torso{stroke-width:5.6} .wico .far{stroke:#b23a1e} .wico .far .f{fill:#b23a1e}
+.wico .f{fill:var(--g);stroke:none} .wico .torso{stroke-width:5.6} .wico .far{stroke:var(--wf)} .wico .far .f{fill:var(--wf)}
 .wico .frame{stroke-width:2.8} .wico .thin{stroke-width:1.5} .wico .seat{stroke-width:3.2} .wico .plate{stroke-width:3.6}
-.wico .ball{fill:#ff8a5c;stroke:none} .wico .seam{stroke:#7a2412;stroke-width:1.1}
-.wico .gnd{stroke:var(--c-fitness);stroke-width:1.8;opacity:.45} .wico .wave{stroke:var(--c-fitness);stroke-width:2.6;opacity:.85} .wico .glow{fill:var(--c-fitness);opacity:.1}
+.wico .ball{fill:var(--w2);stroke:none} .wico .seam{stroke:var(--wf);stroke-width:1.1}
+.wico .gnd{stroke:var(--w2);stroke-width:1.8;opacity:.45} .wico .wave{stroke:var(--w2);stroke-width:2.6;opacity:.85} .wico .glow{fill:var(--w2);opacity:.1}
 .wico:not(.go) *{animation-play-state:paused!important}
-.wico.go{box-shadow:0 0 0 3px rgba(255,106,69,.12)}
+.wico.go{box-shadow:0 0 0 3px rgba(var(--wt),.12)}
 @keyframes wkSw{0%,100%{transform:rotate(calc(-1*var(--a)))}50%{transform:rotate(var(--a))}}
 @keyframes wkRise{0%,100%{transform:rotate(var(--from))}50%{transform:rotate(var(--to))}}
 @keyframes wkBob{0%,50%,100%{transform:translateY(0)}25%,75%{transform:translateY(-1.5px)}}
@@ -1269,7 +1271,7 @@ details.legal p{margin:0}
         +'<g style="--from:20deg;--to:150deg;transform-origin:24px 15px;animation:wkRise .8s ease-in-out infinite">'+ln(24,15,24,26)+'</g>'))
     };})();
   /* Sticker defs: a warm gradient for the figure, and a filter that adds a white cut edge and a soft drop shadow. Ids are made unique per icon. */
-  var WK_DEFS='<defs><linearGradient id="wkG" gradientUnits="userSpaceOnUse" x1="0" y1="2" x2="0" y2="46"><stop offset="0" stop-color="#ffb08a"/><stop offset=".55" stop-color="#ff6a45"/><stop offset="1" stop-color="#f04a2a"/></linearGradient>'
+  var WK_DEFS='<defs><linearGradient id="wkG" gradientUnits="userSpaceOnUse" x1="0" y1="2" x2="0" y2="46"><stop offset="0" style="stop-color:var(--w1)"/><stop offset=".55" style="stop-color:var(--w2)"/><stop offset="1" style="stop-color:var(--w3)"/></linearGradient>'
     +'<filter id="wkS" filterUnits="userSpaceOnUse" x="-4" y="-4" width="56" height="56"><feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="d"/>'
     +'<feGaussianBlur in="d" stdDeviation="1" result="b"/><feOffset in="b" dy="1.2" result="o"/><feFlood flood-color="#000" flood-opacity=".35"/><feComposite in2="o" operator="in" result="sh"/>'
     +'<feFlood flood-color="#fff"/><feComposite in2="d" operator="in" result="edge"/><feMerge><feMergeNode in="sh"/><feMergeNode in="edge"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
