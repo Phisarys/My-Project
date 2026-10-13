@@ -173,6 +173,9 @@ table.grid th.now{color:var(--sec)}
 table.grid td{padding:8px 2px;text-align:center;border-top:1px solid var(--line)}
 table.grid td.name{text-align:left;padding-right:10px;min-width:9rem}
 table.grid td.name strong{display:block;overflow-wrap:anywhere}
+/* Keep habit names in view while the days scroll sideways on small phones */
+table.grid td.name,table.grid th:first-child{position:sticky;left:0;z-index:1;background:#101a3c;box-shadow:8px 0 10px -8px rgba(0,4,20,.7)}
+@media (max-width:440px){table.grid td.name{min-width:7.5rem;max-width:7.5rem}}
 
 /* ---- cards (hobby, badges) ---- */
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:12px}
@@ -498,6 +501,18 @@ details.legal p{margin:0}
     catch(e){showErr('inErr',authMsg(e));}
     busy(false);
   }
+  /* iPhone app only: ask iOS for the person's age range (Apple's Declared Age Range).
+     Only the yes/no "under 13" answer is used, and nothing is stored. If iOS can't or
+     won't share it, the "I am 13 or older" box above is the check. */
+  async function underAge(){
+    if(!isIOSApp())return false;
+    try{
+      var C=window.Capacitor, A=C.Plugins&&C.Plugins.AgeRange&&C.Plugins.AgeRange.requestAgeRange?C.Plugins.AgeRange:(C.registerPlugin?C.registerPlugin('AgeRange'):null);
+      if(!A)return false;
+      var r=await withTimeout(A.requestAgeRange({ageGates:[13,16,18]}),120000);
+      return !!(r&&r.status==='SHARING'&&r.ageUpper!=null&&r.ageUpper<13);
+    }catch(e){return false;}
+  }
   async function doSignUp(){
     var email=val('upEmail').trim(), pw=val('upPw');
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return showErr('upErr','Enter a valid email address.');
@@ -505,6 +520,7 @@ details.legal p{margin:0}
     if(pw!==val('upPw2'))return showErr('upErr','The two passwords don\'t match.');
     if(!document.getElementById('upAge').checked)return showErr('upErr','FiveArc is for people 13 and older. Please confirm your age to continue.');
     showErr('upErr','');busy(true);
+    if(await underAge()){busy(false);return showErr('upErr','FiveArc is for people 13 and older, so an account can\'t be created.');}
     try{await prep();var r=await fb.auth().createUserWithEmailAndPassword(email,pw);await enter(r.user);}
     catch(e){showErr('upErr',authMsg(e));}
     busy(false);
@@ -529,7 +545,8 @@ details.legal p{margin:0}
       try{await fb.auth().currentUser.delete();}
       catch(e){dirty=true;pushNow();throw e;}
       ls.del(key);delete mem[key];leave('up');
-    }catch(e){acctErr=/requires-recent-login/.test((e&&e.code)||'')?authMsg(e):'Your account could not be deleted just now. Check your connection and try again.';render();}
+    }catch(e){var c=(e&&e.code)||'';
+      acctErr=/requires-recent-login/.test(c)?authMsg(e):/admin-restricted-operation/.test(c)?'Your account could not be deleted from here. Email phisarys911@gmail.com from your account email and it will be deleted for you.':'Your account could not be deleted just now. Check your connection and try again.';render();}
   }
   function setPhoto(file){
     photoErr='';
@@ -545,6 +562,34 @@ details.legal p{margin:0}
       img.src=rd.result;};
     rd.readAsDataURL(file);
   }
+  /* ---------- Daily reminder (iPhone app only; kept on this device) ---------- */
+  var remMsg='';
+  function remGet(){try{return JSON.parse(ls.get(KEY+'-reminder')||'null')||{on:false,time:'19:00'};}catch(e){return {on:false,time:'19:00'};}}
+  function notifApi(){var C=window.Capacitor;if(!C)return null;return C.Plugins&&C.Plugins.LocalNotifications&&C.Plugins.LocalNotifications.schedule?C.Plugins.LocalNotifications:(C.registerPlugin?C.registerPlugin('LocalNotifications'):null);}
+  async function remSet(on,time){
+    var N=notifApi();if(!N){remMsg='Reminders are not available in this version of the app.';return render();}
+    if(!/^\d{2}:\d{2}$/.test(time||''))time='19:00';
+    try{
+      await N.cancel({notifications:[{id:1}]}).catch(function(){});
+      if(on){
+        var pm=await N.requestPermissions();
+        if(!pm||pm.display!=='granted'){ls.set(KEY+'-reminder',JSON.stringify({on:false,time:time}));remMsg='Notifications are off for FiveArc. Turn them on in Settings, Notifications, FiveArc, then try again.';return render();}
+        await N.schedule({notifications:[{id:1,title:'FiveArc',body:'A minute for today: log what you did and close your rings.',schedule:{on:{hour:+time.slice(0,2),minute:+time.slice(3,5)},allowWhileIdle:true}}]});
+      }
+      ls.set(KEY+'-reminder',JSON.stringify({on:on,time:time}));
+      var t12=new Date(2000,0,1,+time.slice(0,2),+time.slice(3,5)).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+      remMsg=on?'Reminder set for '+t12+' every day.':'Daily reminder turned off.';
+    }catch(e){remMsg='The reminder could not be set. Try again.';}
+    render();
+  }
+  function vReminder(){
+    if(!isNative())return '';
+    var r=remGet();
+    var o='<div class="block"><h3>Daily reminder</h3><span class="sub">A gentle nudge each day to log your five areas. Only on this phone.</span>';
+    o+='<form class="add" data-form="reminder">'+field('remTime','Time','type="time" value="'+esc(r.time)+'" required')+'<button class="btn small">'+(r.on?'Update time':'Turn on')+'</button>'+(r.on?'<button class="btn small ghost" type="button" data-act="remOff" id="btnRemOff">Turn off</button>':'')+'</form>';
+    if(remMsg){o+='<p class="sub" role="status">'+esc(remMsg)+'</p>';remMsg='';}
+    return o+'</div>';
+  }
   function vProfile(){
     var p=profile(), fresh=!p.first&&!p.nick;
     var o='<div><h2>'+(fresh?'Set up your profile':'Profile')+'</h2><p class="lede">'+(fresh?'Welcome. Add your name and a photo, then pick any section above to start.':'Your name, nickname and photo.')+'</p></div>';
@@ -552,12 +597,13 @@ details.legal p{margin:0}
     o+='<div class="profilehead">'+avatar(104)+'<div class="block"><div class="row"><input class="vh" type="file" id="photoInput" accept="image/*"><label class="btn small" for="photoInput">'+(p.photo?'Change photo':'Add a photo')+'</label>'+(p.photo?'<button class="btn small ghost" type="button" data-act="rmPhoto" id="btnRmPhoto">Remove photo</button>':'')+'</div><span class="sub">Pick any picture from your device. It is cropped to a square.</span>'+(photoErr?'<p class="err" role="alert">'+esc(photoErr)+'</p>':'')+'</div></div>';
     photoErr='';
     o+='<form class="add" data-form="profile">'+field('pfFirst','First name','required maxlength="40" autocomplete="given-name" value="'+esc(p.first)+'"')+field('pfLast','Last name','required maxlength="40" autocomplete="family-name" value="'+esc(p.last)+'"')+field('pfNick','Nickname','maxlength="24" autocomplete="nickname" placeholder="What should we call you?" value="'+esc(p.nick)+'"')+'<button class="btn">Save profile</button></form>';
+    o+=vReminder();
     o+='<div class="block"><h3>Account</h3><span class="sub">Signed in as '+esc(user)+'</span>'+(acctErr?'<p class="err" role="alert">'+esc(acctErr)+'</p>':'')+'<div class="row"><button class="btn small ghost" type="button" data-act="signout" id="btnSignOut">Sign out</button><button class="btn small ghost" type="button" data-act="delAcct" id="btnDelAcct">'+(armedAcct?'Tap again to delete your account and entries':'Delete account')+'</button></div></div>';
     o+='<details class="block legal"><summary><h3>Legal and credits</h3></summary>'
       +'<p class="sub">FiveArc is a personal tracking app. It does not give medical, dietary or professional advice.</p>'
       +'<p class="sub doclinks"><a href="https://fivearc.app/privacy" target="_blank" rel="noopener">Privacy Policy</a> · <a href="https://fivearc.app/terms" target="_blank" rel="noopener">Terms of Use</a></p>'
       +'<p class="sub">Your profile and entries are stored in Google Firebase, private to your account. Delete account above erases them. In the iPhone app, workouts are read from Apple Health only with your permission, are never written back, and are never used for advertising or shared.</p>'
-      +'<p class="sub"><strong>Open-source software used:</strong> Barlow Condensed and Atkinson Hyperlegible fonts (SIL Open Font License 1.1); Firebase JavaScript SDK (Apache License 2.0); Capacitor (MIT License); Capgo Capacitor Health (Mozilla Public License 2.0). Logo, icons and illustrations are original to FiveArc.</p>'
+      +'<p class="sub"><strong>Open-source software used:</strong> Barlow Condensed and Atkinson Hyperlegible fonts (SIL Open Font License 1.1); Firebase JavaScript SDK (Apache License 2.0); Capacitor and Capacitor Local Notifications (MIT License); Capgo Capacitor Health and Capgo Capacitor Age Range (Mozilla Public License 2.0). Logo, icons and illustrations are original to FiveArc.</p>'
       +'</details>';
     acctErr='';
     return o;
@@ -859,6 +905,7 @@ details.legal p{margin:0}
     if(a!=='eraseYear')armedYear=false;
     if(a!=='delAcct')armedAcct=false;
     if(a==='signout'){doSignOut();return;}
+    if(a==='remOff'){remSet(false,remGet().time);return;}
     if(a==='healthConnect'){healthSync(true,false);return;}
     if(a==='healthSync'){healthSync(false,false);return;}
     if(a==='delAcct'){if(!armedAcct){armedAcct=true;render();return;}armedAcct=false;doDelete();return;}
@@ -885,6 +932,7 @@ details.legal p{margin:0}
     if(ev.target.id==='formUp'){ev.preventDefault();doSignUp();return;}
     var f=ev.target.closest('[data-form]'); if(!f||!user)return; ev.preventDefault();
     var v=function(n){var el=f.elements[n];return el?String(el.value).trim():'';}, kind=f.dataset.form, t=today();
+    if(kind==='reminder'){remSet(true,v('remTime'));return;}
     if(kind==='profile'){if(!v('pfFirst')||!v('pfLast'))return;var pr=profile();pr.first=v('pfFirst');pr.last=v('pfLast');pr.nick=v('pfNick');saveAccounts();flash='Profile saved.';render();return;}
     if(kind==='fitness'){if(!v('fitActivity')||!num(v('fitMin')))return;var fd=v('fitDate')||t, fy=+fd.slice(0,4), had={};badges(fy).forEach(function(x){if(x.won)had[x.id]=1;});
       state.fitness.push({id:uid(),date:fd,activity:v('fitActivity'),min:num(v('fitMin'),600),effort:v('fitEffort')});
