@@ -2,7 +2,7 @@
   "name": "fivearc",
   "version": "1.0.0",
   "private": true,
-  "description": "Fitness/Hobby/Better Habit/Schoolwork/Nutrition - website, Android app and iPhone app from one set of files",
+  "description": "Fitness/Hobbies/Habits/School/Food - website, Android app and iPhone app from one set of files",
   "scripts": {
     "prepare-web": "node scripts/prepare.js"
   },

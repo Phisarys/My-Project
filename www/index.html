@@ -376,7 +376,7 @@ details.legal p{margin:0}
     <button class="me" type="button" id="userChip" data-tab="profile" aria-label="Open your profile" hidden></button>
     <div class="hello">
       <h1 id="appTitle"><img class="brandmark" src="icons/logo-water-v6.png" alt="FiveArc logo" width="128" height="128"><span class="brandname">Five<em>Arc</em></span></h1>
-      <p class="tagline" id="tagline"><span class="s-fitness">Fitness</span> · <span class="s-hobby">Hobby</span> · <span class="s-habit">Better Habit</span> · <span class="s-school">Schoolwork</span> · <span class="s-nutrition">Nutrition</span><br>Five parts of your day, one place to keep score.</p>
+      <p class="tagline" id="tagline"><span class="s-fitness">Fitness</span> · <span class="s-hobby">Hobbies</span> · <span class="s-habit">Habits</span> · <span class="s-school">School</span> · <span class="s-nutrition">Food</span><br>Five parts of your day, one place to keep score.</p>
       <p id="greet" hidden></p>
       <div class="date" id="todayLabel"></div>
     </div>
@@ -428,7 +428,7 @@ details.legal p{margin:0}
 <script>
 (function(){
   var KEY='fhbsn-v1';
-  var SECTIONS=[['fitness','Fitness'],['hobby','Hobby'],['habit','Better Habit'],['school','Schoolwork'],['nutrition','Nutrition']];
+  var SECTIONS=[['fitness','Fitness'],['hobby','Hobbies'],['habit','Habits'],['school','School'],['nutrition','Food']];
   var pad=function(n){return (n<10?'0':'')+n;};
   var iso=function(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());};
   var parse=function(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2]);};
@@ -710,7 +710,7 @@ details.legal p{margin:0}
     back:'<svg'+SVGA+'><path d="M15 6l-6 6 6 6"/></svg>',
     trophy:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 3h10v2h3v3a4 4 0 0 1-4 4h-.4A5 5 0 0 1 13 14.9V18h3v3H8v-3h3v-3.1A5 5 0 0 1 8.4 12H8a4 4 0 0 1-4-4V5h3V3zm0 4H6v1a2 2 0 0 0 1 1.7V7zm10 0v2.7A2 2 0 0 0 18 8V7h-1z"/></svg>'
   };
-  var SHORT={fitness:'Fitness',hobby:'Hobby',habit:'Habits',school:'School',nutrition:'Food'};
+  var SHORT={fitness:'Fitness',hobby:'Hobbies',habit:'Habits',school:'School',nutrition:'Food'};
   /* Share of today's target reached in each section, 0 to 1. */
   function todayPct(id){
     var t=today(), c=function(v){return Math.max(0,Math.min(1,v||0));};
@@ -743,11 +743,11 @@ details.legal p{margin:0}
     var fit=sum(state.fitness.filter(function(e){return e.date===t;}),function(e){return e.min;}), fg=Math.max(1,Math.round(state.goals.fitMin/7));
     if(fit<fg)return ['fitness',fit?(fg-fit)+' more active minutes':'Get moving today',fit?'Fitness · '+fit+' of '+fg+' min so far':'Fitness · '+fg+' min is your daily share'];
     var left=state.habits.filter(function(x){return !x.days[t];});
-    if(left.length)return ['habit',left[0].name,'Habit · not checked off yet'+(left.length>1?', '+(left.length-1)+' more after it':'')];
+    if(left.length)return ['habit',left[0].name,'Habits · not checked off yet'+(left.length>1?', '+(left.length-1)+' more after it':'')];
     if(open[0]&&diffDays(open[0].due,t)<=7)return ['school',open[0].title,(open[0].subject?open[0].subject+' · ':'')+dueLabel(open[0],t)[1]];
     var wl=state.goals.water-(state.water[t]||0);
     if(wl>0)return ['nutrition',wl+' more glass'+(wl===1?'':'es')+' of water','Food · '+(state.water[t]||0)+' of '+state.goals.water+' today'];
-    if(state.hobbies.length&&!state.hobbyLog.some(function(e){return e.date===t;})){c=state.hobbies[0];return ['hobby','Some time on '+c.name,'Hobby · nothing logged today'];}
+    if(state.hobbies.length&&!state.hobbyLog.some(function(e){return e.date===t;})){c=state.hobbies[0];return ['hobby','Some time on '+c.name,'Hobbies · nothing logged today'];}
     return ['habit','All caught up today','Nice work. Tomorrow starts fresh'];}
   function vDock(){
     var items=[['home','Home']].concat(SECTIONS.map(function(x){return [x[0],SHORT[x[0]]];}));
@@ -915,7 +915,7 @@ details.legal p{margin:0}
 
   function vHobby(){
     var t=today();
-    var o='<div><h2>Hobby</h2><p class="lede">Keep track of time spent on the things you do for fun. Start a timer or type in the minutes afterward.</p></div>';
+    var o='<div><h2>Hobbies</h2><p class="lede">Keep track of time spent on the things you do for fun. Start a timer or type in the minutes afterward.</p></div>';
     o+=adder('hobby','Add a hobby','<form class="add" data-form="hobby">'+field('hobName','New hobby','required maxlength="40" placeholder="Guitar, chess, baking"','wide')+'<button class="btn">Add hobby</button></form>');
     if(!state.hobbies.length)return o+'<p class="empty">No hobbies yet. Tap Add a hobby to start logging time.</p>';
     o+='<div class="cards">'+state.hobbies.map(function(hb){
@@ -931,7 +931,7 @@ details.legal p{margin:0}
 
   function vHabit(){
     var w=last7(), t=today();
-    var o='<div><h2>Better Habit</h2><p class="lede">Tick each day you kept the habit. A streak counts days in a row, and today does not break it until tomorrow.</p></div>';
+    var o='<div><h2>Habits</h2><p class="lede">Tick each day you kept the habit. A streak counts days in a row, and today does not break it until tomorrow.</p></div>';
     o+='<div class="meters">'+meter('Kept today',habitsToday(),state.habits.length,'habits')+'</div>';
     o+=adder('habit','Add a habit','<form class="add" data-form="habit">'+field('habName','New habit','required maxlength="50" placeholder="Stretch after waking up"','wide')+'<button class="btn">Add habit</button></form>');
     if(!state.habits.length)return o+'<p class="empty">No habits yet. Start with one small thing you can do every day.</p>';
@@ -950,7 +950,7 @@ details.legal p{margin:0}
     var late=open.filter(function(a){return a.due<t;}), week=open.filter(function(a){var n=diffDays(a.due,t);return n>=0&&n<=7;}), later=open.filter(function(a){return diffDays(a.due,t)>7;});
     var item=function(a){var l=dueLabel(a,t);return '<li class="'+(a.done?'done':'')+'"><button class="check'+(a.done?' on':'')+'" type="button" data-act="done" data-id="'+a.id+'" aria-pressed="'+a.done+'" aria-label="Mark '+esc(a.title)+(a.done?' not done':' done')+'">'+(a.done?'✓':'')+'</button><div class="grow"><strong>'+esc(a.title)+'</strong><span class="sub">'+esc(a.subject||'No subject')+' · '+dayLong(a.due)+'</span></div>'+(a.done?'':'<span class="pill '+l[0]+'">'+l[1]+'</span>')+'<button class="x" type="button" data-act="del" data-k="school" data-id="'+a.id+'" aria-label="Delete '+esc(a.title)+'">×</button></li>';};
     var group=function(title,arr){return arr.length?'<div class="block"><h3>'+title+' <span class="sub">('+arr.length+')</span></h3><ul class="list">'+arr.map(item).join('')+'</ul></div>':'';};
-    var o='<div><h2>Schoolwork</h2><p class="lede">Add assignments with a due date. They sort themselves so the next thing due is always on top.</p></div>';
+    var o='<div><h2>School</h2><p class="lede">Add assignments with a due date. They sort themselves so the next thing due is always on top.</p></div>';
     o+='<div class="meters">'+meter('Finished',done.length,state.school.length,'assignments')+'</div>';
     o+=adder('school','Add an assignment','<form class="add" data-form="school">'+field('schTitle','Assignment','required maxlength="60" placeholder="Read chapter 4"','wide')+field('schSubject','Subject','maxlength="30" placeholder="Biology"')+field('schDue','Due','type="date" value="'+addDays(t,1)+'" required')+'<button class="btn">Add assignment</button></form>');
     if(!state.school.length)return o+'<p class="empty">Nothing on the list. Tap Add an assignment to start.</p>';
@@ -1027,7 +1027,7 @@ details.legal p{margin:0}
   function vNutrition(){
     var t=today(), meals=state.meals.filter(function(m){return m.date===t;}), g=state.goals, w=state.water[t]||0;
     var kcal=sum(meals,function(m){return m.kcal;});
-    var o='<div><h2>Nutrition</h2><p class="lede">Log what you eat and drink today. Calories and protein are optional, so fill in only what you know.</p><p class="sub disclaimer">For general tracking only, not medical or dietary advice. Targets are yours to set; talk to a doctor or dietitian for personal guidance.</p></div>';
+    var o='<div><h2>Food</h2><p class="lede">Log what you eat and drink today. Calories and protein are optional, so fill in only what you know.</p><p class="sub disclaimer">For general tracking only, not medical or dietary advice. Targets are yours to set; talk to a doctor or dietitian for personal guidance.</p></div>';
     o+='<div class="meters">'+meter('Water',w,g.water,'glasses')+meter('Protein',sum(meals,function(m){return m.protein;}),g.protein,'g')+meter('Fruit and vegetables',sum(meals,function(m){return m.produce;}),g.produce,'servings')+'</div>';
     var gl='';for(var i=1;i<=Math.max(g.water,w);i++)gl+='<button class="glass'+(i<=w?' on':'')+'" type="button" data-act="water" data-n="'+i+'" aria-pressed="'+(i<=w)+'" aria-label="Glass '+i+'"></button>';
     o+='<div class="block"><span class="label">Tap a glass each time you finish one</span><div class="glasses">'+gl+'</div></div>';
