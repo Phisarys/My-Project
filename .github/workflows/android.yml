@@ -1,9 +1,8 @@
 # Builds the Android app and posts the install file (.apk) on the
 # repository's Releases page, where it can be downloaded to a phone.
 name: Android app
+# Paused: FiveArc launches on iPhone only. Run it by hand from the Actions tab if needed.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 permissions:
   contents: write
