@@ -306,6 +306,22 @@ main.setup::before{display:none}
   linear-gradient(180deg,var(--g-top),var(--g-mid) 55%,var(--g-bot))}
 .bgart::after{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");opacity:var(--grain);mix-blend-mode:overlay}
 
+.partners{display:flex;flex-direction:column;gap:6px;border-radius:var(--r);padding:14px 16px 8px;background:var(--surface);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--line)}
+.partners ul,.ptlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.partners li+li,.ptlist li+li{border-top:1px solid var(--line)}
+.pt{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;color:var(--ink);font:inherit;text-align:left;padding:8px 0;cursor:pointer}
+.pt .grow,.ptrow .grow{flex:1;min-width:0;display:flex;flex-direction:column}
+.pt>svg:last-child{width:18px;height:18px;flex:none;color:var(--muted)}
+.pt[aria-expanded="true"]>svg:last-child{transform:rotate(90deg)}
+.ptring{width:44px;height:44px;flex:none}
+.ptweek{width:100%;border-collapse:separate;border-spacing:4px;margin:0 0 8px;table-layout:fixed}
+.ptweek th{font-size:.72rem;color:var(--muted);font-weight:700;padding:0}
+.ptweek th[scope="row"]{text-align:left;width:4.6em}
+.ptweek td{height:18px;border-radius:5px;background:var(--sec);padding:0}
+.ptrow{display:flex;align-items:center;gap:12px;padding:8px 0}
+.ptcode{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:14px;border-radius:var(--r-sm);background:var(--sunk);border:1px dashed var(--line)}
+.ptcode b{font-family:var(--display);font-size:2.2rem;line-height:1.1;letter-spacing:.12em;font-variant-numeric:tabular-nums}
+
 /* ---- home: today rings ---- */
 .hero{border-radius:24px;padding:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:var(--shadow)}
 .ringwrap{position:relative;width:min(42vw,180px);aspect-ratio:1;flex:none;max-width:100%}
@@ -578,8 +594,8 @@ details.legal p{margin:0}
       .then(function(){syncMsg='';},function(){dirty=true;syncMsg='Your latest changes could not be saved to your account yet. They are kept on this device and will be sent when the connection is back.';})
       .then(function(){pushing=false;setNote();if(dirty){clearTimeout(pushT);pushT=setTimeout(pushNow,syncMsg?15000:1200);}});
   }
-  function saveAccounts(){cachePut();schedulePush();}
-  function save(){if(!state)return;cachePut();schedulePush();setNote();}
+  function saveAccounts(){cachePut();schedulePush();if(pt.mine)ptPublish();}
+  function save(){if(!state)return;cachePut();schedulePush();setNote();if(pt.mine)ptPublish();}
   window.addEventListener('online',function(){if(dirty)pushNow();});
   document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'&&dirty)pushNow();});
 
@@ -637,7 +653,7 @@ details.legal p{margin:0}
     cachePut();if(create)schedulePush();
     if(carried){ls.del(GKEY);flash='The entries from this device are now in your account.';}
     render();setNote();
-    maybeAutoHealth();remSync();
+    maybeAutoHealth();remSync();ptStart();
   }
   /* ---------- Using FiveArc without an account (entries stay on this device) ---------- */
   function guestData(){var g=null;try{g=JSON.parse(ls.get(GKEY)||'null');}catch(e){g=null;}return g&&g.state&&!g.state.example?g:null;}
@@ -707,7 +723,7 @@ details.legal p{margin:0}
     try{await fbReady();await fb.auth().sendPasswordResetEmail(email);showErr('inErr','If there is an account for that email, a reset link is on its way. Check your spam folder too.');}
     catch(e){showErr('inErr',authMsg(e));}
   }
-  function leave(mode){active='home';user=null;uidv=null;state=null;prof=null;dataKey=null;dirty=false;clearTimeout(pushT);authMode(mode);render();}
+  function leave(mode){ptReset();active='home';user=null;uidv=null;state=null;prof=null;dataKey=null;dirty=false;clearTimeout(pushT);authMode(mode);render();}
   async function doSignOut(){
     try{await withTimeout(pushNow(),6000);}catch(e){}
     try{await fb.auth().signOut();}catch(e){}
@@ -717,6 +733,7 @@ details.legal p{margin:0}
     var key=dataKey;
     try{
       clearTimeout(pushT);dirty=false;
+      await ptErase();
       await fb.firestore().collection('users').doc(uidv).delete();
       try{await fb.auth().currentUser.delete();}
       catch(e){dirty=true;pushNow();throw e;}
@@ -829,13 +846,13 @@ details.legal p{margin:0}
     o+='<div class="profilehead">'+avatar(104)+'<div class="block"><div class="row"><input class="vh" type="file" id="photoInput" accept="image/*"><label class="btn small" for="photoInput">'+(p.photo?'Change photo':'Add a photo')+'</label>'+(p.photo?'<button class="btn small ghost" type="button" data-act="rmPhoto" id="btnRmPhoto">Remove photo</button>':'')+'</div><span class="sub">Pick any picture from your device. It is cropped to a square.</span>'+(photoErr?'<p class="err" role="alert">'+esc(photoErr)+'</p>':'')+'</div></div>';
     photoErr='';
     o+='<form class="add" data-form="profile">'+field('pfFirst','First name','required maxlength="40" autocomplete="given-name" value="'+esc(p.first)+'"')+field('pfLast','Last name','required maxlength="40" autocomplete="family-name" value="'+esc(p.last)+'"')+field('pfNick','Nickname','maxlength="24" autocomplete="nickname" placeholder="What should we call you?" value="'+esc(p.nick)+'"')+'<button class="btn">Save profile</button></form>';
-    o+=vReminder()+vTheme()+vFeedback();
+    o+=vReminder()+vPartners()+vTheme()+vFeedback();
     if(guest)o+='<div class="block"><h3>Account</h3><span class="sub">You\'re using FiveArc without an account. Your entries are only on this device, so they\'re lost if you delete the app. Create an account to back them up and use them on other devices.</span><div class="row"><button class="btn small" type="button" data-act="guestUp" id="btnGuestUp">Create an account</button><button class="btn small ghost" type="button" data-act="guestIn" id="btnGuestIn">Sign in</button></div></div>';
     else o+='<div class="block"><h3>Account</h3><span class="sub">Signed in as '+esc(user)+'</span>'+(acctErr?'<p class="err" role="alert">'+esc(acctErr)+'</p>':'')+'<div class="row"><button class="btn small ghost" type="button" data-act="signout" id="btnSignOut">Sign out</button><button class="btn small ghost" type="button" data-act="delAcct" id="btnDelAcct">'+(armedAcct?'Tap again to delete your account and entries':'Delete account')+'</button></div></div>';
     o+='<details class="block legal"><summary><h3>Legal and credits</h3></summary>'
       +'<p class="sub">FiveArc is a personal tracking app. It does not give medical, dietary or professional advice.</p>'
       +'<p class="sub doclinks"><a href="https://fivearc.app/privacy" target="_blank" rel="noopener">Privacy Policy</a> · <a href="https://fivearc.app/terms" target="_blank" rel="noopener">Terms of Use</a></p>'
-      +'<p class="sub">With an account, your profile and entries are stored in Google Firebase, private to your account, and Delete account above erases them. Without an account, they stay on this device only. In the iPhone app, workouts are read from Apple Health only with your permission, are never written back, and are never used for advertising or shared.</p>'
+      +'<p class="sub">With an account, your profile and entries are stored in Google Firebase, private to your account, and Delete account above erases them. If you add a partner, they can see your nickname or first name and your daily ring percentages for the last 7 days, never your entries, until either of you stops sharing. Without an account, they stay on this device only. In the iPhone app, workouts are read from Apple Health only with your permission, are never written back, and are never used for advertising or shared.</p>'
       +'<p class="sub"><strong>Open-source software used:</strong> Barlow Condensed and Atkinson Hyperlegible fonts (SIL Open Font License 1.1); Firebase JavaScript SDK (Apache License 2.0); Capacitor, Capacitor App, Capacitor Haptics, Capacitor Local Notifications and Capacitor Barcode Scanner (MIT License); Capgo Capacitor Health and Capgo Capacitor Age Range (Mozilla Public License 2.0). Food data from Open Food Facts (Open Database License). Logo, icons and illustrations are original to FiveArc.</p>'
       +'</details>';
     acctErr='';
@@ -860,11 +877,11 @@ details.legal p{margin:0}
   };
   var SHORT={fitness:'Fitness',hobby:'Hobby',habit:'Habits',school:'School',nutrition:'Food'};
   /* Share of today's target reached in each section, 0 to 1. */
-  function todayPct(id){
-    var t=today(), c=function(v){return Math.max(0,Math.min(1,v||0));};
+  function todayPct(id,day){
+    var t=day||today(), c=function(v){return Math.max(0,Math.min(1,v||0));};
     if(id==='fitness')return c(sum(state.fitness.filter(function(e){return e.date===t;}),function(e){return e.min;})/Math.max(1,Math.round(state.goals.fitMin/7)));
     if(id==='hobby')return c(sum(state.hobbyLog.filter(function(e){return e.date===t;}),function(e){return e.min;})/30);
-    if(id==='habit')return state.habits.length?c(habitsToday()/state.habits.length):0;
+    if(id==='habit')return state.habits.length?c(state.habits.filter(function(x){return x.days[t];}).length/state.habits.length):0;
     if(id==='school'){var near=state.school.filter(function(a){return Math.abs(diffDays(a.due,t))<=7;});return near.length?c(near.filter(function(a){return a.done;}).length/near.length):0;}
     return c((state.water[t]||0)/state.goals.water);
   }
@@ -882,6 +899,7 @@ details.legal p{margin:0}
     o+='<section class="quick" aria-label="Quick check-off"><span class="label">Check off today</span><div class="chips">'
       +state.habits.map(function(hb){var on=!!hb.days[t];return '<button class="chip s-habit'+(on?' on':'')+'" type="button" data-act="tick" data-id="'+hb.id+'" data-d="'+t+'" aria-pressed="'+on+'" id="q-'+hb.id+'"><i>'+(on?'✓':'')+'</i><span>'+esc(hb.name)+'</span></button>';}).join('')
       +'<button class="chip water s-school'+(w?' on':'')+'" type="button" data-act="water" data-n="'+(w+1)+'" id="qWater" aria-label="Add a glass of water, '+w+' of '+state.goals.water+' so far"><i>+</i><span>Water '+w+' of '+state.goals.water+'</span></button></div>'+(vRecap()?'':'<button class="link weeklink" type="button" data-act="recapOpen" id="btnWeek">See your week</button>')+'</section>';
+    o+=vPartnersHome();
     o+='<nav class="lanes" aria-label="Sections">'+SECTIONS.map(function(x,i){return '<button class="lane s-'+x[0]+'" type="button" id="tab-'+x[0]+'" data-tab="'+x[0]+'"><span class="ico">'+ICON[x[0]]+'</span><span class="lt"><b>'+x[1]+'</b><small>'+esc(glance(x[0]))+'</small><span class="mini"><div style="width:'+Math.round(pcts[i]*100)+'%"></div></span></span><span class="chev">'+ICON.chev+'</span></button>';}).join('')+'</nav>';
     return o;
   }
@@ -925,6 +943,121 @@ details.legal p{margin:0}
     o+=r('school','Assignments done',w.done,w.next?w.next+' due in the next 7 days':'');
     o+=r('nutrition','Days you hit your water goal',w.wd+' of 7',w.md?'Meals logged on '+w.md+' day'+(w.md===1?'':'s'):'');
     return o+'</ul></section>';
+  }
+  /* ---------- Partners: share daily rings with people who also use FiveArc ----------
+     shares/{uid} holds only a display name and ring percentages for the last 7 days; viewers lists who may read it.
+     A partner joins with a one-use invite code, joining is mutual, and either side can stop at any time (see firestore.rules). */
+  var CODE_ABC='ABCDEFGHJKMNPQRSTUVWXYZ23456789', PT_MAX=5;
+  var pt=ptBlank();
+  function ptBlank(){return {list:[],raw:[],mine:null,subs:[],code:null,codeExp:0,msg:'',ok:false,busy:false,armed:null,open:null,pubT:null,copied:false};}
+  function ptReset(){pt.subs.forEach(function(u){try{u();}catch(e){}});clearTimeout(pt.pubT);pt=ptBlank();}
+  function ptName(){var p=profile()||{};return String(p.nick||p.first||'Your partner').slice(0,40);}
+  function ptDays(){var o={},t=today();for(var i=0;i<7;i++){var d=addDays(t,-i);o[d]=SECTIONS.map(function(x){return Math.round(todayPct(x[0],d)*100);});}return o;}
+  function ptRef(id){return fb.firestore().collection('shares').doc(id);}
+  function ptFV(){return firebase.firestore.FieldValue;}
+  function ptViewers(){return (pt.mine&&pt.mine.viewers)||[];}
+  function ptPublish(){clearTimeout(pt.pubT);pt.pubT=setTimeout(function(){if(!pt.mine||!uidv||!fb||!state)return;ptRef(uidv).set({name:ptName(),days:ptDays(),updated:Date.now()},{merge:true}).catch(function(){});},1500);}
+  async function ptStart(){
+    ptReset();if(guest||!uidv||!cloudOk)return;
+    try{await fbReady();}catch(e){return;}
+    var me=uidv, first=true;
+    var inv=null;try{inv=JSON.parse(ls.get(KEY+'-inv-'+me)||'null');}catch(e){}
+    if(inv&&inv.exp>Date.now()){pt.code=inv.code;pt.codeExp=inv.exp;}
+    pt.subs.push(ptRef(me).onSnapshot(function(d){if(me!==uidv)return;
+      var before=ptViewers().length;pt.mine=d.exists?d.data():null;
+      if(pt.code&&!first&&ptViewers().length>before){pt.code=null;ls.del(KEY+'-inv-'+me);}
+      if(first&&pt.mine)ptPublish();first=false;ptSync();ptPaint();},function(){}));
+    pt.subs.push(fb.firestore().collection('shares').where('viewers','array-contains',me).onSnapshot(function(q){if(me!==uidv)return;
+      pt.raw=q.docs.map(function(x){var v=x.data()||{};return {id:x.id,name:String(v.name||'Partner').slice(0,40),days:v.days||{}};}).sort(function(a,b){return a.name.localeCompare(b.name);});
+      ptSync();ptPaint();},function(){}));
+  }
+  /* Only mutual links are shown: someone appears here only while you also share with them, so nobody can add themselves to your Home. */
+  function ptSync(){var v=ptViewers();pt.list=pt.raw.filter(function(x){return v.indexOf(x.id)>=0;});
+  }
+  function ptPaint(){if(!user||!state)return;if(active==='home'&&!state.onboard){render();return;}
+    if(active==='profile'){var b=document.getElementById('ptList');if(b)b.innerHTML=ptListHtml();var j=document.getElementById('btnPtJoin');if(j)j.disabled=pt.busy;}}
+  function ptCodeOk(){return pt.code&&pt.codeExp>Date.now();}
+  async function ptInvite(){
+    if(pt.busy)return;pt.busy=true;pt.msg='';pt.copied=false;ptPaint();
+    try{await fbReady();
+      if(ptViewers().length>=PT_MAX)throw {msg:'You already share with '+PT_MAX+' people, the most FiveArc allows. Stop sharing with someone first.'};
+      if(!pt.mine){var m={name:ptName(),days:ptDays(),updated:Date.now(),viewers:[]};await ptRef(uidv).set(m);pt.mine=m;}
+      if(pt.code){try{await fb.firestore().collection('invites').doc(pt.code).delete();}catch(e){}}
+      var a=new Uint32Array(8);crypto.getRandomValues(a);
+      var code=Array.prototype.map.call(a,function(n){return CODE_ABC.charAt(n%CODE_ABC.length);}).join(''), exp=Date.now()+7*864e5;
+      await fb.firestore().collection('invites').doc(code).set({from:uidv,name:ptName(),expires:exp});
+      pt.code=code;pt.codeExp=exp;ls.set(KEY+'-inv-'+uidv,JSON.stringify({code:code,exp:exp}));
+    }catch(e){pt.ok=false;pt.msg=(e&&e.msg)||'The invite code couldn\'t be made. Check your internet connection and try again.';}
+    pt.busy=false;ptPaint();
+  }
+  async function ptJoin(raw){
+    var code=String(raw||'').toUpperCase().replace(/[^A-Z0-9]/g,''), bad='That code doesn\'t work. It may be mistyped, already used, or more than 7 days old. Ask your partner for a new one.';
+    if(pt.busy)return false;
+    if(code.length!==8){pt.ok=false;pt.msg='Codes have 8 letters and numbers, like K7QM 2XRP.';ptPaint();return false;}
+    if(code===pt.code){pt.ok=false;pt.msg='That\'s your own code. Send it to your partner, and they enter it in their app.';ptPaint();return false;}
+    pt.busy=true;pt.msg='';ptPaint();var done=false;
+    try{await fbReady();
+      var inv=await fb.firestore().collection('invites').doc(code).get();
+      if(!inv.exists)throw {msg:bad};
+      var d=inv.data()||{};
+      if(!(d.expires>Date.now()))throw {msg:bad};
+      if(d.from===uidv)throw {msg:'That\'s your own code. Send it to your partner, and they enter it in their app.'};
+      if(pt.list.some(function(x){return x.id===d.from;}))throw {msg:'You already share with '+String(d.name||'them')+'.'};
+      if(ptViewers().length>=PT_MAX)throw {msg:'You already share with '+PT_MAX+' people, the most FiveArc allows. Stop sharing with someone first.'};
+      await ptRef(d.from).update({viewers:ptFV().arrayUnion(uidv),via:code});
+      if(pt.mine)await ptRef(uidv).update({viewers:ptFV().arrayUnion(d.from)});
+      else{var m={name:ptName(),days:ptDays(),updated:Date.now(),viewers:[d.from]};await ptRef(uidv).set(m);pt.mine=m;}
+      try{await fb.firestore().collection('invites').doc(code).delete();}catch(e){}
+      ptPublish();pt.ok=true;pt.msg='You and '+String(d.name||'your partner').slice(0,40)+' now see each other\'s rings.';haptic('success');done=true;
+    }catch(e){pt.ok=false;pt.msg=(e&&e.msg)||(/permission/.test((e&&e.code)||'')?bad:'Couldn\'t connect. Check your internet connection and try again.');}
+    pt.busy=false;ptPaint();return done;
+  }
+  async function ptStop(id){
+    pt.armed=null;pt.busy=true;ptPaint();var ok=true;
+    try{await ptRef(uidv).update({viewers:ptFV().arrayRemove(id)});}catch(e){ok=!ptViewers().includes(id);}
+    try{await ptRef(id).update({viewers:ptFV().arrayRemove(uidv)});}catch(e){}
+    pt.busy=false;pt.ok=ok;pt.msg=ok?'You\'ve stopped sharing with each other.':'That didn\'t go through. Check your internet connection and try again.';
+    if(pt.open===id)pt.open=null;ptPaint();
+  }
+  /* Removes this account from every partner and deletes its shared summary and invite (used before deleting the account). */
+  async function ptErase(){
+    if(!fb||!uidv)return;
+    await Promise.all(pt.raw.map(function(x){return ptRef(x.id).update({viewers:ptFV().arrayRemove(uidv)}).catch(function(){});}));
+    if(pt.code)await fb.firestore().collection('invites').doc(pt.code).delete().catch(function(){});
+    if(pt.mine)await ptRef(uidv).delete();
+    ls.del(KEY+'-inv-'+uidv);ptReset();
+  }
+  function ptRings(d){
+    return '<svg class="ptring" viewBox="0 0 44 44" aria-hidden="true">'+SECTIONS.map(function(x,i){var r=19-i*3.6, full=2*Math.PI*r, p=d?Math.max(0,Math.min(100,+d[i]||0))/100:0;
+      return '<circle cx="22" cy="22" r="'+r.toFixed(1)+'" fill="none" stroke="currentColor" stroke-opacity=".12" stroke-width="2.6"/>'+(p?'<circle class="s-'+x[0]+'" cx="22" cy="22" r="'+r.toFixed(1)+'" fill="none" stroke="var(--sec)" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="'+(full*p).toFixed(1)+' '+full.toFixed(1)+'" transform="rotate(-90 22 22)"/>':'');}).join('')+'</svg>';
+  }
+  function ptAvg(d){return d?Math.round(sum(d,function(v){return +v||0;})/SECTIONS.length):null;}
+  function ptWeek(p){
+    var t=today(), days=[];for(var i=6;i>=0;i--)days.push(addDays(t,-i));
+    return '<table class="ptweek" aria-label="'+esc(p.name)+'\'s last 7 days"><thead><tr><td></td>'+days.map(function(d){return '<th scope="col">'+DOW[parse(d).getDay()].charAt(0)+'</th>';}).join('')+'</tr></thead><tbody>'
+      +SECTIONS.map(function(x,i){return '<tr class="s-'+x[0]+'"><th scope="row">'+SHORT[x[0]]+'</th>'+days.map(function(d){var v=p.days[d]?Math.max(0,Math.min(100,+p.days[d][i]||0)):null;
+        return '<td style="opacity:'+(v===null?.08:(.16+.84*v/100).toFixed(2))+'"><span class="vh">'+dayShort(d)+': '+(v===null?'no update':v+'%')+'</span></td>';}).join('')+'</tr>';}).join('')+'</tbody></table>';
+  }
+  function vPartnersHome(){
+    if(!pt.list.length)return '';var t=today();
+    return '<section class="partners" aria-label="Partners"><span class="label">Partners</span><ul>'+pt.list.map(function(p){var d=p.days[t]||null, a=ptAvg(d), open=pt.open===p.id;
+      return '<li><button class="pt" type="button" data-act="ptOpen" data-id="'+esc(p.id)+'" aria-expanded="'+open+'" id="pt-'+esc(p.id)+'">'+ptRings(d)+'<span class="grow"><strong>'+esc(p.name)+'</strong><span class="sub">'+(d?a+'% of today\'s targets':'No update yet today')+'</span></span>'+ICON.chev+'</button>'+(open?ptWeek(p):'')+'</li>';}).join('')+'</ul></section>';
+  }
+  function ptListHtml(){
+    var o=pt.msg?'<p class="'+(pt.ok?'ok':'err')+'" role="'+(pt.ok?'status':'alert')+'">'+esc(pt.msg)+'</p>':'';
+    var seen=pt.raw.map(function(x){return x.id;}), only=ptViewers().filter(function(v){return seen.indexOf(v)<0;});
+    if(pt.list.length)o+='<ul class="ptlist">'+pt.list.map(function(p){var a=ptAvg(p.days[today()]);
+      return '<li class="ptrow">'+ptRings(p.days[today()])+'<span class="grow"><strong>'+esc(p.name)+'</strong><span class="sub">'+(a===null?'No update yet today':a+'% today')+'</span></span><button class="btn small ghost" type="button" data-act="ptStop" data-id="'+esc(p.id)+'" id="ptStop-'+esc(p.id)+'">'+(pt.armed===p.id?'Tap again to stop':'Stop sharing')+'</button></li>';}).join('')+'</ul>';
+    if(only.length)o+='<div class="ptrow"><span class="grow sub">'+only.length+(only.length===1?' person can':' people can')+' see your rings but isn\'t sharing back.</span><button class="btn small ghost" type="button" data-act="ptStop" data-id="'+esc(only[0])+'" id="ptStopOnly">'+(pt.armed===only[0]?'Tap again to stop':'Stop')+'</button></div>';
+    if(ptCodeOk())o+='<div class="ptcode"><span class="label">Your invite code</span><b id="ptCodeText">'+pt.code.slice(0,4)+' '+pt.code.slice(4)+'</b><span class="sub">Send it to your partner. It works once, until '+dayShort(new Date(pt.codeExp).toISOString().slice(0,10))+'. They enter it in their FiveArc app under Profile, then Partners.</span><div class="row"><button class="btn small" type="button" data-act="ptCopy" id="btnPtCopy">'+(pt.copied?'Copied':'Copy code')+'</button><button class="btn small ghost" type="button" data-act="ptInvite" id="btnPtNew"'+(pt.busy?' disabled':'')+'>New code</button></div></div>';
+    else if(ptViewers().length<PT_MAX)o+='<div class="row"><button class="btn small" type="button" data-act="ptInvite" id="btnPtInvite"'+(pt.busy?' disabled':'')+'>'+(pt.busy?'Making a code…':'Invite a partner')+'</button></div>';
+    return o;
+  }
+  function vPartners(){
+    if(guest)return '<div class="block"><h3>Partners</h3><span class="sub">Share your daily rings with a partner who also uses FiveArc. This needs a free account, so create one below first.</span></div>';
+    return '<div class="block" id="ptBox"><h3>Partners</h3><span class="sub">Share your daily rings with up to '+PT_MAX+' people who also use FiveArc, and see theirs on Home. They see your nickname or first name and your ring percentages for the last 7 days, never your entries.</span>'
+      +'<div class="block" id="ptList">'+ptListHtml()+'</div>'
+      +'<form class="add" data-form="ptJoin">'+field('ptCode','Have a code from a partner?','maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="K7QM 2XRP"')+'<button class="btn small" id="btnPtJoin"'+(pt.busy?' disabled':'')+'>Connect</button></form></div>';
   }
   function vDock(){
     var items=[['home','Home']].concat(SECTIONS.map(function(x){return [x[0],SHORT[x[0]]];}));
@@ -1342,7 +1475,7 @@ details.legal p{margin:0}
     if(ev.target.id==='btnGuest'){doGuest();return;}
     if(!user)return;
     var tab=ev.target.closest('[data-tab]');
-    if(tab){var from=active;active=tab.dataset.tab;adding=null;fitOpen=tab.id==='trophyChip';try{history.replaceState(null,'',active==='home'?location.pathname:'#'+active);}catch(e){}render();window.scrollTo(0,0);
+    if(tab){var from=active;active=tab.dataset.tab;adding=null;pt.msg='';pt.armed=null;fitOpen=tab.id==='trophyChip';try{history.replaceState(null,'',active==='home'?location.pathname:'#'+active);}catch(e){}render();window.scrollTo(0,0);
       var el=active==='home'?document.getElementById('tab-'+from):panel.querySelector('h2');if(el){if(el.tagName==='H2')el.setAttribute('tabindex','-1');try{el.focus({preventScroll:true});}catch(e){}}return;}
     var b=ev.target.closest('[data-act]'); if(!b)return;
     var a=b.dataset.act, id=b.dataset.id, t=today();
@@ -1360,6 +1493,11 @@ details.legal p{margin:0}
     if(a==='obExamples'){finishSetup(true);return;}
     if(a==='recapOpen'){recapOpen=true;render();var rc=panel.querySelector('.recap h3');if(rc){rc.setAttribute('tabindex','-1');try{rc.focus();}catch(e){}}return;}
     if(a==='recapX'){recapOpen=false;ls.set(KEY+'-recap-seen',b.dataset.end);render();return;}
+    if(a==='ptOpen'){pt.open=pt.open===b.dataset.id?null:b.dataset.id;render();var po=document.getElementById('pt-'+b.dataset.id);if(po)try{po.focus({preventScroll:true});}catch(e){}return;}
+    if(a==='ptInvite'){ptInvite();return;}
+    if(a==='ptStop'){if(pt.armed!==b.dataset.id){pt.armed=b.dataset.id;ptPaint();return;}ptStop(b.dataset.id);return;}
+    if(a==='ptCopy'){var txt=pt.code||'', fin=function(){pt.copied=true;ptPaint();};
+      try{navigator.clipboard.writeText(txt).then(fin,function(){var r=document.createRange(),el=document.getElementById('ptCodeText');if(el){r.selectNodeContents(el);var sl=getSelection();sl.removeAllRanges();sl.addRange(r);}});}catch(e){}return;}
     if(a==='remOff'){remSet(false,remGet().time);return;}
     if(a==='scan'){foodScan();return;}
     if(a==='addOpen'){adding=b.dataset.k;render();var fe=panel.querySelector('.adder input:not([type=hidden]),.adder select');if(fe)try{fe.focus();}catch(e){}return;}
@@ -1398,6 +1536,7 @@ details.legal p{margin:0}
     if(kind==='ob0'){obState().name=v('obName');obState().step=1;render();obFocus();return;}
     if(kind==='obOwn'){var on=v('obOwn').slice(0,40), os=obState();if(on&&os.habits.length<5){if(os.own.indexOf(on)<0&&OB_HABITS.indexOf(on)<0)os.own.push(on);if(os.habits.indexOf(on)<0)os.habits.push(on);}render();obFocus('obOwn');return;}
     if(kind==='reminder'){remSet(true,v('remTime'));return;}
+    if(kind==='ptJoin'){ptJoin(v('ptCode')).then(function(ok){if(ok){var el=document.getElementById('ptCode');if(el)el.value='';}});return;}
     if(kind==='barcode'){foodLookup(v('barcode'));return;}
     if(kind==='profile'){if(!v('pfFirst')||!v('pfLast'))return;var pr=profile();pr.first=v('pfFirst');pr.last=v('pfLast');pr.nick=v('pfNick');saveAccounts();flash='Profile saved.';render();return;}
     if(kind==='fitness'){if(!v('fitActivity')||!num(v('fitMin')))return;var fd=v('fitDate')||t, fy=+fd.slice(0,4), had={};badges(fy).forEach(function(x){if(x.won)had[x.id]=1;});
