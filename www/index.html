@@ -208,6 +208,22 @@ table.grid td.name,table.grid th:first-child{position:sticky;left:0;z-index:1;ba
 footer{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;color:var(--on-bg-muted);font-size:.86rem;border-radius:var(--r);padding:12px 16px}
 footer p{margin:0;flex:1 1 16rem;min-width:0}
 .link{background:none;border:0;padding:0;color:var(--muted);text-decoration:underline;cursor:pointer;font:inherit;font-size:.9rem;align-self:flex-start}
+/* ---- add buttons, quick check-offs, undo ---- */
+.addrow{display:flex;flex-wrap:wrap;gap:10px}
+.addbtn{display:inline-flex;align-items:center;gap:8px}
+.addbtn svg{width:18px;height:18px}
+.adder{display:flex;flex-direction:column;gap:10px}
+.quick{display:flex;flex-direction:column;gap:10px;border-radius:var(--r);padding:16px 18px;background:var(--surface);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--line)}
+.quick .chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:6px 14px 6px 8px;border-radius:99px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font:inherit;font-size:.92rem;cursor:pointer;max-width:100%}
+.chip i{width:24px;height:24px;border-radius:8px;border:2px solid rgba(255,255,255,.25);display:grid;place-items:center;font-style:normal;font-weight:800;font-size:.8rem;flex:none;color:var(--on-sec)}
+.chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.chip.on{border-color:color-mix(in srgb,var(--sec) 55%,transparent)}
+.chip.on i{background:var(--sec);border-color:var(--sec)}
+.chip.water i{border-radius:4px 4px 9px 9px;border-top-width:1px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:30;display:flex;align-items:center;gap:14px;padding:10px 10px 10px 18px;border-radius:99px;background:#1b2550;border:1px solid var(--line);box-shadow:var(--shadow);color:var(--ink);font-size:.95rem;max-width:calc(100% - 32px);white-space:nowrap;width:max-content}
+.toast .btn{--sec:var(--ink)}
+@media (prefers-reduced-motion:no-preference){.toast{animation:toastIn .2s ease-out}@keyframes toastIn{from{opacity:0;transform:translate(-50%,8px)}}}
 .keep{display:flex;align-items:center;gap:10px;font-size:.92rem;color:var(--muted)}
 .keep input{width:20px;height:20px;flex:none;padding:0;accent-color:var(--c-fitness)}
 #ssoMsg{color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px}
@@ -643,6 +659,10 @@ details.legal p{margin:0}
     var o='<section class="hero" aria-label="Today"><div class="hero-title"><h2>Today</h2><span class="label">'+avg+'% of daily targets</span></div>';
     o+='<div class="ringwrap">'+rings+'<div class="ringcenter"><b>'+avg+'%</b></div></div>';
     o+='<ul class="legend">'+SECTIONS.map(function(x,i){return '<li class="s-'+x[0]+'"><i></i><span>'+SHORT[x[0]]+'</span><em>'+Math.round(pcts[i]*100)+'%</em></li>';}).join('')+'</ul></section>';
+    var t=today(), w=state.water[t]||0;
+    o+='<section class="quick" aria-label="Quick check-off"><span class="label">Check off today</span><div class="chips">'
+      +state.habits.map(function(hb){var on=!!hb.days[t];return '<button class="chip s-habit'+(on?' on':'')+'" type="button" data-act="tick" data-id="'+hb.id+'" data-d="'+t+'" aria-pressed="'+on+'" id="q-'+hb.id+'"><i>'+(on?'✓':'')+'</i><span>'+esc(hb.name)+'</span></button>';}).join('')
+      +'<button class="chip water s-school'+(w?' on':'')+'" type="button" data-act="water" data-n="'+(w+1)+'" id="qWater" aria-label="Add a glass of water, '+w+' of '+state.goals.water+' so far"><i>+</i><span>Water '+w+' of '+state.goals.water+'</span></button></div></section>';
     o+='<nav class="lanes" aria-label="Sections">'+SECTIONS.map(function(x,i){return '<button class="lane s-'+x[0]+'" type="button" id="tab-'+x[0]+'" data-tab="'+x[0]+'"><span class="ico">'+ICON[x[0]]+'</span><span class="lt"><b>'+x[1]+'</b><small>'+esc(glance(x[0]))+'</small><span class="mini"><div style="width:'+Math.round(pcts[i]*100)+'%"></div></span></span><span class="chev">'+ICON.chev+'</span></button>';}).join('')+'</nav>';
     return o;
   }
@@ -789,9 +809,9 @@ details.legal p{margin:0}
     var best=per.indexOf(Math.max.apply(null,per)), yi=years.indexOf(fitYear);
     var o='<div><h2>Fitness</h2><p class="lede">Every workout is kept for the whole year, month by month. A new log starts each January, and past years stay here to look back on.</p><p class="sub disclaimer">For general fitness tracking only, not medical advice. Check with a doctor before starting a new exercise programme.</p></div>';
     if(state.congrats&&state.congrats.length)o+='<div class="congrats" role="status">'+TROPHY+'<p><strong>Congratulations!</strong> You earned '+state.congrats.map(function(n){return '<strong>'+esc(n)+'</strong>';}).join(' and ')+'.</p><button class="x" type="button" data-act="dismiss" aria-label="Dismiss">×</button></div>';
-    o+='<form class="add" data-form="fitness">'+field('fitActivity','Activity','required maxlength="40" list="fitList" placeholder="Run, swim, yoga"','wide')+'<datalist id="fitList"><option>Run</option><option>Walk</option><option>Bike ride</option><option>Strength training</option><option>Swim</option><option>Yoga</option><option>Basketball</option></datalist>'
-      +field('fitMin','Minutes','type="number" min="1" max="600" required inputmode="numeric"')+sel('fitEffort','Effort',['Easy','Moderate','Hard'])+field('fitDate','Date','type="date" value="'+t+'" max="'+t+'" required')+'<button class="btn">Log workout</button></form>'+vHealth();
     if(fitYear===cy)o+='<div class="meters">'+meter('This week: active minutes, last 7 days',fitWeek(),state.goals.fitMin,'min')+'</div>';
+    o+=adder('fitness','Log a workout','<form class="add" data-form="fitness">'+field('fitActivity','Activity','required maxlength="40" list="fitList" placeholder="Run, swim, yoga"','wide')+'<datalist id="fitList"><option>Run</option><option>Walk</option><option>Bike ride</option><option>Strength training</option><option>Swim</option><option>Yoga</option><option>Basketball</option></datalist>'
+      +field('fitMin','Minutes','type="number" min="1" max="600" required inputmode="numeric"')+sel('fitEffort','Effort',['Easy','Moderate','Hard'])+field('fitDate','Date','type="date" value="'+t+'" max="'+t+'" required')+'<button class="btn">Log workout</button></form>')+vHealth();
     o+='<div class="block"><div class="headrow"><div class="yearnav"><button class="btn small ghost" type="button" data-act="year" data-y="'+(years[yi-1]||'')+'" id="yrPrev" aria-label="Previous year"'+(yi>0?'':' disabled')+'>‹</button><strong>'+fitYear+'</strong><button class="btn small ghost" type="button" data-act="year" data-y="'+(years[yi+1]||'')+'" id="yrNext" aria-label="Next year"'+(yi<years.length-1?'':' disabled')+'>›</button></div><span class="sub">'+(fitYear===cy?'Year so far':'Full year')+'</span></div>';
     var stat=function(l,f,u){return '<div class="stat"><span class="label">'+l+'</span><span class="fig">'+f+' <i>'+u+'</i></span></div>';};
     o+='<div class="stats">'+stat('Total time',hrs(mins),'hours')+stat('Workouts',E.length,'')+stat('Active days',Object.keys(days).length,'')+stat('Best month',E.length?MON[best]:'None',E.length?hrs(per[best])+' hr':'')+'</div></div>';
@@ -809,8 +829,8 @@ details.legal p{margin:0}
   function vHobby(){
     var t=today();
     var o='<div><h2>Hobby</h2><p class="lede">Keep track of time spent on the things you do for fun. Start a timer or type in the minutes afterward.</p></div>';
-    o+='<form class="add" data-form="hobby">'+field('hobName','New hobby','required maxlength="40" placeholder="Guitar, chess, baking"','wide')+'<button class="btn">Add hobby</button></form>';
-    if(!state.hobbies.length)return o+'<p class="empty">No hobbies yet. Add one above to start logging time.</p>';
+    o+=adder('hobby','Add a hobby','<form class="add" data-form="hobby">'+field('hobName','New hobby','required maxlength="40" placeholder="Guitar, chess, baking"','wide')+'<button class="btn">Add hobby</button></form>');
+    if(!state.hobbies.length)return o+'<p class="empty">No hobbies yet. Tap Add a hobby to start logging time.</p>';
     o+='<div class="cards">'+state.hobbies.map(function(hb){
       var log=state.hobbyLog.filter(function(e){return e.hobbyId===hb.id;}).sort(byDateDesc), tot=sum(log,function(e){return e.min;}), last=log[0];
       var running=state.timer&&state.timer.hobbyId===hb.id;
@@ -826,7 +846,7 @@ details.legal p{margin:0}
     var w=last7(), t=today();
     var o='<div><h2>Better Habit</h2><p class="lede">Tick each day you kept the habit. A streak counts days in a row, and today does not break it until tomorrow.</p></div>';
     o+='<div class="meters">'+meter('Kept today',habitsToday(),state.habits.length,'habits')+'</div>';
-    o+='<form class="add" data-form="habit">'+field('habName','New habit','required maxlength="50" placeholder="Stretch after waking up"','wide')+'<button class="btn">Add habit</button></form>';
+    o+=adder('habit','Add a habit','<form class="add" data-form="habit">'+field('habName','New habit','required maxlength="50" placeholder="Stretch after waking up"','wide')+'<button class="btn">Add habit</button></form>');
     if(!state.habits.length)return o+'<p class="empty">No habits yet. Start with one small thing you can do every day.</p>';
     o+='<div class="scroll"><table class="grid"><thead><tr><th></th>'+w.map(function(d){return '<th class="'+(d===t?'now':'')+'">'+(d===t?'Today':DOW[parse(d).getDay()]+'<br>'+parse(d).getDate())+'</th>';}).join('')+'<th></th></tr></thead><tbody>'
       +state.habits.map(function(hb){var s=streak(hb);return '<tr><td class="name"><strong>'+esc(hb.name)+'</strong><span class="sub">'+(s?s+'-day streak':'No streak yet')+'</span></td>'
@@ -845,12 +865,29 @@ details.legal p{margin:0}
     var group=function(title,arr){return arr.length?'<div class="block"><h3>'+title+' <span class="sub">('+arr.length+')</span></h3><ul class="list">'+arr.map(item).join('')+'</ul></div>':'';};
     var o='<div><h2>Schoolwork</h2><p class="lede">Add assignments with a due date. They sort themselves so the next thing due is always on top.</p></div>';
     o+='<div class="meters">'+meter('Finished',done.length,state.school.length,'assignments')+'</div>';
-    o+='<form class="add" data-form="school">'+field('schTitle','Assignment','required maxlength="60" placeholder="Read chapter 4"','wide')+field('schSubject','Subject','maxlength="30" placeholder="Biology"')+field('schDue','Due','type="date" value="'+addDays(t,1)+'" required')+'<button class="btn">Add assignment</button></form>';
-    if(!state.school.length)return o+'<p class="empty">Nothing on the list. Add your next assignment above.</p>';
+    o+=adder('school','Add an assignment','<form class="add" data-form="school">'+field('schTitle','Assignment','required maxlength="60" placeholder="Read chapter 4"','wide')+field('schSubject','Subject','maxlength="30" placeholder="Biology"')+field('schDue','Due','type="date" value="'+addDays(t,1)+'" required')+'<button class="btn">Add assignment</button></form>');
+    if(!state.school.length)return o+'<p class="empty">Nothing on the list. Tap Add an assignment to start.</p>';
     o+=group('Overdue',late)+group('Due in the next 7 days',week)+group('Later',later)+group('Done',done);
     if(!open.length)o+='<p class="empty">Everything is done. Nice work.</p>';
     return o;
   }
+
+  /* ---------- Add buttons: each section shows your entries first; the form opens on demand ---------- */
+  var adding=null, PLUS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+  function adder(kind,label,form,extra){
+    if(adding===kind)return '<div class="adder">'+form+'<button class="link" type="button" data-act="addClose" id="addClose">Cancel</button></div>';
+    return '<div class="addrow"><button class="btn addbtn" type="button" data-act="addOpen" data-k="'+kind+'" id="add-'+kind+'">'+PLUS+label+'</button>'+(extra||'')+'</div>';
+  }
+  /* ---------- Haptics (iPhone app only) ---------- */
+  function haptic(kind){try{var C=window.Capacitor;if(!isNative())return;var H=C.Plugins&&C.Plugins.Haptics&&C.Plugins.Haptics.impact?C.Plugins.Haptics:(C.registerPlugin?C.registerPlugin('Haptics'):null);if(!H)return;
+    (kind==='success'?H.notification({type:'SUCCESS'}):H.impact({style:'LIGHT'})).catch(function(){});}catch(e){}}
+  /* ---------- Undo for deletes ---------- */
+  var undo=null, undoT=null;
+  function offerUndo(msg,snap){undo={msg:msg,snap:snap};clearTimeout(undoT);undoT=setTimeout(function(){undo=null;drawUndo();},5000);drawUndo();}
+  function drawUndo(){var el=document.getElementById('undoToast');
+    if(!undo||!user){if(el)el.remove();return;}
+    if(!el){el=document.createElement('div');el.id='undoToast';el.className='toast';el.setAttribute('role','status');document.body.appendChild(el);}
+    el.innerHTML='<span>'+esc(undo.msg)+'</span><button class="btn small" type="button" data-act="undo" id="btnUndo">Undo</button>';}
 
   /* ---------- Food barcode lookup (Open Food Facts) ---------- */
   var food={busy:false,msg:'',ok:false,fill:null};
@@ -865,7 +902,7 @@ details.legal p{margin:0}
   async function foodLookup(raw){
     var code=gtinFrom(raw);
     if(!code){food.ok=false;food.msg=/^https?:/i.test(String(raw||''))?'That QR code isn\'t a food barcode. Scan the striped barcode on the package instead.':'Enter the 8 to 14 digit number under the barcode.';return render();}
-    food.busy=true;food.msg='';render();
+    food.busy=true;food.msg='';adding='nutrition';render();
     try{
       var r=await withTimeout(fetch('https://world.openfoodfacts.org/api/v2/product/'+code+'?fields=product_name,product_name_en,brands,nutriments,serving_size,serving_quantity'),10000);
       var j=await r.json().catch(function(){return null;});
@@ -879,7 +916,7 @@ details.legal p{margin:0}
         var pn=(pr.product_name_en||pr.product_name||'').trim(), br=(pr.brands||'').split(',')[0].trim();
         var name=((br&&pn.toLowerCase().indexOf(br.toLowerCase())<0?br+' ':'')+pn).trim().slice(0,60)||br||'Scanned food';
         food.fill={name:name,kcal:kc!=null?Math.round(kc):'',protein:pt!=null?Math.round(pt):''};
-        food.ok=true;food.msg='Filled in '+per+' from Open Food Facts. Check the numbers, then tap Log food.';
+        food.ok=true;food.msg='Filled in '+per+' from Open Food Facts. Check the numbers, then tap Log food.';haptic('success');
       }
     }catch(e){food.ok=false;food.msg='The food database couldn\'t be reached. Check your connection and try again, or type it in below.';}
     food.busy=false;render();
@@ -893,13 +930,13 @@ details.legal p{margin:0}
     if(r&&r.ScanResult)foodLookup(r.ScanResult);
   }
   function vFood(){
-    var o='<div class="block"><span class="label">Packaged food?</span>'
-      +(isNative()?'<div class="row"><button class="btn" type="button" data-act="scan" id="btnScan"'+(food.busy?' disabled':'')+'>'+(food.busy?'Looking up…':'Scan barcode')+'</button><span class="sub">Fills in the name, calories and protein.</span></div>':'')
+    var o='<div class="block"><span class="label">Packaged food? Look it up by barcode.</span>'
       +'<form class="add" data-form="barcode">'+field('barcode',isNative()?'Or type the barcode number':'Barcode number','inputmode="numeric" autocomplete="off" maxlength="80" placeholder="012345678905"')
       +'<button class="btn small ghost"'+(food.busy?' disabled':'')+'>'+(food.busy?'Looking up…':'Look up')+'</button></form>';
     if(food.msg)o+='<p class="'+(food.ok?'sub':'err')+'" role="status">'+esc(food.msg)+'</p>';
     return o+'</div>';
   }
+  function scanBtn(){return isNative()?'<button class="btn ghost" type="button" data-act="scan" id="btnScan"'+(food.busy?' disabled':'')+'>'+(food.busy?'Looking up…':'Scan barcode')+'</button>':'';}
   function vNutrition(){
     var t=today(), meals=state.meals.filter(function(m){return m.date===t;}), g=state.goals, w=state.water[t]||0;
     var kcal=sum(meals,function(m){return m.kcal;});
@@ -908,10 +945,10 @@ details.legal p{margin:0}
     var gl='';for(var i=1;i<=Math.max(g.water,w);i++)gl+='<button class="glass'+(i<=w?' on':'')+'" type="button" data-act="water" data-n="'+i+'" aria-pressed="'+(i<=w)+'" aria-label="Glass '+i+'"></button>';
     o+='<div class="block"><span class="label">Tap a glass each time you finish one</span><div class="glasses">'+gl+'</div></div>';
     var fl=food.fill||{};food.fill=null;
-    o+=vFood();
-    o+='<form class="add" data-form="meal">'+field('mealName','Food','required maxlength="60" placeholder="Turkey sandwich and an apple"'+(fl.name?' value="'+esc(fl.name)+'"':''),'wide')+sel('mealType','Meal',['Breakfast','Lunch','Dinner','Snack'])+field('mealKcal','Calories','type="number" min="0" max="5000" inputmode="numeric" placeholder="Optional"'+(fl.kcal!==undefined&&fl.kcal!==''?' value="'+fl.kcal+'"':''))+field('mealProtein','Protein (g)','type="number" min="0" max="300" inputmode="numeric" placeholder="Optional"'+(fl.protein!==undefined&&fl.protein!==''?' value="'+fl.protein+'"':''))+field('mealProduce','Fruit/veg servings','type="number" min="0" max="20" inputmode="numeric" placeholder="0"')+'<button class="btn">Log food</button></form>';
-    o+='<div class="block"><h3>Today <span class="sub">'+(kcal?kcal+' calories logged':'')+'</span></h3>'+(meals.length?'<ul class="list">'+meals.map(function(m){var bits=[esc(m.type)];if(m.protein)bits.push(m.protein+' g protein');if(m.produce)bits.push(m.produce+' fruit/veg');return '<li><div class="grow"><strong>'+esc(m.name)+'</strong><span class="sub">'+bits.join(' · ')+'</span></div>'+(m.kcal?'<span class="num">'+m.kcal+' cal</span>':'')+'<button class="x" type="button" data-act="del" data-k="meals" data-id="'+m.id+'" aria-label="Delete '+esc(m.name)+'">×</button></li>';}).join('')+'</ul>':'<p class="empty">Nothing logged today. Add your first meal above.</p>')+'</div>';
-    o+='<form class="add" data-form="goals"><div class="f wide"><span class="label">Daily targets</span><span class="sub">Set these to what suits you.</span></div>'+field('goalWater','Water (glasses)','type="number" min="1" max="20" required value="'+g.water+'"')+field('goalProtein','Protein (g)','type="number" min="1" max="300" required value="'+g.protein+'"')+field('goalProduce','Fruit/veg','type="number" min="1" max="20" required value="'+g.produce+'"')+field('goalFit','Weekly active min','type="number" min="10" max="2000" required value="'+g.fitMin+'"')+'<button class="btn ghost">Save targets</button></form>';
+    if(adding!=='nutrition'&&food.msg&&!food.ok)o+='<p class="err" role="status">'+esc(food.msg)+'</p>';
+    o+=adder('nutrition','Log food',vFood()+'<form class="add" data-form="meal">'+field('mealName','Food','required maxlength="60" placeholder="Turkey sandwich and an apple"'+(fl.name?' value="'+esc(fl.name)+'"':''),'wide')+sel('mealType','Meal',['Breakfast','Lunch','Dinner','Snack'])+field('mealKcal','Calories','type="number" min="0" max="5000" inputmode="numeric" placeholder="Optional"'+(fl.kcal!==undefined&&fl.kcal!==''?' value="'+fl.kcal+'"':''))+field('mealProtein','Protein (g)','type="number" min="0" max="300" inputmode="numeric" placeholder="Optional"'+(fl.protein!==undefined&&fl.protein!==''?' value="'+fl.protein+'"':''))+field('mealProduce','Fruit/veg servings','type="number" min="0" max="20" inputmode="numeric" placeholder="0"')+'<button class="btn">Log food</button></form>'+(isNative()?'<div class="row">'+scanBtn()+'</div>':''),scanBtn());
+    o+='<div class="block"><h3>Today <span class="sub">'+(kcal?kcal+' calories logged':'')+'</span></h3>'+(meals.length?'<ul class="list">'+meals.map(function(m){var bits=[esc(m.type)];if(m.protein)bits.push(m.protein+' g protein');if(m.produce)bits.push(m.produce+' fruit/veg');return '<li><div class="grow"><strong>'+esc(m.name)+'</strong><span class="sub">'+bits.join(' · ')+'</span></div>'+(m.kcal?'<span class="num">'+m.kcal+' cal</span>':'')+'<button class="x" type="button" data-act="del" data-k="meals" data-id="'+m.id+'" aria-label="Delete '+esc(m.name)+'">×</button></li>';}).join('')+'</ul>':'<p class="empty">Nothing logged today. Tap Log food to add your first meal.</p>')+'</div>';
+    o+=adder('goals','Daily targets','<form class="add" data-form="goals"><div class="f wide"><span class="label">Daily targets</span><span class="sub">Set these to what suits you.</span></div>'+field('goalWater','Water (glasses)','type="number" min="1" max="20" required value="'+g.water+'"')+field('goalProtein','Protein (g)','type="number" min="1" max="300" required value="'+g.protein+'"')+field('goalProduce','Fruit/veg','type="number" min="1" max="20" required value="'+g.produce+'"')+field('goalFit','Weekly active min','type="number" min="10" max="2000" required value="'+g.fitMin+'"')+'<button class="btn ghost">Save targets</button></form>').replace('class="btn addbtn"','class="btn ghost addbtn"');
     return o;
   }
 
@@ -947,7 +984,7 @@ details.legal p{margin:0}
     if(ev.target.id==='btnForgot'){doForgot();return;}
     if(!user)return;
     var tab=ev.target.closest('[data-tab]');
-    if(tab){var from=active;active=tab.dataset.tab;try{history.replaceState(null,'',active==='home'?location.pathname:'#'+active);}catch(e){}render();window.scrollTo(0,0);
+    if(tab){var from=active;active=tab.dataset.tab;adding=null;try{history.replaceState(null,'',active==='home'?location.pathname:'#'+active);}catch(e){}render();window.scrollTo(0,0);
       var el=active==='home'?document.getElementById('tab-'+from):panel.querySelector('h2');if(el){if(el.tagName==='H2')el.setAttribute('tabindex','-1');try{el.focus({preventScroll:true});}catch(e){}}return;}
     var b=ev.target.closest('[data-act]'); if(!b)return;
     var a=b.dataset.act, id=b.dataset.id, t=today();
@@ -957,6 +994,9 @@ details.legal p{margin:0}
     if(a==='signout'){doSignOut();return;}
     if(a==='remOff'){remSet(false,remGet().time);return;}
     if(a==='scan'){foodScan();return;}
+    if(a==='addOpen'){adding=b.dataset.k;render();var fe=panel.querySelector('.adder input:not([type=hidden]),.adder select');if(fe)try{fe.focus();}catch(e){}return;}
+    if(a==='addClose'){adding=null;food.msg='';render();var ob=document.getElementById('add-'+active)||panel.querySelector('.addbtn');if(ob)try{ob.focus({preventScroll:true});}catch(e){}return;}
+    if(a==='undo'){if(undo){state=JSON.parse(undo.snap);undo=null;clearTimeout(undoT);drawUndo();commit();}return;}
     if(a==='healthConnect'){healthSync(true,false);return;}
     if(a==='healthSync'){healthSync(false,false);return;}
     if(a==='delAcct'){if(!armedAcct){armedAcct=true;render();return;}armedAcct=false;doDelete();return;}
@@ -964,14 +1004,14 @@ details.legal p{margin:0}
     if(a==='month'){fitMonth=+b.dataset.m;render();var mb=document.getElementById('mon-'+fitMonth);if(mb)mb.focus();return;}
     if(a==='year'){if(b.dataset.y){fitYear=+b.dataset.y;fitMonth=null;}render();return;}
     if(a==='dismiss'){state.congrats=null;}
-    else if(a==='eraseYear'){if(!armedYear){armedYear=true;render();return;}armedYear=false;state.fitness=state.fitness.filter(function(e){return yearOf(e)!==fitYear;});state.congrats=null;}
-    else if(a==='del'){state[b.dataset.k]=state[b.dataset.k].filter(function(x){return x.id!==id;});}
-    else if(a==='delHobby'){state.hobbies=state.hobbies.filter(function(x){return x.id!==id;});state.hobbyLog=state.hobbyLog.filter(function(x){return x.hobbyId!==id;});if(state.timer&&state.timer.hobbyId===id)state.timer=null;}
+    else if(a==='eraseYear'){if(!armedYear){armedYear=true;render();return;}armedYear=false;offerUndo(fitYear+' workouts erased.',JSON.stringify(state));state.fitness=state.fitness.filter(function(e){return yearOf(e)!==fitYear;});state.congrats=null;}
+    else if(a==='del'){offerUndo('Deleted.',JSON.stringify(state));state[b.dataset.k]=state[b.dataset.k].filter(function(x){return x.id!==id;});}
+    else if(a==='delHobby'){offerUndo('Hobby deleted.',JSON.stringify(state));state.hobbies=state.hobbies.filter(function(x){return x.id!==id;});state.hobbyLog=state.hobbyLog.filter(function(x){return x.hobbyId!==id;});if(state.timer&&state.timer.hobbyId===id)state.timer=null;}
     else if(a==='start'){state.timer={hobbyId:id,start:Date.now()};}
     else if(a==='stop'){if(state.timer){state.hobbyLog.push({id:uid(),hobbyId:state.timer.hobbyId,date:t,min:Math.max(1,Math.round((Date.now()-state.timer.start)/60000)),note:'Timed session'});state.timer=null;}}
-    else if(a==='tick'){var hb=state.habits.filter(function(x){return x.id===id;})[0];if(hb){if(hb.days[b.dataset.d])delete hb.days[b.dataset.d];else hb.days[b.dataset.d]=true;}}
-    else if(a==='done'){var as=state.school.filter(function(x){return x.id===id;})[0];if(as)as.done=!as.done;}
-    else if(a==='water'){var n=+b.dataset.n;state.water[t]=(state.water[t]||0)===n?n-1:n;}
+    else if(a==='tick'){var hb=state.habits.filter(function(x){return x.id===id;})[0];if(hb){if(hb.days[b.dataset.d])delete hb.days[b.dataset.d];else{hb.days[b.dataset.d]=true;haptic();}}}
+    else if(a==='done'){var as=state.school.filter(function(x){return x.id===id;})[0];if(as){as.done=!as.done;if(as.done)haptic();}}
+    else if(a==='water'){var n=Math.min(+b.dataset.n,30);var wasN=(state.water[t]||0)===n;state.water[t]=wasN?n-1:n;if(!wasN)haptic();}
     else if(a==='fresh'){var g=state.goals;state=blank();state.goals=g;}
     else if(a==='keep'){state.example=false;}
     else if(a==='erase'){if(!eraseArmed){eraseArmed=true;b.textContent='Tap again to erase all my entries';return;}eraseArmed=false;b.textContent='Erase my entries';state=blank();}
@@ -996,6 +1036,7 @@ details.legal p{margin:0}
     else if(kind==='school'){if(!v('schTitle')||!v('schDue'))return;state.school.push({id:uid(),title:v('schTitle'),subject:v('schSubject'),due:v('schDue'),done:false});}
     else if(kind==='meal'){if(!v('mealName'))return;food.msg='';state.meals.push({id:uid(),date:t,name:v('mealName'),type:v('mealType'),kcal:num(v('mealKcal'),5000),protein:num(v('mealProtein'),300),produce:num(v('mealProduce'),20)});}
     else if(kind==='goals'){state.goals={water:Math.max(1,num(v('goalWater'),20)),protein:Math.max(1,num(v('goalProtein'),300)),produce:Math.max(1,num(v('goalProduce'),20)),fitMin:Math.max(10,num(v('goalFit'),2000))};}
+    if(/^(fitness|hobby|habit|school|meal|goals)$/.test(kind)){adding=null;haptic('success');}
     commit();
   });
 
