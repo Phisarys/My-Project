@@ -102,7 +102,7 @@ h3{font-family:var(--display);font-weight:700;font-size:1.2rem;text-transform:up
 h3 .sub{text-transform:none;letter-spacing:0;font-family:var(--body);font-weight:400}
 .lede{margin:6px 0 0;color:var(--muted);max-width:60ch}
 .block{display:flex;flex-direction:column;gap:12px;min-width:0}
-.label{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700}
+.label{font-size:.84rem;letter-spacing:.01em;color:var(--muted);font-weight:700}
 .pagehead{display:flex;align-items:center;gap:10px;margin-bottom:-8px}
 .back{display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--line);border-radius:99px;padding:6px 14px 6px 10px;font:inherit;font-size:.9rem;font-weight:700;color:var(--muted);cursor:pointer}
 .back svg{width:16px;height:16px}
@@ -139,7 +139,7 @@ button.col:hover .bar{opacity:1}
 form.add{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:14px}
 .f{display:flex;flex-direction:column;gap:5px;flex:1 1 7rem;min-width:0}
 .f.wide{flex:3 1 12rem}
-.f label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+.f label{font-size:.84rem;color:var(--muted);letter-spacing:.01em;font-weight:700}
 input,select{font:inherit;color:var(--ink);background:rgba(4,9,26,.55);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;width:100%;min-width:0;height:48px;transition:border-color .15s ease,box-shadow .15s ease}
 input::placeholder{color:var(--faint)}
 input:focus,select:focus{outline:none;border-color:var(--sec,#fff);box-shadow:0 0 0 3px color-mix(in srgb,var(--sec,#fff) 25%,transparent)}
@@ -186,25 +186,15 @@ ul.list li{display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px;
 .grow strong{display:block;overflow-wrap:anywhere}
 .sub{color:var(--muted);font-size:.86rem}
 .num{font-family:var(--display);font-size:1.25rem;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:700}
-.x{background:transparent;border:0;color:var(--faint);cursor:pointer;font-size:1.3rem;line-height:1;width:34px;height:34px;border-radius:99px;flex:none}
+.x{background:transparent;border:0;color:var(--faint);cursor:pointer;font-size:1.3rem;line-height:1;width:44px;height:44px;border-radius:99px;flex:none}
 .x:hover{background:rgba(255,122,110,.14);color:var(--warn)}
 .pill{font-size:.74rem;border:1px solid var(--line);border-radius:99px;padding:2px 9px;color:var(--muted);white-space:nowrap}
 .pill.late{color:var(--warn);border-color:var(--warn);font-weight:700}
 .empty{color:var(--muted);border:1px dashed var(--line);border-radius:var(--r-sm);padding:18px;margin:0;text-align:center}
-.check{width:32px;height:32px;border-radius:10px;border:2px solid rgba(255,255,255,.22);background:transparent;cursor:pointer;flex:none;color:var(--on-sec);font-weight:800;line-height:1;padding:0;transition:transform .12s ease}
+.check{width:40px;height:40px;border-radius:10px;border:2px solid rgba(255,255,255,.22);background:transparent;cursor:pointer;flex:none;color:var(--on-sec);font-weight:800;line-height:1;padding:0;transition:transform .12s ease}
 .check.on{background:var(--sec);border-color:var(--sec);box-shadow:0 0 14px color-mix(in srgb,var(--sec) 55%,transparent)}
 .check:active{transform:scale(.9)}
 .done strong{text-decoration:line-through;color:var(--muted)}
-.scroll{overflow-x:auto}
-table.grid{border-collapse:separate;border-spacing:0;width:100%;min-width:420px}
-table.grid th{font-size:.7rem;color:var(--muted);font-weight:700;padding:4px 2px;text-align:center;text-transform:uppercase;letter-spacing:.06em}
-table.grid th.now{color:var(--sec)}
-table.grid td{padding:8px 2px;text-align:center;border-top:1px solid var(--line)}
-table.grid td.name{text-align:left;padding-right:10px;min-width:9rem}
-table.grid td.name strong{display:block;overflow-wrap:anywhere}
-/* Keep habit names in view while the days scroll sideways on small phones */
-table.grid td.name,table.grid th:first-child{position:sticky;left:0;z-index:1;background:#101a3c;box-shadow:8px 0 10px -8px rgba(0,4,20,.7)}
-@media (max-width:440px){table.grid td.name{min-width:7.5rem;max-width:7.5rem}}
 
 /* ---- cards (hobby, badges) ---- */
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:12px}
@@ -214,8 +204,8 @@ table.grid td.name,table.grid th:first-child{position:sticky;left:0;z-index:1;ba
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .row input{flex:1 1 5rem}
 .timer{font-family:var(--display);font-size:1.5rem;font-variant-numeric:tabular-nums;font-weight:700;color:var(--sec)}
-.glasses{display:flex;flex-wrap:wrap;gap:8px}
-.glass{width:36px;height:46px;border:2px solid rgba(255,255,255,.25);border-top-width:1px;border-radius:4px 4px 12px 12px;background:transparent;cursor:pointer;padding:0;transition:background .15s ease}
+.glasses{display:grid;grid-template-columns:repeat(var(--n,8),minmax(0,40px));gap:6px}
+.glass{width:100%;height:46px;border:2px solid rgba(255,255,255,.25);border-top-width:1px;border-radius:4px 4px 12px 12px;background:transparent;cursor:pointer;padding:0;transition:background .15s ease}
 .glass.on{background:linear-gradient(180deg,color-mix(in srgb,var(--c-school) 70%,#fff 0%),var(--c-school));border-color:var(--c-school)}
 .congrats{display:flex;align-items:center;gap:12px;background:linear-gradient(120deg,var(--sec),color-mix(in srgb,var(--sec) 60%,#ffc23d));color:var(--on-sec);border-radius:var(--r);padding:14px 16px;box-shadow:0 10px 30px color-mix(in srgb,var(--sec) 40%,transparent)}
 .congrats svg{flex:none}
@@ -357,7 +347,10 @@ main.setup::before{display:none}
 .ringcenter b{font-family:var(--display);font-weight:800;font-style:italic;font-size:1.7rem;line-height:.9}
 .ringcenter span{font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
 .legend{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px;flex:1;min-width:7.5rem}
-.legend li{display:flex;align-items:center;gap:9px;font-size:.92rem}
+.legend li{font-size:.92rem}
+.legend button{display:flex;align-items:center;gap:9px;width:100%;min-height:34px;padding:0 4px 0 0;margin:0;background:none;border:0;font:inherit;color:inherit;text-align:left;cursor:pointer;border-radius:10px}
+.legend button svg{width:14px;height:14px;flex:none;color:var(--faint)}
+.legend button:active{background:var(--surface-2)}
 .legend i{width:10px;height:10px;border-radius:50%;background:var(--sec);box-shadow:0 0 8px var(--sec);flex:none}
 .legend span{flex:1;min-width:0}
 .legend em{font-style:normal;font-family:var(--display);font-weight:700;font-size:1.1rem;font-variant-numeric:tabular-nums;color:var(--sec)}
@@ -394,6 +387,43 @@ main.setup::before{display:none}
 .healthnote svg{width:18px;height:18px;flex:none}
 
 /* ---- legal ---- */
+/* Tap a row to edit it; Delete lives inside the edit form */
+.rowbtn{display:flex;align-items:center;gap:12px;flex:1;min-width:0;background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;text-align:left;min-height:44px;cursor:pointer;border-radius:8px}
+.rowbtn .grow{display:flex;flex-direction:column;min-width:0}
+.rowbtn .grow strong,.rowbtn .grow .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rowbtn:focus-visible{outline:2px solid var(--sec);outline-offset:4px}
+ul.list li.editing{display:block;padding:14px}
+.edbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%}
+.edbar .link.danger{margin-left:auto;color:var(--warn);align-self:center;min-height:44px}
+/* Habits: one card per habit, the week as seven boxes */
+.hlist{display:flex;flex-direction:column;gap:8px}
+.hweek{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;justify-items:center}
+.hdays{padding:0 13px;font-size:.72rem;color:var(--muted);font-weight:700;text-align:center;line-height:1.25}
+.hdays span{display:flex;flex-direction:column}.hdays .now{color:var(--sec)}
+.hcard{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:4px 12px 12px;display:flex;flex-direction:column;gap:6px}
+.hcard .hweek .check{width:100%;max-width:44px;height:40px}
+.hcard form{padding-top:8px}
+@media (max-width:400px){.hcard{padding:4px 8px 10px}.hdays{padding:0 9px}.hweek{gap:3px}}
+/* Hobby cards open on tap */
+.hobhead{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer;min-height:44px}
+.hobhead .grow{display:flex;flex-direction:column;min-width:0}
+.hobhead > svg{width:18px;height:18px;flex:none;color:var(--muted);transition:transform .2s ease}
+.card.open .hobhead > svg{transform:rotate(90deg)}
+/* Slim rows: Apple Health, settings */
+.slimrow{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface-2);font-size:.9rem;color:var(--muted)}
+.slimrow > svg{width:20px;height:20px;flex:none;color:var(--c-fitness)}
+.slimrow .grow{min-width:0}
+.slimrow .link{align-self:center;min-height:36px;color:var(--ink)}
+.mecard{display:flex;align-items:center;gap:14px}
+.mecard .grow{display:flex;flex-direction:column;min-width:0}
+.mecard strong{font-family:var(--display);font-size:1.4rem;line-height:1.1}
+ul.settings{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface-2);overflow:hidden}
+ul.settings li + li{border-top:1px solid var(--line)}
+.setrow{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 14px;background:none;border:0;font:inherit;color:var(--ink);text-align:left;cursor:pointer;text-decoration:none}
+.setrow .grow{display:flex;flex-direction:column;min-width:0}
+.setrow .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.setrow > svg{width:16px;height:16px;flex:none;color:var(--muted)}
+.psback{align-self:flex-start}
 .disclaimer{margin:6px 0 0;font-size:.8rem;color:var(--faint)}
 details.legal summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px}
 details.legal summary::-webkit-details-marker{display:none}
@@ -609,7 +639,7 @@ details.legal p{margin:0}
     return st;
   }
   function cachePut(){if(!dataKey)return;var j=JSON.stringify({state:state,profile:prof});mem[dataKey]=j;ls.set(dataKey,j);}
-  function setNote(){document.getElementById('saveNote').textContent=syncMsg||(guest?'Your entries are saved on this device only. Create an account in Profile to back them up.':'Your profile and entries are saved to your account.');var f=document.getElementById('acctFooter');if(f)f.hidden=!(active==='profile'||syncMsg);}
+  function setNote(){document.getElementById('saveNote').textContent=syncMsg||(guest?'Your entries are saved on this device only. Create an account in Profile to back them up.':'Your profile and entries are saved to your account.');var f=document.getElementById('acctFooter');if(f)f.hidden=!((active==='profile'&&pset==='account')||syncMsg);}
   function schedulePush(){dirty=true;clearTimeout(pushT);pushT=setTimeout(pushNow,1200);}
   function pushNow(){
     clearTimeout(pushT);
@@ -650,7 +680,7 @@ details.legal p{margin:0}
     return 'Can\'t reach the sign-in service. Check your internet connection and try again.';
   }
   var profile=function(){return prof;};
-  var displayName=function(){var p=profile();return p.nick||p.first||(guest?'there':user.split('@')[0]);};
+  var displayName=function(){var p=profile();return p.nick||p.first||'there';};
   function avatar(size){var p=profile(), st='style="width:'+size+'px;height:'+size+'px;font-size:'+Math.round(size*.4)+'px"';
     if(p.photo&&p.photo.indexOf('data:image/')===0)return '<img class="av" '+st+' src="'+esc(p.photo)+'" alt="">';
     var ini=((p.first||p.nick||(guest?'?':user)).charAt(0)+(p.last||'').charAt(0)).toUpperCase();return '<span class="av" '+st+' aria-hidden="true">'+esc(ini)+'</span>';}
@@ -829,7 +859,7 @@ details.legal p{margin:0}
   function vReminder(){
     if(!isNative())return '';
     var r=remGet();
-    var o='<div class="block"><h3>Reminders</h3><span class="sub">Only on this phone. The daily nudge reminds you to log your five areas.</span>';
+    var o='<div class="block"><span class="sub">Only on this phone. The daily nudge reminds you to log your five areas.</span>';
     o+='<form class="add" data-form="reminder">'+field('remTime','Time','type="time" value="'+esc(r.time)+'" required')+'<button class="btn small">'+(r.on?'Update time':'Turn on')+'</button>'+(r.on?'<button class="btn small ghost" type="button" data-act="remOff" id="btnRemOff">Turn off</button>':'')+'</form>';
     var sm=smartGet();
     o+='<span class="label">Smart reminders</span><div class="switches">'+SMART.map(function(x){return '<button class="switch s-'+x[3]+'" type="button" data-act="smart" data-k="'+x[0]+'" id="smart-'+x[0]+'" aria-pressed="'+!!sm[x[0]]+'"><span class="grow"><strong>'+x[1]+'</strong><span class="sub">'+x[2]+'</span></span><span class="tog" aria-hidden="true"></span></button>';}).join('')+'</div>';
@@ -857,30 +887,45 @@ details.legal p{margin:0}
     var body='What happened, or what would make FiveArc better?\n\n\n\n---\nPlease keep this part so the problem can be found faster.\nFiveArc version: '+i.v+'\nUsing: '+i.where+'\nSystem: '+sys+'\nAccount: '+(guest?'none (entries on this device only)':'signed in');
     return 'mailto:'+FEEDBACK_TO+'?subject='+encodeURIComponent('FiveArc feedback, '+(i.where==='website'?'website':'version '+i.v))+'&body='+encodeURIComponent(body);
   }
-  function vFeedback(){
-    if(!appInfo)appVersion().then(function(){var a=document.getElementById('btnFeedback');if(a)a.href=feedbackHref();});
-    return '<div class="block"><h3>Feedback</h3><span class="sub">Found a bug or have an idea? It goes straight to the person who makes FiveArc.</span><div class="row"><a class="btn small" id="btnFeedback" href="'+esc(feedbackHref())+'">Send feedback</a></div><span class="sub">Opens an email to '+FEEDBACK_TO+' with your app version filled in.</span></div>';
-  }
   function vTheme(){var v=themeGet();
-    return '<div class="block"><h3>Appearance</h3><span class="sub">Automatic follows your iPhone\'s light or dark setting.</span><div class="seg" role="group" aria-label="Appearance">'
+    return '<div class="block"><span class="sub">Automatic follows your iPhone\'s light or dark setting.</span><div class="seg" role="group" aria-label="Appearance">'
       +[['auto','Automatic'],['light','Light'],['dark','Dark']].map(function(x){return '<button type="button" data-act="theme" data-v="'+x[0]+'" id="theme-'+x[0]+'" aria-pressed="'+(v===x[0])+'">'+x[1]+'</button>';}).join('')+'</div></div>';}
-  function vProfile(){
-    var p=profile(), fresh=!p.first&&!p.nick;
-    var o='<div><h2>'+(fresh?'Set up your profile':'Profile')+'</h2><p class="lede">'+(fresh?'Welcome. Add your name and a photo, then pick any section above to start.':'Your name, nickname and photo.')+'</p></div>';
-    if(flash){o+='<p class="ok" role="status">'+esc(flash)+'</p>';flash='';}
+  var pset=null;
+  var PSET={me:'Name and photo',reminders:'Reminders',partners:'Partners',look:'Appearance',account:'Account',legal:'Privacy, terms and credits'};
+  function ptSummary(){var n=pt.list.length;return guest?'Needs an account':n?n+' partner'+(n===1?'':'s'):'Share your rings with a friend';}
+  function psRow(k,sub){return '<li><button class="setrow" type="button" data-act="pset" data-k="'+k+'" id="ps-'+k+'"><span class="grow"><strong>'+PSET[k]+'</strong><span class="sub">'+sub+'</span></span>'+ICON.chev+'</button></li>';}
+  function vMe(){var p=profile(), o='';
     o+='<div class="profilehead">'+avatar(104)+'<div class="block"><div class="row"><input class="vh" type="file" id="photoInput" accept="image/*"><label class="btn small" for="photoInput">'+(p.photo?'Change photo':'Add a photo')+'</label>'+(p.photo?'<button class="btn small ghost" type="button" data-act="rmPhoto" id="btnRmPhoto">Remove photo</button>':'')+'</div><span class="sub">Pick any picture from your device. It is cropped to a square.</span>'+(photoErr?'<p class="err" role="alert">'+esc(photoErr)+'</p>':'')+'</div></div>';
     photoErr='';
-    o+='<form class="add" data-form="profile">'+field('pfFirst','First name','required maxlength="40" autocomplete="given-name" value="'+esc(p.first)+'"')+field('pfLast','Last name','required maxlength="40" autocomplete="family-name" value="'+esc(p.last)+'"')+field('pfNick','Nickname','maxlength="24" autocomplete="nickname" placeholder="What should we call you?" value="'+esc(p.nick)+'"')+'<button class="btn">Save profile</button></form>';
-    o+=vReminder()+vPartners()+vTheme()+vFeedback();
-    if(guest)o+='<div class="block"><h3>Account</h3><span class="sub">You\'re using FiveArc without an account. Your entries are only on this device, so they\'re lost if you delete the app. Create an account to back them up and use them on other devices.</span><div class="row"><button class="btn small" type="button" data-act="guestUp" id="btnGuestUp">Create an account</button><button class="btn small ghost" type="button" data-act="guestIn" id="btnGuestIn">Sign in</button></div></div>';
-    else o+='<div class="block"><h3>Account</h3><span class="sub">Signed in as '+esc(user)+'</span>'+(acctErr?'<p class="err" role="alert">'+esc(acctErr)+'</p>':'')+'<div class="row"><button class="btn small ghost" type="button" data-act="signout" id="btnSignOut">Sign out</button><button class="btn small ghost" type="button" data-act="delAcct" id="btnDelAcct">'+(armedAcct?'Tap again to delete your account and entries':'Delete account')+'</button></div></div>';
-    o+='<details class="block legal"><summary><h3>Legal and credits</h3></summary>'
-      +'<p class="sub">FiveArc is a personal tracking app. It does not give medical, dietary or professional advice.</p>'
+    return o+'<form class="add" data-form="profile">'+field('pfFirst','First name','required maxlength="40" autocomplete="given-name" value="'+esc(p.first)+'"')+field('pfLast','Last name','required maxlength="40" autocomplete="family-name" value="'+esc(p.last)+'"')+field('pfNick','Nickname','maxlength="24" autocomplete="nickname" placeholder="What should we call you?" value="'+esc(p.nick)+'"')+'<button class="btn">Save profile</button></form>';
+  }
+  function vAccount(){
+    if(guest)return '<div class="block"><span class="sub">You\'re using FiveArc without an account. Your entries are only on this device, so they\'re lost if you delete the app. Create an account to back them up and use them on other devices.</span><div class="row"><button class="btn small" type="button" data-act="guestUp" id="btnGuestUp">Create an account</button><button class="btn small ghost" type="button" data-act="guestIn" id="btnGuestIn">Sign in</button></div></div>';
+    return '<div class="block"><span class="sub">Signed in as '+esc(user)+'</span>'+(acctErr?'<p class="err" role="alert">'+esc(acctErr)+'</p>':'')+'<div class="row"><button class="btn small ghost" type="button" data-act="signout" id="btnSignOut">Sign out</button><button class="btn small ghost" type="button" data-act="delAcct" id="btnDelAcct">'+(armedAcct?'Tap again to delete your account and entries':'Delete account')+'</button></div></div>';
+  }
+  function vLegal(){
+    return '<div class="block legal"><p class="sub">FiveArc is a personal tracking app. It does not give medical, dietary or professional advice.</p>'
       +'<p class="sub doclinks"><a href="https://fivearc.app/privacy" target="_blank" rel="noopener">Privacy Policy</a> · <a href="https://fivearc.app/terms" target="_blank" rel="noopener">Terms of Use</a></p>'
-      +'<p class="sub">With an account, your profile and entries are stored in Google Firebase, private to your account, and Delete account above erases them. If you add a partner, they can see your nickname or first name and your daily ring percentages for the last 7 days, never your entries, until either of you stops sharing. Without an account, they stay on this device only. In the iPhone app, workouts are read from Apple Health only with your permission, are never written back, and are never used for advertising or shared.</p>'
-      +'<p class="sub"><strong>Open-source software used:</strong> Barlow Condensed and Atkinson Hyperlegible fonts (SIL Open Font License 1.1); Firebase JavaScript SDK (Apache License 2.0); Capacitor, Capacitor App, Capacitor Haptics, Capacitor Local Notifications and Capacitor Barcode Scanner (MIT License); Capgo Capacitor Health and Capgo Capacitor Age Range (Mozilla Public License 2.0). Food data from Open Food Facts (Open Database License). Logo, icons and illustrations are original to FiveArc.</p>'
-      +'</details>';
-    acctErr='';
+      +'<p class="sub">With an account, your profile and entries are stored in Google Firebase, private to your account, and Delete account erases them. If you add a partner, they can see your nickname or first name and your daily ring percentages for the last 7 days, never your entries, until either of you stops sharing. Without an account, they stay on this device only. In the iPhone app, workouts are read from Apple Health only with your permission, are never written back, and are never used for advertising or shared.</p>'
+      +'<p class="sub"><strong>Open-source software used:</strong> Barlow Condensed and Atkinson Hyperlegible fonts (SIL Open Font License 1.1); Firebase JavaScript SDK (Apache License 2.0); Capacitor, Capacitor App, Capacitor Haptics, Capacitor Local Notifications and Capacitor Barcode Scanner (MIT License); Capgo Capacitor Health and Capgo Capacitor Age Range (Mozilla Public License 2.0). Food data from Open Food Facts (Open Database License). Logo, icons and illustrations are original to FiveArc.</p></div>';
+  }
+  function vProfile(){
+    var p=profile(), fresh=!p.first&&!p.nick, o='';
+    var fl=flash?'<p class="ok" role="status">'+esc(flash)+'</p>':'';flash='';
+    if(pset&&PSET[pset]&&(pset!=='reminders'||isNative())){
+      o='<button class="btn small ghost psback" type="button" data-act="pset" data-k="" id="psBack">'+'‹ Profile</button><div><h2>'+PSET[pset]+'</h2></div>'+fl;
+      o+=pset==='me'?vMe():pset==='reminders'?vReminder():pset==='partners'?vPartners():pset==='look'?vTheme():pset==='account'?vAccount():vLegal();
+      acctErr='';return o;
+    }
+    pset=null;
+    o='<div><h2>'+(fresh?'Set up your profile':'Profile')+'</h2>'+(fresh?'<p class="lede">Welcome. Add your name and a photo, then pick any section below to start.</p>':'')+'</div>'+fl;
+    if(fresh)o+=vMe();
+    else o+='<button class="setrow mecard" type="button" data-act="pset" data-k="me" id="ps-me">'+avatar(64)+'<span class="grow"><strong>'+esc((p.first+' '+p.last).trim()||displayName())+'</strong><span class="sub">'+(p.nick?'Goes by '+esc(p.nick):'Edit name and photo')+'</span></span>'+ICON.chev+'</button>';
+    var r=isNative()?remGet():null, th=themeGet();
+    o+='<ul class="settings">'+(r?psRow('reminders',r.on?'Daily at '+esc(r.time):'Off'):'')+psRow('partners',ptSummary())+psRow('look',th==='auto'?'Automatic':th==='light'?'Light':'Dark');
+    if(!appInfo)appVersion().then(function(){var a=document.getElementById('btnFeedback');if(a)a.href=feedbackHref();});
+    o+='<li><a class="setrow" id="btnFeedback" href="'+esc(feedbackHref())+'"><span class="grow"><strong>Send feedback</strong><span class="sub">Email a bug or an idea</span></span>'+ICON.chev+'</a></li>';
+    o+=psRow('account',guest?'Not backed up yet':esc(user))+psRow('legal','Not medical advice')+'</ul>';
     return o;
   }
 
@@ -918,14 +963,13 @@ details.legal p{margin:0}
     var o='<section class="hero" aria-label="Today"><div class="hero-title"><h2>Today</h2></div>';
     o+='<div class="ringwrap">'+rings+'<div class="ringcenter"><b data-v="'+avg+'">'+avg+'%</b></div></div>';
     var t=today(), w=state.water[t]||0, nx=upNext();
-    o+='<ul class="legend">'+SECTIONS.map(function(x,i){return '<li class="s-'+x[0]+'"><i></i><span>'+SHORT[x[0]]+'</span><em>'+Math.round(pcts[i]*100)+'%</em></li>';}).join('')+'</ul>';
+    o+='<ul class="legend">'+SECTIONS.map(function(x,i){var pc=Math.round(pcts[i]*100);return '<li class="s-'+x[0]+'"><button type="button" data-tab="'+x[0]+'" id="tab-'+x[0]+'" aria-label="'+x[1]+', '+pc+' percent today. '+esc(glance(x[0]))+'"><i></i><span>'+SHORT[x[0]]+'</span><em>'+pc+'%</em>'+ICON.chev+'</button></li>';}).join('')+'</ul>';
     o+='<button class="upnext s-'+nx[0]+'" type="button" data-tab="'+nx[0]+'" id="upNext"><span class="grow"><span class="label">Up next</span><strong>'+esc(nx[1])+'</strong><span class="sub">'+esc(nx[2])+'</span></span>'+ICON.back+'</button></section>';
     o+=vRecap();
     o+='<section class="quick" aria-label="Quick check-off"><span class="label">Check off today</span><div class="chips">'
       +state.habits.map(function(hb){var on=!!hb.days[t];return '<button class="chip s-habit'+(on?' on':'')+'" type="button" data-act="tick" data-id="'+hb.id+'" data-d="'+t+'" aria-pressed="'+on+'" id="q-'+hb.id+'"><i>'+(on?'✓':'')+'</i><span>'+esc(hb.name)+'</span></button>';}).join('')
       +'<button class="chip water s-school'+(w?' on':'')+'" type="button" data-act="water" data-n="'+(w+1)+'" id="qWater" aria-label="Add a glass of water, '+w+' of '+state.goals.water+' so far"><i>+</i><span>Water '+w+' of '+state.goals.water+'</span></button></div>'+(vRecap()?'':'<button class="link weeklink" type="button" data-act="recapOpen" id="btnWeek">See your week</button>')+'</section>';
     o+=vPartnersHome();
-    o+='<nav class="lanes" aria-label="Sections">'+SECTIONS.map(function(x,i){return '<button class="lane s-'+x[0]+'" type="button" id="tab-'+x[0]+'" data-tab="'+x[0]+'"><span class="ico">'+ICON[x[0]]+'</span><span class="lt"><b>'+x[1]+'</b><small>'+esc(glance(x[0]))+'</small><span class="mini"><div style="width:'+Math.round(pcts[i]*100)+'%"></div></span></span><span class="chev">'+ICON.chev+'</span></button>';}).join('')+'</nav>';
     return o;
   }
   /* The one thing most worth doing next: [section, title, detail]. */
@@ -1000,7 +1044,7 @@ details.legal p{margin:0}
   function ptSync(){var v=ptViewers();pt.list=pt.raw.filter(function(x){return v.indexOf(x.id)>=0;});
   }
   function ptPaint(){if(!user||!state)return;if(active==='home'&&!state.onboard){render();return;}
-    if(active==='profile'){var b=document.getElementById('ptList');if(b)b.innerHTML=ptListHtml();var j=document.getElementById('btnPtJoin');if(j)j.disabled=pt.busy;}}
+    if(active==='profile'){var ps=document.querySelector('#ps-partners .sub');if(ps)ps.textContent=ptSummary();var b=document.getElementById('ptList');if(b)b.innerHTML=ptListHtml();var j=document.getElementById('btnPtJoin');if(j)j.disabled=pt.busy;}}
   function ptCodeOk(){return pt.code&&pt.codeExp>Date.now();}
   async function ptInvite(){
     if(pt.busy)return;pt.busy=true;pt.msg='';pt.copied=false;ptPaint();
@@ -1079,8 +1123,8 @@ details.legal p{margin:0}
     return o;
   }
   function vPartners(){
-    if(guest)return '<div class="block"><h3>Partners</h3><span class="sub">Share your daily rings with a partner who also uses FiveArc. This needs a free account, so create one below first.</span></div>';
-    return '<div class="block" id="ptBox"><h3>Partners</h3><span class="sub">Share your daily rings with up to '+PT_MAX+' people who also use FiveArc, and see theirs on Home. They see your nickname or first name and your ring percentages for the last 7 days, never your entries.</span>'
+    if(guest)return '<div class="block"><span class="sub">Share your daily rings with a partner who also uses FiveArc. This needs a free account. Create one under Account.</span><div class="row"><button class="btn small" type="button" data-act="pset" data-k="account" id="btnPtAcct">Go to Account</button></div></div>';
+    return '<div class="block" id="ptBox"><span class="sub">Share your daily rings with up to '+PT_MAX+' people who also use FiveArc, and see theirs on Home. They see your nickname or first name and your ring percentages for the last 7 days, never your entries.</span>'
       +'<div class="block" id="ptList">'+ptListHtml()+'</div>'
       +'<form class="add" data-form="ptJoin">'+field('ptCode','Have a code from a partner?','maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="K7QM 2XRP"')+'<button class="btn small" id="btnPtJoin"'+(pt.busy?' disabled':'')+'>Connect</button></form></div>';
   }
@@ -1106,6 +1150,14 @@ details.legal p{margin:0}
   function meter(label,val,goal,unit){var pct=goal>0?Math.min(100,Math.round(val/goal*100)):0;
     return '<div class="meter"><span class="label">'+label+'</span><span class="fig">'+val+' <i>of '+goal+' '+unit+'</i></span><div class="track" role="img" aria-label="'+pct+' percent of goal"><div style="width:'+pct+'%"></div></div></div>';}
   function field(id,label,attrs,cls){return '<div class="f '+(cls||'')+'"><label for="'+id+'">'+label+'</label><input id="'+id+'" name="'+id+'" '+attrs+'></div>';}
+  function selV(id,label,opts,val){return '<div class="f"><label for="'+id+'">'+label+'</label><select id="'+id+'" name="'+id+'">'+opts.map(function(o){return '<option'+(o===val?' selected':'')+'>'+o+'</option>';}).join('')+'</select></div>';}
+  /* ---------- Editing: tap a row to change it; Delete sits inside the form ---------- */
+  var editing=null;
+  function isEd(k,id){return editing===k+':'+id;}
+  function edForm(k,id,fields,delAct,what){
+    return '<form class="add" data-form="edit" data-k="'+k+'" data-id="'+id+'">'+fields+'<div class="edbar"><button class="btn small">Save</button><button class="btn small ghost" type="button" data-act="editX" id="editX">Cancel</button><button class="link danger" type="button" data-act="'+(delAct||'del')+'" data-k="'+k+'" data-id="'+id+'" id="editDel">Delete '+(what||'')+'</button></div></form>';}
+  function edRow(k,x,inner,label,pre,cls){
+    return '<li'+(cls?' class="'+cls+'"':'')+'>'+(pre||'')+'<button class="rowbtn" type="button" data-act="edit" data-k="'+k+'" data-id="'+x.id+'" id="ed-'+x.id+'" aria-label="'+label+'. Tap to edit">'+inner+'</button></li>';}
   function sel(id,label,opts){return '<div class="f"><label for="'+id+'">'+label+'</label><select id="'+id+'" name="'+id+'">'+opts.map(function(o){return '<option>'+o+'</option>';}).join('')+'</select></div>';}
   var byDateDesc=function(a,b){return a.date<b.date?1:a.date>b.date?-1:0;};
 
@@ -1203,13 +1255,16 @@ details.legal p{margin:0}
     if(isIOSApp()&&state&&state.health&&state.health.on&&Date.now()-healthLastAuto>5*60000){healthLastAuto=Date.now();healthSync(false,true);}
   }
   document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&user)maybeAutoHealth();});
+  function healthHidden(){try{return localStorage.getItem('fivearc-health-hide')==='1';}catch(e){return false;}}
   function vHealth(){
     if(isIOSApp()){
-      var h=state.health||{}, n=state.fitness.filter(function(e){return e.src==='health';}).length;
-      var o='<div class="card s-fitness healthcard"><div class="head"><span class="hk">'+ICON.watch+'</span><div class="grow"><strong>Apple Watch &amp; Health</strong><span class="sub">'+(h.on?'Connected. '+n+' workout'+(n===1?'':'s')+' imported'+(h.last?', last checked '+dayLong(iso(new Date(h.last))):'')+'.':'Log runs and workouts from your Apple Watch automatically.')+'</span></div></div>';
-      o+='<div class="row"><button class="btn small" type="button" data-act="'+(h.on?'healthSync':'healthConnect')+'" id="btnHealth"'+(healthBusy?' disabled':'')+'>'+(healthBusy?'Checking…':(h.on?'Sync now':'Connect Apple Health'))+'</button></div>';
-      if(healthMsg)o+='<p class="sub" role="status">'+esc(healthMsg)+'</p>';
-      return o+'</div>';
+      var h=state.health||{}, n=state.fitness.filter(function(e){return e.src==='health';}).length, o;
+      var msg=healthMsg?'<p class="sub" role="status">'+esc(healthMsg)+'</p>':'';
+      if(h.on)return '<div class="slimrow">'+ICON.watch+'<span class="grow">Apple Health · '+n+' imported'+(h.last?', checked '+dayShort(iso(new Date(h.last))):'')+'</span><button class="link" type="button" data-act="healthSync" id="btnHealth"'+(healthBusy?' disabled':'')+'>'+(healthBusy?'Checking…':'Sync')+'</button></div>'+msg;
+      if(healthHidden())return '<div class="slimrow">'+ICON.watch+'<span class="grow">Log Apple Watch workouts automatically</span><button class="link" type="button" data-act="healthConnect" id="btnHealth"'+(healthBusy?' disabled':'')+'>'+(healthBusy?'Checking…':'Connect')+'</button></div>'+msg;
+      o='<div class="card s-fitness healthcard"><div class="head"><span class="hk">'+ICON.watch+'</span><div class="grow"><strong>Apple Watch &amp; Health</strong><span class="sub">Log runs and workouts from your Apple Watch automatically.</span></div></div>';
+      o+='<div class="row"><button class="btn small" type="button" data-act="healthConnect" id="btnHealth"'+(healthBusy?' disabled':'')+'>'+(healthBusy?'Checking…':'Connect Apple Health')+'</button><button class="btn small ghost" type="button" data-act="healthHide" id="btnHealthHide">Not now</button></div>';
+      return o+msg+'</div>';
     }
     if(isIOSWeb())return '<p class="sub healthnote">'+ICON.watch+' Automatic Apple Watch logging will come with the App Store version of this app.</p>';
     return '';
@@ -1283,7 +1338,7 @@ details.legal p{margin:0}
     var max=Math.max.apply(null,per.concat([60])), mins=sum(E,function(e){return e.min;});
     var days={};E.forEach(function(e){days[e.date]=1;});
     var best=per.indexOf(Math.max.apply(null,per)), yi=years.indexOf(fitYear);
-    var o='<div><h2>Fitness</h2><p class="lede">Log workouts and watch your year add up. Past years stay here to look back on.</p><p class="sub disclaimer">For general fitness tracking only, not medical advice. Check with a doctor before starting a new exercise programme.</p></div>';
+    var o='<div><h2>Fitness</h2><p class="lede">Log workouts and watch your year add up.</p></div>';
     if(state.congrats&&state.congrats.length)o+='<div class="congrats" role="status">'+TROPHY+'<p><strong>Congratulations!</strong> You earned '+state.congrats.map(function(n){return '<strong>'+esc(n)+'</strong>';}).join(' and ')+'.</p><button class="x" type="button" data-act="dismiss" aria-label="Dismiss">×</button></div>';
     if(fitYear===cy)o+='<div class="meters">'+meter('This week: active minutes, last 7 days',fitWeek(),state.goals.fitMin,'min')+'</div>';
     o+=adder('fitness','Log a workout','<form class="add" data-form="fitness">'+field('fitActivity','Activity','required maxlength="40" list="fitList" placeholder="Run, swim, yoga"','wide')+'<datalist id="fitList"><option>Run</option><option>Walk</option><option>Bike ride</option><option>Strength training</option><option>Swim</option><option>Yoga</option><option>Basketball</option></datalist>'
@@ -1299,39 +1354,49 @@ details.legal p{margin:0}
       return '<div class="badge'+(x.won?' won':'')+'">'+TROPHY+'<strong>'+x.name+'</strong><span>'+x.desc+'</span>'+(x.won?'<span>Earned</span>':'<div class="track" role="img" aria-label="'+x.val+' of '+x.goal+' '+x.unit+'"><div style="width:'+Math.round(x.val/x.goal*100)+'%"></div></div><span>'+x.val+' of '+x.goal+' '+x.unit+'</span>')+'</div>';}).join('')+'</div></div>';
     var Y=o;o='';
     var mm=pad(fitMonth+1), list=E.filter(function(e){return e.date.slice(5,7)===mm;}).sort(byDateDesc);
-    o+='<div class="block"><h3>'+MON[fitMonth]+' '+fitYear+' <span class="sub">'+list.length+' workout'+(list.length===1?'':'s')+', '+hrs(per[fitMonth])+' hr</span></h3>'+(list.length?'<ul class="list">'+list.map(function(e){return '<li>'+wkIcon(e.activity,e.date===t)+'<div class="grow"><strong>'+esc(e.activity)+'</strong><span class="sub">'+(e.date===t?'Today':dayLong(e.date))+' · '+(e.src==='health'?'Apple Health'+(e.km?' · '+e.km+' km':''):esc(e.effort))+'</span></div><span class="num">'+e.min+' min</span><button class="x" type="button" data-act="del" data-k="fitness" data-id="'+e.id+'" aria-label="Delete '+esc(e.activity)+'">×</button></li>';}).join('')+'</ul>':'<p class="empty">No workouts logged in '+MON[fitMonth]+' '+fitYear+'.</p>')+'</div>';
+    o+='<div class="block"><h3>'+MON[fitMonth]+' '+fitYear+' <span class="sub">'+list.length+' workout'+(list.length===1?'':'s')+', '+hrs(per[fitMonth])+' hr</span></h3>'+(list.length?'<ul class="list">'+list.map(function(e){
+      if(isEd('fitness',e.id))return '<li class="editing">'+edForm('fitness',e.id,field('edAct','Activity','required maxlength="40" list="edFitList" value="'+esc(e.activity)+'"','wide')+'<datalist id="edFitList"><option>Run</option><option>Walk</option><option>Bike ride</option><option>Strength training</option><option>Swim</option><option>Yoga</option><option>Basketball</option></datalist>'
+        +field('edMin','Minutes','type="number" min="1" max="600" required inputmode="numeric" value="'+e.min+'"')+(e.src==='health'?'':selV('edEffort','Effort',['Easy','Moderate','Hard'],e.effort))+field('edDate','Date','type="date" value="'+e.date+'" max="'+t+'" required'),'del','workout')+'</li>';
+      return edRow('fitness',e,wkIcon(e.activity,e.date===t)+'<span class="grow"><strong>'+esc(e.activity)+'</strong><span class="sub">'+(e.date===t?'Today':dayShort(e.date))+' · '+(e.src==='health'?'Apple Health'+(e.km?' · '+e.km+' km':''):esc(e.effort))+'</span></span><span class="num">'+e.min+' min</span>',esc(e.activity)+', '+e.min+' minutes, '+dayLong(e.date));}).join('')+'</ul>':'<p class="empty">No workouts logged in '+MON[fitMonth]+' '+fitYear+'.</p>')+'</div>';
     var M=o;o='';
     if(E.length)o+='<div><button class="btn small ghost" type="button" data-act="eraseYear" id="btnYear">'+(armedYear?'Tap again to erase all '+fitYear+' workouts':'Reset the '+fitYear+' log')+'</button></div>';
     var open=fitOpen||fitYear!==cy, tg='<button class="btn ghost yeartoggle" type="button" data-act="fitOpen" id="btnFitYear" aria-expanded="'+open+'">'+(open?'Hide your year':'See your year<span>'+hrs(mins)+' hr · '+won+' of '+bs.length+' trophies</span>')+'</button>';
-    return top+(open?tg+Y+M+o:M+tg);
+    return top+(open?tg+Y+M+o:M+tg)+'<p class="sub disclaimer">Not medical advice. Check with a doctor before starting a new exercise programme.</p>';
   }
 
+  var hobOpen=null;
   function vHobby(){
     var t=today();
-    var o='<div><h2>Hobby</h2><p class="lede">Keep track of time spent on the things you do for fun. Start a timer or type in the minutes afterward.</p></div>';
+    var o='<div><h2>Hobby</h2><p class="lede">Time on the things you do for fun.</p></div>';
     o+=adder('hobby','Add a hobby','<form class="add" data-form="hobby">'+field('hobName','New hobby','required maxlength="40" placeholder="Guitar, chess, baking"','wide')+'<button class="btn">Add hobby</button></form>');
     if(!state.hobbies.length)return o+'<p class="empty">No hobbies yet. Tap Add a hobby to start logging time.</p>';
     o+='<div class="cards">'+state.hobbies.map(function(hb){
       var log=state.hobbyLog.filter(function(e){return e.hobbyId===hb.id;}).sort(byDateDesc), tot=sum(log,function(e){return e.min;}), last=log[0];
-      var running=state.timer&&state.timer.hobbyId===hb.id;
-      return '<div class="card"><div class="head"><div class="grow"><strong>'+esc(hb.name)+'</strong><span class="sub">'+log.length+' session'+(log.length===1?'':'s')+'</span></div><span class="hours">'+hrs(tot)+' <span class="sub">hr</span></span><button class="x" type="button" data-act="delHobby" data-id="'+hb.id+'" aria-label="Delete '+esc(hb.name)+'">×</button></div>'
-        +'<span class="sub">'+(last?'Last: '+(last.date===t?'today':dayLong(last.date))+', '+last.min+' min'+(last.note?' · '+esc(last.note):''):'No sessions yet')+'</span>'
-        +'<div class="row">'+(running?'<button class="btn small" type="button" data-act="stop" id="stop-'+hb.id+'">Stop and log</button><span class="timer" id="tick">0:00</span>':'<button class="btn small ghost" type="button" data-act="start" data-id="'+hb.id+'" id="start-'+hb.id+'">Start timer</button>')+'</div>'
-        +'<form class="row" data-form="hobbyLog" data-id="'+hb.id+'"><input id="hm-'+hb.id+'" name="min" type="number" min="1" max="600" required inputmode="numeric" placeholder="Min" aria-label="Minutes for '+esc(hb.name)+'" style="flex:0 1 5rem"><input id="hn-'+hb.id+'" name="note" maxlength="60" placeholder="What you worked on" aria-label="Note for '+esc(hb.name)+'" style="flex:2 1 8rem"><button class="btn small">Log</button></form></div>';
+      var running=state.timer&&state.timer.hobbyId===hb.id, open=hobOpen===hb.id;
+      var c='<div class="card'+(open?' open':'')+'"><button class="hobhead" type="button" data-act="hobOpen" data-id="'+hb.id+'" id="hob-'+hb.id+'" aria-expanded="'+open+'"><span class="grow"><strong>'+esc(hb.name)+'</strong><span class="sub">'+(last?log.length+' session'+(log.length===1?'':'s')+' · last '+(last.date===t?'today':dayShort(last.date)):'No sessions yet')+'</span></span><span class="hours">'+hrs(tot)+' <span class="sub">hr</span></span>'+ICON.chev+'</button>'
+        +'<div class="row">'+(running?'<button class="btn small" type="button" data-act="stop" id="stop-'+hb.id+'">Stop and log</button><span class="timer" id="tick">0:00</span>':'<button class="btn small ghost" type="button" data-act="start" data-id="'+hb.id+'" id="start-'+hb.id+'">Start timer</button>')+'</div>';
+      if(!open)return c+'</div>';
+      c+='<form class="row" data-form="hobbyLog" data-id="'+hb.id+'"><input id="hm-'+hb.id+'" name="min" type="number" min="1" max="600" required inputmode="numeric" placeholder="Min" aria-label="Minutes for '+esc(hb.name)+'" style="flex:0 1 5rem"><input id="hn-'+hb.id+'" name="note" maxlength="60" placeholder="What you worked on" aria-label="Note for '+esc(hb.name)+'" style="flex:2 1 8rem"><button class="btn small">Log</button></form>';
+      if(log.length)c+='<ul class="list">'+log.slice(0,5).map(function(e){
+        if(isEd('hobbyLog',e.id))return '<li class="editing">'+edForm('hobbyLog',e.id,field('edMin','Minutes','type="number" min="1" max="600" required inputmode="numeric" value="'+e.min+'"')+field('edDate','Date','type="date" value="'+e.date+'" max="'+t+'" required')+field('edNote','Note','maxlength="60" value="'+esc(e.note||'')+'"','wide'),'del','session')+'</li>';
+        return edRow('hobbyLog',e,'<span class="grow"><strong>'+esc(e.note||'Session')+'</strong><span class="sub">'+(e.date===t?'Today':dayShort(e.date))+'</span></span><span class="num">'+e.min+' min</span>',esc(e.note||'Session')+', '+e.min+' minutes, '+dayLong(e.date));}).join('')+'</ul>';
+      c+=isEd('hobbies',hb.id)?edForm('hobbies',hb.id,field('edName','Hobby name','required maxlength="40" value="'+esc(hb.name)+'"','wide'),'delHobby','hobby'):'<button class="link" type="button" data-act="edit" data-k="hobbies" data-id="'+hb.id+'" id="ed-'+hb.id+'">Rename or delete this hobby</button>';
+      return c+'</div>';
     }).join('')+'</div>';
     return o;
   }
 
   function vHabit(){
     var w=last7(), t=today();
-    var o='<div><h2>Better Habit</h2><p class="lede">Tick each day you kept the habit. A streak counts days in a row, and today does not break it until tomorrow.</p></div>';
+    var o='<div><h2>Better Habit</h2><p class="lede">Tick each day you keep a habit.</p></div>';
     o+='<div class="meters">'+meter('Kept today',habitsToday(),state.habits.length,'habits')+'</div>';
     o+=adder('habit','Add a habit','<form class="add" data-form="habit">'+field('habName','New habit','required maxlength="50" placeholder="Stretch after waking up"','wide')+'<button class="btn">Add habit</button></form>');
     if(!state.habits.length)return o+'<p class="empty">No habits yet. Start with one small thing you can do every day.</p>';
-    o+='<div class="scroll"><table class="grid"><thead><tr><th></th>'+w.map(function(d){return '<th class="'+(d===t?'now':'')+'">'+(d===t?'Today':DOW[parse(d).getDay()]+'<br>'+parse(d).getDate())+'</th>';}).join('')+'<th></th></tr></thead><tbody>'
-      +state.habits.map(function(hb){var s=streak(hb);return '<tr><td class="name"><strong>'+esc(hb.name)+'</strong><span class="sub">'+(s?s+'-day streak':'No streak yet')+'</span></td>'
-        +w.map(function(d){var on=!!hb.days[d];return '<td><button class="check'+(on?' on':'')+'" type="button" data-act="tick" data-id="'+hb.id+'" data-d="'+d+'" aria-pressed="'+on+'" aria-label="'+esc(hb.name)+', '+dayLong(d)+'">'+(on?'✓':'')+'</button></td>';}).join('')
-        +'<td><button class="x" type="button" data-act="del" data-k="habits" data-id="'+hb.id+'" aria-label="Delete '+esc(hb.name)+'">×</button></td></tr>';}).join('')+'</tbody></table></div>';
+    o+='<div class="hlist"><div class="hweek hdays" aria-hidden="true">'+w.map(function(d){return '<span class="'+(d===t?'now':'')+'">'+(d===t?'Today':DOW[parse(d).getDay()])+'<b>'+parse(d).getDate()+'</b></span>';}).join('')+'</div>'
+      +state.habits.map(function(hb){var s=streak(hb);
+        var top=isEd('habits',hb.id)?edForm('habits',hb.id,field('edName','Habit','required maxlength="50" value="'+esc(hb.name)+'"','wide'),'del','habit')
+          :'<button class="rowbtn" type="button" data-act="edit" data-k="habits" data-id="'+hb.id+'" id="ed-'+hb.id+'" aria-label="'+esc(hb.name)+'. Tap to rename or delete"><span class="grow"><strong>'+esc(hb.name)+'</strong><span class="sub">'+(s?s+'-day streak':'No streak yet')+'</span></span></button>';
+        return '<div class="hcard">'+top+'<div class="hweek">'+w.map(function(d){var on=!!hb.days[d];return '<button class="check'+(on?' on':'')+'" type="button" data-act="tick" data-id="'+hb.id+'" data-d="'+d+'" aria-pressed="'+on+'" aria-label="'+esc(hb.name)+', '+dayLong(d)+'">'+(on?'✓':'')+'</button>';}).join('')+'</div></div>';}).join('')+'</div>';
     return o;
   }
 
@@ -1341,9 +1406,12 @@ details.legal p{margin:0}
   function vSchool(){
     var t=today(), open=state.school.filter(function(a){return !a.done;}).sort(function(a,b){return a.due<b.due?-1:a.due>b.due?1:0;}), done=state.school.filter(function(a){return a.done;});
     var late=open.filter(function(a){return a.due<t;}), week=open.filter(function(a){var n=diffDays(a.due,t);return n>=0&&n<=7;}), later=open.filter(function(a){return diffDays(a.due,t)>7;});
-    var item=function(a){var l=dueLabel(a,t);return '<li class="'+(a.done?'done':'')+'"><button class="check'+(a.done?' on':'')+'" type="button" data-act="done" data-id="'+a.id+'" aria-pressed="'+a.done+'" aria-label="Mark '+esc(a.title)+(a.done?' not done':' done')+'">'+(a.done?'✓':'')+'</button><div class="grow"><strong>'+esc(a.title)+'</strong><span class="sub">'+esc(a.subject||'No subject')+' · '+dayLong(a.due)+'</span></div>'+(a.done?'':'<span class="pill '+l[0]+'">'+l[1]+'</span>')+'<button class="x" type="button" data-act="del" data-k="school" data-id="'+a.id+'" aria-label="Delete '+esc(a.title)+'">×</button></li>';};
+    var item=function(a){var l=dueLabel(a,t);
+      if(isEd('school',a.id))return '<li class="editing">'+edForm('school',a.id,field('edTitle','Assignment','required maxlength="60" value="'+esc(a.title)+'"','wide')+field('edSubject','Subject','maxlength="30" value="'+esc(a.subject||'')+'"')+field('edDue','Due','type="date" required value="'+a.due+'"'),'del','assignment')+'</li>';
+      return edRow('school',a,'<span class="grow"><strong>'+esc(a.title)+'</strong><span class="sub">'+esc(a.subject||'No subject')+' · '+dayShort(a.due)+'</span></span>'+(a.done?'':'<span class="pill '+l[0]+'">'+l[1]+'</span>'),esc(a.title),
+        '<button class="check'+(a.done?' on':'')+'" type="button" data-act="done" data-id="'+a.id+'" aria-pressed="'+a.done+'" aria-label="Mark '+esc(a.title)+(a.done?' not done':' done')+'">'+(a.done?'✓':'')+'</button>',a.done?'done':'');};
     var group=function(title,arr){return arr.length?'<div class="block"><h3>'+title+' <span class="sub">('+arr.length+')</span></h3><ul class="list">'+arr.map(item).join('')+'</ul></div>':'';};
-    var o='<div><h2>Schoolwork</h2><p class="lede">Add assignments with a due date. They sort themselves so the next thing due is always on top.</p></div>';
+    var o='<div><h2>Schoolwork</h2><p class="lede">Assignments, with the next one due on top.</p></div>';
     o+='<div class="meters">'+meter('Finished',done.length,state.school.length,'assignments')+'</div>';
     o+=adder('school','Add an assignment','<form class="add" data-form="school">'+field('schTitle','Assignment','required maxlength="60" placeholder="Read chapter 4"','wide')+field('schSubject','Subject','maxlength="30" placeholder="Biology"')+field('schDue','Due','type="date" value="'+addDays(t,1)+'" required')+'<button class="btn">Add assignment</button></form>');
     if(!state.school.length)return o+'<p class="empty">Nothing on the list. Tap Add an assignment to start.</p>';
@@ -1420,15 +1488,18 @@ details.legal p{margin:0}
   function vNutrition(){
     var t=today(), meals=state.meals.filter(function(m){return m.date===t;}), g=state.goals, w=state.water[t]||0;
     var kcal=sum(meals,function(m){return m.kcal;});
-    var o='<div><h2>Nutrition</h2><p class="lede">Log what you eat and drink today. Calories and protein are optional, so fill in only what you know.</p><p class="sub disclaimer">For general tracking only, not medical or dietary advice. Targets are yours to set; talk to a doctor or dietitian for personal guidance.</p></div>';
+    var o='<div><h2>Nutrition</h2><p class="lede">What you eat and drink today. Fill in only what you know.</p></div>';
     o+='<div class="meters">'+meter('Water',w,g.water,'glasses')+meter('Protein',sum(meals,function(m){return m.protein;}),g.protein,'g')+meter('Fruit and vegetables',sum(meals,function(m){return m.produce;}),g.produce,'servings')+'</div>';
-    var gl='';for(var i=1;i<=Math.max(g.water,w);i++)gl+='<button class="glass'+(i<=w?' on':'')+'" type="button" data-act="water" data-n="'+i+'" aria-pressed="'+(i<=w)+'" aria-label="Glass '+i+'"></button>';
-    o+='<div class="block"><span class="label">Tap a glass each time you finish one</span><div class="glasses">'+gl+'</div></div>';
+    var gl='', gn=Math.max(g.water,w);for(var i=1;i<=gn;i++)gl+='<button class="glass'+(i<=w?' on':'')+'" type="button" data-act="water" data-n="'+i+'" aria-pressed="'+(i<=w)+'" aria-label="Glass '+i+'"></button>';
+    o+='<div class="block"><span class="label">Tap a glass each time you finish one</span><div class="glasses" style="--n:'+Math.min(gn,10)+'">'+gl+'</div></div>';
     var fl=food.fill||{};food.fill=null;
     if(adding!=='nutrition'&&food.msg&&!food.ok)o+='<p class="err" role="status">'+esc(food.msg)+'</p>';
     o+=adder('nutrition','Log food',vFood()+'<form class="add" data-form="meal">'+field('mealName','Food','required maxlength="60" placeholder="Turkey sandwich and an apple"'+(fl.name?' value="'+esc(fl.name)+'"':''),'wide')+sel('mealType','Meal',['Breakfast','Lunch','Dinner','Snack'])+field('mealKcal','Calories','type="number" min="0" max="5000" inputmode="numeric" placeholder="Optional"'+(fl.kcal!==undefined&&fl.kcal!==''?' value="'+fl.kcal+'"':''))+field('mealProtein','Protein (g)','type="number" min="0" max="300" inputmode="numeric" placeholder="Optional"'+(fl.protein!==undefined&&fl.protein!==''?' value="'+fl.protein+'"':''))+field('mealProduce','Fruit/veg servings','type="number" min="0" max="20" inputmode="numeric" placeholder="0"')+'<button class="btn">Log food</button></form>'+(isNative()?'<div class="row">'+scanBtn()+'</div>':''),scanBtn());
-    o+='<div class="block"><h3>Today <span class="sub">'+(kcal?kcal+' calories logged':'')+'</span></h3>'+(meals.length?'<ul class="list">'+meals.map(function(m){var bits=[esc(m.type)];if(m.protein)bits.push(m.protein+' g protein');if(m.produce)bits.push(m.produce+' fruit/veg');return '<li><div class="grow"><strong>'+esc(m.name)+'</strong><span class="sub">'+bits.join(' · ')+'</span></div>'+(m.kcal?'<span class="num">'+m.kcal+' cal</span>':'')+'<button class="x" type="button" data-act="del" data-k="meals" data-id="'+m.id+'" aria-label="Delete '+esc(m.name)+'">×</button></li>';}).join('')+'</ul>':'<p class="empty">Nothing logged today. Tap Log food to add your first meal.</p>')+'</div>';
+    o+='<div class="block"><h3>Today <span class="sub">'+(kcal?kcal+' calories logged':'')+'</span></h3>'+(meals.length?'<ul class="list">'+meals.map(function(m){
+      if(isEd('meals',m.id))return '<li class="editing">'+edForm('meals',m.id,field('edName','Food','required maxlength="60" value="'+esc(m.name)+'"','wide')+selV('edType','Meal',['Breakfast','Lunch','Dinner','Snack'],m.type)+field('edKcal','Calories','type="number" min="0" max="5000" inputmode="numeric" value="'+(m.kcal||'')+'"')+field('edProtein','Protein (g)','type="number" min="0" max="300" inputmode="numeric" value="'+(m.protein||'')+'"')+field('edProduce','Fruit/veg servings','type="number" min="0" max="20" inputmode="numeric" value="'+(m.produce||'')+'"'),'del','food')+'</li>';
+      var bits=[esc(m.type)];if(m.protein)bits.push(m.protein+' g protein');if(m.produce)bits.push(m.produce+' fruit/veg');return edRow('meals',m,'<span class="grow"><strong>'+esc(m.name)+'</strong><span class="sub">'+bits.join(' · ')+'</span></span>'+(m.kcal?'<span class="num">'+m.kcal+' cal</span>':''),esc(m.name));}).join('')+'</ul>':'<p class="empty">Nothing logged today. Tap Log food to add your first meal.</p>')+'</div>';
     o+=adder('goals','Daily targets','<form class="add" data-form="goals"><div class="f wide"><span class="label">Daily targets</span><span class="sub">Set these to what suits you.</span></div>'+field('goalWater','Water (glasses)','type="number" min="1" max="20" required value="'+g.water+'"')+field('goalProtein','Protein (g)','type="number" min="1" max="300" required value="'+g.protein+'"')+field('goalProduce','Fruit/veg','type="number" min="1" max="20" required value="'+g.produce+'"')+field('goalFit','Weekly active min','type="number" min="10" max="2000" required value="'+g.fitMin+'"')+'<button class="btn ghost">Save targets</button></form>').replace('class="btn addbtn"','class="btn ghost addbtn"');
+    o+='<p class="sub disclaimer">Not medical or dietary advice. Targets are yours to set; a doctor or dietitian can help with personal guidance.</p>';
     return o;
   }
 
@@ -1442,7 +1513,7 @@ details.legal p{margin:0}
     document.body.classList.toggle('signed-out',!user);document.body.classList.toggle('has-dock',!!user);
     if(!user)document.getElementById('trophyChip').hidden=true;
     if(!user)return;
-    greet.textContent=state&&state.onboard?'Hi there':'Hey, '+displayName();
+    var pn=profile();greet.textContent=state&&state.onboard?'Hi there':(pn.nick||pn.first?'Hey, '+displayName():'Hey there');
     chip.innerHTML=avatar(52);
     var won=badges(+today().slice(0,4)).filter(function(x){return x.won;}).length, tc=document.getElementById('trophyChip');
     tc.hidden=!won;tc.innerHTML=ICON.trophy+won;tc.setAttribute('aria-label',won+' trophies this year. Open Fitness');
@@ -1453,7 +1524,7 @@ details.legal p{margin:0}
     setNote();
     if(ob){panel.className='setup'+(entering?' enter':'');panel.innerHTML=vSetup();return;}
     if(active==='home'){panel.className='home'+(entering?' enter':'');panel.innerHTML=vHome();ringAnim();}
-    else{panel.className='s-'+active+(entering?' enter':'');panel.innerHTML='<div class="pagehead"><button class="back" type="button" data-tab="home" id="btnBack">'+ICON.back+'All sections</button></div>'+VIEWS[active]();}
+    else{panel.className='s-'+active+(entering?' enter':'');panel.innerHTML=VIEWS[active]();}
     var sc=panel.querySelector('.scroll'); if(sc)sc.scrollLeft=sc.scrollWidth;
     tick();ringCheck();
   }
@@ -1558,7 +1629,7 @@ details.legal p{margin:0}
     if(!user)return;
     var wi=ev.target.closest('.wico');if(wi){if(!wi.dataset.live){wi.classList.remove('go');void wi.offsetWidth;wi.classList.add('go');clearTimeout(wi._t);wi._t=setTimeout(function(){wi.classList.remove('go');},4000);}haptic();return;}
     var tab=ev.target.closest('[data-tab]');
-    if(tab){var from=active;active=tab.dataset.tab;adding=null;pt.msg='';pt.armed=null;fitOpen=tab.id==='trophyChip';try{history.replaceState(null,'',active==='home'?location.pathname:'#'+active);}catch(e){}render();window.scrollTo(0,0);
+    if(tab){var from=active;active=tab.dataset.tab;adding=null;editing=null;pset=null;pt.msg='';pt.armed=null;fitOpen=tab.id==='trophyChip';try{history.replaceState(null,'',active==='home'?location.pathname:'#'+active);}catch(e){}render();window.scrollTo(0,0);
       var el=active==='home'?document.getElementById('tab-'+from):panel.querySelector('h2');if(el){if(el.tagName==='H2')el.setAttribute('tabindex','-1');try{el.focus({preventScroll:true});}catch(e){}}return;}
     var b=ev.target.closest('[data-act]'); if(!b)return;
     var a=b.dataset.act, id=b.dataset.id, t=today();
@@ -1581,9 +1652,14 @@ details.legal p{margin:0}
     if(a==='ptStop'){if(pt.armed!==b.dataset.id){pt.armed=b.dataset.id;ptPaint();return;}ptStop(b.dataset.id);return;}
     if(a==='ptCopy'){var txt=pt.code||'', fin=function(){pt.copied=true;ptPaint();};
       try{navigator.clipboard.writeText(txt).then(fin,function(){var r=document.createRange(),el=document.getElementById('ptCodeText');if(el){r.selectNodeContents(el);var sl=getSelection();sl.removeAllRanges();sl.addRange(r);}});}catch(e){}return;}
+    if(a==='edit'){editing=b.dataset.k+':'+id;adding=null;render();var ef=panel.querySelector('form[data-form="edit"] input');if(ef)try{ef.focus({preventScroll:true});}catch(e){}return;}
+    if(a==='editX'){var eb=editing&&editing.split(':')[1];editing=null;render();var rb=document.getElementById('ed-'+eb);if(rb)try{rb.focus({preventScroll:true});}catch(e){}return;}
+    if(a==='hobOpen'){hobOpen=hobOpen===id?null:id;editing=null;render();var hh=document.getElementById('hob-'+id);if(hh)try{hh.focus({preventScroll:true});}catch(e){}return;}
+    if(a==='healthHide'){try{localStorage.setItem('fivearc-health-hide','1');}catch(e){}render();return;}
+    if(a==='pset'){var from=pset;pset=b.dataset.k||null;render();window.scrollTo(0,0);var pf=pset?panel.querySelector('h2'):document.getElementById('ps-'+from);if(pf){if(pf.tagName==='H2')pf.setAttribute('tabindex','-1');try{pf.focus({preventScroll:true});}catch(e){}}return;}
     if(a==='remOff'){remSet(false,remGet().time);return;}
     if(a==='scan'){foodScan();return;}
-    if(a==='addOpen'){adding=b.dataset.k;render();var fe=panel.querySelector('.adder input:not([type=hidden]),.adder select');if(fe)try{fe.focus();}catch(e){}return;}
+    if(a==='addOpen'){adding=b.dataset.k;editing=null;render();var fe=panel.querySelector('.adder input:not([type=hidden]),.adder select');if(fe)try{fe.focus();}catch(e){}return;}
     if(a==='addClose'){adding=null;food.msg='';render();var ob=document.getElementById('add-'+active)||panel.querySelector('.addbtn');if(ob)try{ob.focus({preventScroll:true});}catch(e){}return;}
     if(a==='theme'){themeSet(b.dataset.v);render();var tb=document.getElementById('theme-'+b.dataset.v);if(tb)try{tb.focus({preventScroll:true});}catch(e){}return;}
     if(a==='fitOpen'){fitOpen=!fitOpen;if(!fitOpen)fitYear=+t.slice(0,4),fitMonth=null;render();var fb=document.getElementById('btnFitYear');if(fb)try{fb.focus({preventScroll:true});}catch(e){}return;}
@@ -1596,8 +1672,8 @@ details.legal p{margin:0}
     if(a==='year'){if(b.dataset.y){fitYear=+b.dataset.y;fitMonth=null;}render();return;}
     if(a==='dismiss'){state.congrats=null;}
     else if(a==='eraseYear'){if(!armedYear){armedYear=true;render();return;}armedYear=false;offerUndo(fitYear+' workouts erased.',JSON.stringify(state));state.fitness=state.fitness.filter(function(e){return yearOf(e)!==fitYear;});state.congrats=null;}
-    else if(a==='del'){offerUndo('Deleted.',JSON.stringify(state));state[b.dataset.k]=state[b.dataset.k].filter(function(x){return x.id!==id;});}
-    else if(a==='delHobby'){offerUndo('Hobby deleted.',JSON.stringify(state));state.hobbies=state.hobbies.filter(function(x){return x.id!==id;});state.hobbyLog=state.hobbyLog.filter(function(x){return x.hobbyId!==id;});if(state.timer&&state.timer.hobbyId===id)state.timer=null;}
+    else if(a==='del'){editing=null;offerUndo('Deleted.',JSON.stringify(state));state[b.dataset.k]=state[b.dataset.k].filter(function(x){return x.id!==id;});}
+    else if(a==='delHobby'){editing=null;hobOpen=null;offerUndo('Hobby deleted.',JSON.stringify(state));state.hobbies=state.hobbies.filter(function(x){return x.id!==id;});state.hobbyLog=state.hobbyLog.filter(function(x){return x.hobbyId!==id;});if(state.timer&&state.timer.hobbyId===id)state.timer=null;}
     else if(a==='start'){state.timer={hobbyId:id,start:Date.now()};}
     else if(a==='stop'){if(state.timer){state.hobbyLog.push({id:uid(),hobbyId:state.timer.hobbyId,date:t,min:Math.max(1,Math.round((Date.now()-state.timer.start)/60000)),note:'Timed session'});state.timer=null;}}
     else if(a==='tick'){var hb=state.habits.filter(function(x){return x.id===id;})[0];if(hb){if(hb.days[b.dataset.d])delete hb.days[b.dataset.d];else{hb.days[b.dataset.d]=true;haptic();}}}
@@ -1622,6 +1698,16 @@ details.legal p{margin:0}
     if(kind==='ptJoin'){ptJoin(v('ptCode')).then(function(ok){if(ok){var el=document.getElementById('ptCode');if(el)el.value='';}});return;}
     if(kind==='barcode'){foodLookup(v('barcode'));return;}
     if(kind==='profile'){if(!v('pfFirst')||!v('pfLast'))return;var pr=profile();pr.first=v('pfFirst');pr.last=v('pfLast');pr.nick=v('pfNick');saveAccounts();flash='Profile saved.';render();return;}
+    if(kind==='edit'){var ek=f.dataset.k, ei=f.dataset.id, x=(state[ek]||[]).filter(function(y){return y.id===ei;})[0];
+      if(x){
+        if(ek==='fitness'){if(!v('edAct')||!num(v('edMin')))return;x.activity=v('edAct');x.min=num(v('edMin'),600);if(f.elements.edEffort)x.effort=v('edEffort');if(v('edDate')){x.date=v('edDate');fitYear=+x.date.slice(0,4);fitMonth=+x.date.slice(5,7)-1;}}
+        else if(ek==='meals'){if(!v('edName'))return;x.name=v('edName');x.type=v('edType');x.kcal=num(v('edKcal'),5000);x.protein=num(v('edProtein'),300);x.produce=num(v('edProduce'),20);}
+        else if(ek==='school'){if(!v('edTitle')||!v('edDue'))return;x.title=v('edTitle');x.subject=v('edSubject');x.due=v('edDue');}
+        else if(ek==='hobbyLog'){if(!num(v('edMin')))return;x.min=num(v('edMin'),600);x.note=v('edNote');if(v('edDate'))x.date=v('edDate');}
+        else if(ek==='habits'||ek==='hobbies'){if(!v('edName'))return;x.name=v('edName');}
+        haptic('success');
+      }
+      editing=null;commit();var sb=document.getElementById('ed-'+ei);if(sb)try{sb.focus({preventScroll:true});}catch(e){}return;}
     if(kind==='fitness'){if(!v('fitActivity')||!num(v('fitMin')))return;var fd=v('fitDate')||t, fy=+fd.slice(0,4), had={};badges(fy).forEach(function(x){if(x.won)had[x.id]=1;});
       state.fitness.push({id:uid(),date:fd,activity:v('fitActivity'),min:num(v('fitMin'),600),effort:v('fitEffort')});
       var fresh=badges(fy).filter(function(x){return x.won&&!had[x.id];}).map(function(x){return x.name;});
