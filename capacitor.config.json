@@ -1,6 +1,6 @@
 {
   "appId": "com.phisarys.dailyfive",
-  "appName": "Daily Five",
+  "appName": "FiveArc",
   "webDir": "www",
   "ios": {
     "contentInset": "never",

@@ -36,16 +36,16 @@ jobs:
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
-          cp app/build/outputs/apk/debug/app-debug.apk ../daily-five.apk
+          cp app/build/outputs/apk/debug/app-debug.apk ../fivearc.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: daily-five-apk
-          path: daily-five.apk
+          name: fivearc-apk
+          path: fivearc.apk
       - name: Post to Releases
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete android-latest --yes --cleanup-tag || true
-          gh release create android-latest daily-five.apk \
+          gh release create android-latest fivearc.apk \
             --title "Android app (latest test build)" \
-            --notes "Download daily-five.apk on an Android phone and open it to install. Test build number ${{ github.run_number }}."
+            --notes "Download fivearc.apk on an Android phone and open it to install. Test build number ${{ github.run_number }}."

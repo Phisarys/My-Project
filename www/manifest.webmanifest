@@ -1,6 +1,6 @@
 {
-  "name": "Daily Five",
-  "short_name": "Daily Five",
+  "name": "FiveArc",
+  "short_name": "FiveArc",
   "description": "Track workouts, hobby time, daily habits, schoolwork, and food and water.",
   "start_url": "./",
   "scope": "./",
