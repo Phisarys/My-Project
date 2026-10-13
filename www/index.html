@@ -219,6 +219,20 @@ footer p{margin:0;flex:1 1 16rem;min-width:0}
 .quick{display:flex;flex-direction:column;gap:10px;border-radius:var(--r);padding:16px 18px;background:var(--surface);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--line)}
 .upnext{display:flex;align-items:center;gap:14px;width:100%;text-align:left;font:inherit;color:var(--ink);cursor:pointer;border-radius:var(--r);padding:14px 16px 14px 18px;background:var(--surface);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--line);border-left:4px solid var(--sec)}
 .upnext .grow{display:flex;flex-direction:column;min-width:0;flex:1}.upnext strong{font-size:1.05rem;overflow-wrap:anywhere}.upnext .label{color:var(--sec)}.upnext svg{width:20px;height:20px;flex:none;color:var(--muted);transform:scaleX(-1)}
+.guestpanel{gap:12px}.guestpanel p{margin:0}
+.recap{display:flex;flex-direction:column;gap:12px;border-radius:var(--r);padding:16px 18px;background:var(--surface);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--line);position:relative}
+.recap .head{display:flex;align-items:baseline;gap:10px;padding-right:36px}.recap h3{margin:0}.recap .x{position:absolute;top:10px;right:10px}
+.recap ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+.recap li{display:flex;align-items:flex-start;gap:10px;font-size:.95rem}.recap li i{width:10px;height:10px;border-radius:50%;background:var(--sec);flex:none;align-self:flex-start;margin-top:.45em}
+.recap li span{flex:1;min-width:0}.recap li b{font-family:var(--display);font-weight:700;font-size:1.15rem;color:var(--sec);white-space:nowrap}
+.recap .delta{display:block;font-size:.82rem;color:var(--muted);margin-top:1px}
+.weeklink{align-self:flex-start}
+.switches{display:flex;flex-direction:column;gap:8px}
+.switch{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;cursor:pointer}
+.switch .grow{display:flex;flex-direction:column;min-width:0;flex:1}.switch .sub{font-size:.84rem}
+.switch .tog{width:44px;height:26px;border-radius:99px;background:var(--line);position:relative;flex:none;transition:background .15s ease}
+.switch .tog::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--ink);transition:transform .15s ease}
+.switch[aria-pressed="true"] .tog{background:var(--c-habit)}.switch[aria-pressed="true"] .tog::after{transform:translateX(18px);background:#fff}
 .quick .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:6px 14px 6px 8px;border-radius:99px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font:inherit;font-size:.92rem;cursor:pointer;max-width:100%}
 .chip i{width:24px;height:24px;border-radius:8px;border:2px solid rgba(255,255,255,.25);display:grid;place-items:center;font-style:normal;font-weight:800;font-size:.8rem;flex:none;color:var(--on-sec)}
@@ -390,6 +404,7 @@ details.legal p{margin:0}
     </nav>
     <div class="authpanel stack">
       <p class="err" id="ssoMsg" role="status" hidden></p>
+      <p class="ok" id="carryNote" hidden>The entries you made on this device without an account will move into your account when you create one, or when you sign in to an account that has no entries yet.</p>
       <form id="formIn" class="stack" novalidate>
         <div class="f"><label for="inEmail">Email</label><input id="inEmail" type="email" autocomplete="username" required></div>
         <div class="f"><label for="inPw">Password</label><input id="inPw" type="password" autocomplete="current-password" required></div>
@@ -408,6 +423,12 @@ details.legal p{margin:0}
       </form>
       <label class="keep" for="keepIn"><input type="checkbox" id="keepIn"> Keep me signed in on this device</label>
       <p class="note">Your account works on any phone or computer. Sign in the same way and your profile and entries follow you.</p>
+    </div>
+    <div class="authpanel stack guestpanel" id="guestPanel">
+      <p><strong>Just want to try it?</strong> Use FiveArc without an account. Your entries stay on this device, and you can create an account later to back them up.</p>
+      <label class="keep" for="guestAge"><input type="checkbox" id="guestAge"> I am 13 or older</label>
+      <p class="err" id="guestErr" role="alert" hidden></p>
+      <button class="btn ghost" type="button" id="btnGuest">Start without an account</button>
     </div>
   </section>
   <div id="app" class="wrap" hidden>
@@ -470,7 +491,7 @@ details.legal p{margin:0}
       {id:uid(),title:'Lab report: density',subject:'Chemistry',due:d(-1),done:false},
       {id:uid(),title:'Essay outline',subject:'English',due:d(4),done:false},
       {id:uid(),title:'Unit 3 vocabulary quiz',subject:'Spanish',due:d(9),done:false},
-      {id:uid(),title:'Map of trade routes',subject:'History',due:d(-2),done:true}];
+      {id:uid(),title:'Map of trade routes',subject:'History',due:d(-2),done:true,doneAt:d(-2)}];
     s.meals=[
       {id:uid(),date:d(0),name:'Oatmeal with banana',type:'Breakfast',kcal:350,protein:12,produce:1},
       {id:uid(),date:d(0),name:'Chicken rice bowl with peppers',type:'Lunch',kcal:620,protein:38,produce:2}];
@@ -479,6 +500,7 @@ details.legal p{margin:0}
   }
 
   var state=null, canSave=true, user=null, uidv=null, prof=null, dataKey=null, mem={}, flash='', photoErr='', acctErr='', armedAcct=false;
+  var guest=false, GKEY=KEY+'-guest';
   var fb=null, fbP=null, cloudOk=true, pushT=null, pushing=false, dirty=false, syncMsg='';
   var FB_CONFIG={apiKey:"AIzaSyBclq-OPz_Ubs0e9PTwSmBeXWsT7uftCsE",authDomain:"project-monarch1.firebaseapp.com",projectId:"project-monarch1",storageBucket:"project-monarch1.firebasestorage.app",messagingSenderId:"196203054964",appId:"1:196203054964:web:59ed45a4bd5dfaf63fce21"};
   var FB_FILES=['firebase-app-compat.js','firebase-auth-compat.js','firebase-firestore-compat.js'], FB_CDN='https://www.gstatic.com/firebasejs/10.14.1/';
@@ -491,7 +513,7 @@ details.legal p{margin:0}
     return st;
   }
   function cachePut(){if(!dataKey)return;var j=JSON.stringify({state:state,profile:prof});mem[dataKey]=j;ls.set(dataKey,j);}
-  function setNote(){document.getElementById('saveNote').textContent=syncMsg||'Your profile and entries are saved to your account.';var f=document.getElementById('acctFooter');if(f)f.hidden=!(active==='profile'||syncMsg);}
+  function setNote(){document.getElementById('saveNote').textContent=syncMsg||(guest?'Your entries are saved on this device only. Create an account in Profile to back them up.':'Your profile and entries are saved to your account.');var f=document.getElementById('acctFooter');if(f)f.hidden=!(active==='profile'||syncMsg);}
   function schedulePush(){dirty=true;clearTimeout(pushT);pushT=setTimeout(pushNow,1200);}
   function pushNow(){
     clearTimeout(pushT);
@@ -532,19 +554,22 @@ details.legal p{margin:0}
     return 'Can\'t reach the sign-in service. Check your internet connection and try again.';
   }
   var profile=function(){return prof;};
-  var displayName=function(){var p=profile();return p.nick||p.first||user.split('@')[0];};
+  var displayName=function(){var p=profile();return p.nick||p.first||(guest?'there':user.split('@')[0]);};
   function avatar(size){var p=profile(), st='style="width:'+size+'px;height:'+size+'px;font-size:'+Math.round(size*.4)+'px"';
     if(p.photo&&p.photo.indexOf('data:image/')===0)return '<img class="av" '+st+' src="'+esc(p.photo)+'" alt="">';
-    var ini=((p.first||p.nick||user).charAt(0)+(p.last||'').charAt(0)).toUpperCase();return '<span class="av" '+st+' aria-hidden="true">'+esc(ini)+'</span>';}
+    var ini=((p.first||p.nick||(guest?'?':user)).charAt(0)+(p.last||'').charAt(0)).toUpperCase();return '<span class="av" '+st+' aria-hidden="true">'+esc(ini)+'</span>';}
   async function enter(u){
+    guest=false;ls.set(KEY+'-guest-on','0');
     uidv=u.uid;user=u.email||'your account';dataKey=KEY+'-c-'+uidv;prof={first:'',last:'',nick:'',photo:''};state=null;cloudOk=true;syncMsg='';dirty=false;
-    var doc=null, reached=true, create=false;
+    var doc=null, reached=true, create=false, carried=false;
     try{doc=await withTimeout(fb.firestore().collection('users').doc(uidv).get(),9000);}catch(e){reached=false;}
     if(doc&&doc.exists){var d=doc.data()||{};state=parseState(d.data);Object.assign(prof,d.profile||{});}
     else{
       var c=null;try{c=JSON.parse(ls.get(dataKey)||mem[dataKey]||'null');}catch(e){c=null;}
       var o=old[(u.email||'').toLowerCase()];
+      var gd=guestData();
       if(c){state=parseState(JSON.stringify(c.state));Object.assign(prof,c.profile||{});}
+      else if(gd){state=parseState(JSON.stringify(gd.state));Object.assign(prof,gd.profile||{});carried=true;}
       else if(o){state=parseState(ls.get(KEY+'-u-'+o.id));Object.assign(prof,o.profile||{});}
       else if(u.displayName){var parts=String(u.displayName).trim().split(/\s+/);prof.first=parts[0]||'';prof.last=parts.slice(1).join(' ');}
       create=reached;
@@ -554,12 +579,31 @@ details.legal p{margin:0}
     if(!prof.first&&!prof.nick)active='profile';
     ['formIn','formUp'].forEach(function(id){document.getElementById(id).reset();});
     cachePut();if(create)schedulePush();
+    if(carried){ls.del(GKEY);flash='The entries from this device are now in your account.';}
     render();setNote();
-    maybeAutoHealth();
+    maybeAutoHealth();remSync();
   }
+  /* ---------- Using FiveArc without an account (entries stay on this device) ---------- */
+  function guestData(){var g=null;try{g=JSON.parse(ls.get(GKEY)||'null');}catch(e){g=null;}return g&&g.state&&!g.state.example?g:null;}
+  function enterGuest(){
+    guest=true;uidv=null;user='guest';dataKey=GKEY;prof={first:'',last:'',nick:'',photo:''};state=null;cloudOk=true;syncMsg='';dirty=false;
+    var c=null;try{c=JSON.parse(ls.get(GKEY)||'null');}catch(e){c=null;}
+    if(c&&c.state){state=parseState(JSON.stringify(c.state));Object.assign(prof,c.profile||{});}
+    if(!state)state=seed();
+    ls.set(KEY+'-guest-on','1');
+    cachePut();render();setNote();maybeAutoHealth();remSync();
+  }
+  async function doGuest(){
+    if(!document.getElementById('guestAge').checked)return showErr('guestErr','FiveArc is for people 13 and older. Please confirm your age to continue.');
+    showErr('guestErr','');
+    if(await underAge())return showErr('guestErr','FiveArc is for people 13 and older, so it can\'t be used here.');
+    enterGuest();
+  }
+  function leaveGuest(mode){cachePut();guest=false;ls.set(KEY+'-guest-on','0');leave(mode);}
   function authMode(m){document.getElementById('formIn').hidden=m!=='in';document.getElementById('formUp').hidden=m!=='up';
     document.getElementById('authIn').setAttribute('aria-selected',m==='in');document.getElementById('authUp').setAttribute('aria-selected',m==='up');
-    ['inErr','upErr','ssoMsg'].forEach(function(id){document.getElementById(id).hidden=true;});}
+    ['inErr','upErr','ssoMsg'].forEach(function(id){document.getElementById(id).hidden=true;});
+    document.getElementById('carryNote').hidden=!guestData();}
   function showErr(id,msg){var el=document.getElementById(id);el.textContent=msg;el.hidden=!msg;}
   var val=function(id){return document.getElementById(id).value;};
   function busy(on){['formIn','formUp'].forEach(function(id){var bt=document.querySelector('#'+id+' .btn');bt.disabled=on;});}
@@ -657,11 +701,39 @@ details.legal p{margin:0}
     }catch(e){remMsg='The reminder could not be set. Try again.';}
     render();
   }
+  /* Smarter reminders (iPhone app only; kept on this device). Notifications can't check anything
+     when they fire, so they are rebuilt from the entries every time something changes. */
+  var SMART=[['due','Homework due tomorrow','7 pm the evening before an assignment is due','school'],['habits','Habits still unchecked','Each evening, only while some are left','habit'],['recap','Sunday recap','6 pm Sunday, a look back at your week','profile']];
+  function smartGet(){var d={due:false,habits:false,recap:false,habitTime:'20:00'};try{return Object.assign(d,JSON.parse(ls.get(KEY+'-smart')||'{}')||{});}catch(e){return d;}}
+  async function smartSet(k){
+    var N=notifApi();if(!N){remMsg='Reminders are not available in this version of the app.';return render();}
+    var sm=smartGet();
+    if(!sm[k]){try{var pm=await N.requestPermissions();if(!pm||pm.display!=='granted'){remMsg='Notifications are off for FiveArc. Turn them on in Settings, Notifications, FiveArc, then try again.';return render();}}catch(e){remMsg='The reminder could not be set. Try again.';return render();}}
+    sm[k]=!sm[k];ls.set(KEY+'-smart',JSON.stringify(sm));remSync(true);render();
+  }
+  var remT=null, SMART_IDS=[];
+  for(var si=100;si<140;si++)SMART_IDS.push({id:si});for(si=200;si<207;si++)SMART_IDS.push({id:si});SMART_IDS.push({id:300});
+  function remSync(now){clearTimeout(remT);if(!isNative()||!state)return;remT=setTimeout(remBuild,now?0:700);}
+  async function remBuild(){
+    var N=notifApi();if(!N||!state)return;
+    var sm=smartGet(), list=[], t=today(), nowMs=Date.now();
+    var at=function(d,hm){var x=parse(d);x.setHours(+hm.slice(0,2),+hm.slice(3,5),0,0);return x;};
+    if(sm.due){var by={};state.school.forEach(function(a){if(!a.done&&a.due&&diffDays(a.due,t)>=1&&diffDays(a.due,t)<=40)(by[a.due]=by[a.due]||[]).push(a);});
+      Object.keys(by).sort().slice(0,40).forEach(function(due,i){var w=at(addDays(due,-1),'19:00');if(w.getTime()<=nowMs)return;var a=by[due];
+        list.push({id:100+i,title:'Due tomorrow',body:a.length===1?a[0].title+(a[0].subject?' ('+a[0].subject+')':''):a.length+' assignments: '+a.slice(0,2).map(function(x){return x.title;}).join(', ')+(a.length>2?' and '+(a.length-2)+' more':''),schedule:{at:w,allowWhileIdle:true},extra:{tab:'school'}});});}
+    if(sm.habits&&state.habits.length){for(var i=0;i<7;i++){var d=addDays(t,i), w=at(d,sm.habitTime);if(w.getTime()<=nowMs)continue;
+      var left=state.habits.filter(function(h){return !h.days[d];});if(!left.length)continue;
+      list.push({id:200+i,title:'Habits',body:'Still to check off today: '+left.slice(0,3).map(function(h){return h.name;}).join(', ')+(left.length>3?' and '+(left.length-3)+' more':''),schedule:{at:w,allowWhileIdle:true},extra:{tab:'habit'}});}}
+    if(sm.recap)list.push({id:300,title:'Your week in FiveArc',body:'Your Sunday recap is ready. See how the week went.',schedule:{on:{weekday:1,hour:18,minute:0},allowWhileIdle:true},extra:{tab:'home'}});
+    try{await N.cancel({notifications:SMART_IDS});if(list.length)await N.schedule({notifications:list});}catch(e){}
+  }
   function vReminder(){
     if(!isNative())return '';
     var r=remGet();
-    var o='<div class="block"><h3>Daily reminder</h3><span class="sub">A gentle nudge each day to log your five areas. Only on this phone.</span>';
+    var o='<div class="block"><h3>Reminders</h3><span class="sub">Only on this phone. The daily nudge reminds you to log your five areas.</span>';
     o+='<form class="add" data-form="reminder">'+field('remTime','Time','type="time" value="'+esc(r.time)+'" required')+'<button class="btn small">'+(r.on?'Update time':'Turn on')+'</button>'+(r.on?'<button class="btn small ghost" type="button" data-act="remOff" id="btnRemOff">Turn off</button>':'')+'</form>';
+    var sm=smartGet();
+    o+='<span class="label">Smart reminders</span><div class="switches">'+SMART.map(function(x){return '<button class="switch s-'+x[3]+'" type="button" data-act="smart" data-k="'+x[0]+'" id="smart-'+x[0]+'" aria-pressed="'+!!sm[x[0]]+'"><span class="grow"><strong>'+x[1]+'</strong><span class="sub">'+x[2]+'</span></span><span class="tog" aria-hidden="true"></span></button>';}).join('')+'</div>';
     if(remMsg){o+='<p class="sub" role="status">'+esc(remMsg)+'</p>';remMsg='';}
     return o+'</div>';
   }
@@ -683,11 +755,12 @@ details.legal p{margin:0}
     photoErr='';
     o+='<form class="add" data-form="profile">'+field('pfFirst','First name','required maxlength="40" autocomplete="given-name" value="'+esc(p.first)+'"')+field('pfLast','Last name','required maxlength="40" autocomplete="family-name" value="'+esc(p.last)+'"')+field('pfNick','Nickname','maxlength="24" autocomplete="nickname" placeholder="What should we call you?" value="'+esc(p.nick)+'"')+'<button class="btn">Save profile</button></form>';
     o+=vReminder()+vTheme();
-    o+='<div class="block"><h3>Account</h3><span class="sub">Signed in as '+esc(user)+'</span>'+(acctErr?'<p class="err" role="alert">'+esc(acctErr)+'</p>':'')+'<div class="row"><button class="btn small ghost" type="button" data-act="signout" id="btnSignOut">Sign out</button><button class="btn small ghost" type="button" data-act="delAcct" id="btnDelAcct">'+(armedAcct?'Tap again to delete your account and entries':'Delete account')+'</button></div></div>';
+    if(guest)o+='<div class="block"><h3>Account</h3><span class="sub">You\'re using FiveArc without an account. Your entries are only on this device, so they\'re lost if you delete the app. Create an account to back them up and use them on other devices.</span><div class="row"><button class="btn small" type="button" data-act="guestUp" id="btnGuestUp">Create an account</button><button class="btn small ghost" type="button" data-act="guestIn" id="btnGuestIn">Sign in</button></div></div>';
+    else o+='<div class="block"><h3>Account</h3><span class="sub">Signed in as '+esc(user)+'</span>'+(acctErr?'<p class="err" role="alert">'+esc(acctErr)+'</p>':'')+'<div class="row"><button class="btn small ghost" type="button" data-act="signout" id="btnSignOut">Sign out</button><button class="btn small ghost" type="button" data-act="delAcct" id="btnDelAcct">'+(armedAcct?'Tap again to delete your account and entries':'Delete account')+'</button></div></div>';
     o+='<details class="block legal"><summary><h3>Legal and credits</h3></summary>'
       +'<p class="sub">FiveArc is a personal tracking app. It does not give medical, dietary or professional advice.</p>'
       +'<p class="sub doclinks"><a href="https://fivearc.app/privacy" target="_blank" rel="noopener">Privacy Policy</a> · <a href="https://fivearc.app/terms" target="_blank" rel="noopener">Terms of Use</a></p>'
-      +'<p class="sub">Your profile and entries are stored in Google Firebase, private to your account. Delete account above erases them. In the iPhone app, workouts are read from Apple Health only with your permission, are never written back, and are never used for advertising or shared.</p>'
+      +'<p class="sub">With an account, your profile and entries are stored in Google Firebase, private to your account, and Delete account above erases them. Without an account, they stay on this device only. In the iPhone app, workouts are read from Apple Health only with your permission, are never written back, and are never used for advertising or shared.</p>'
       +'<p class="sub"><strong>Open-source software used:</strong> Barlow Condensed and Atkinson Hyperlegible fonts (SIL Open Font License 1.1); Firebase JavaScript SDK (Apache License 2.0); Capacitor, Capacitor Local Notifications and Capacitor Barcode Scanner (MIT License); Capgo Capacitor Health and Capgo Capacitor Age Range (Mozilla Public License 2.0). Food data from Open Food Facts (Open Database License). Logo, icons and illustrations are original to FiveArc.</p>'
       +'</details>';
     acctErr='';
@@ -729,10 +802,11 @@ details.legal p{margin:0}
     o+='<div class="ringwrap">'+rings+'<div class="ringcenter"><b>'+avg+'%</b></div></div>';
     o+='<ul class="legend">'+SECTIONS.map(function(x,i){return '<li class="s-'+x[0]+'"><i></i><span>'+SHORT[x[0]]+'</span><em>'+Math.round(pcts[i]*100)+'%</em></li>';}).join('')+'</ul></section>';
     var t=today(), w=state.water[t]||0, nx=upNext();
+    o+=vRecap();
     o+='<button class="upnext s-'+nx[0]+'" type="button" data-tab="'+nx[0]+'" id="upNext"><span class="grow"><span class="label">Up next</span><strong>'+esc(nx[1])+'</strong><span class="sub">'+esc(nx[2])+'</span></span>'+ICON.back+'</button>';
     o+='<section class="quick" aria-label="Quick check-off"><span class="label">Check off today</span><div class="chips">'
       +state.habits.map(function(hb){var on=!!hb.days[t];return '<button class="chip s-habit'+(on?' on':'')+'" type="button" data-act="tick" data-id="'+hb.id+'" data-d="'+t+'" aria-pressed="'+on+'" id="q-'+hb.id+'"><i>'+(on?'✓':'')+'</i><span>'+esc(hb.name)+'</span></button>';}).join('')
-      +'<button class="chip water s-school'+(w?' on':'')+'" type="button" data-act="water" data-n="'+(w+1)+'" id="qWater" aria-label="Add a glass of water, '+w+' of '+state.goals.water+' so far"><i>+</i><span>Water '+w+' of '+state.goals.water+'</span></button></div></section>';
+      +'<button class="chip water s-school'+(w?' on':'')+'" type="button" data-act="water" data-n="'+(w+1)+'" id="qWater" aria-label="Add a glass of water, '+w+' of '+state.goals.water+' so far"><i>+</i><span>Water '+w+' of '+state.goals.water+'</span></button></div>'+(vRecap()?'':'<button class="link weeklink" type="button" data-act="recapOpen" id="btnWeek">See your week</button>')+'</section>';
     o+='<nav class="lanes" aria-label="Sections">'+SECTIONS.map(function(x,i){return '<button class="lane s-'+x[0]+'" type="button" id="tab-'+x[0]+'" data-tab="'+x[0]+'"><span class="ico">'+ICON[x[0]]+'</span><span class="lt"><b>'+x[1]+'</b><small>'+esc(glance(x[0]))+'</small><span class="mini"><div style="width:'+Math.round(pcts[i]*100)+'%"></div></span></span><span class="chev">'+ICON.chev+'</span></button>';}).join('')+'</nav>';
     return o;
   }
@@ -749,6 +823,33 @@ details.legal p{margin:0}
     if(wl>0)return ['nutrition',wl+' more glass'+(wl===1?'':'es')+' of water','Food · '+(state.water[t]||0)+' of '+state.goals.water+' today'];
     if(state.hobbies.length&&!state.hobbyLog.some(function(e){return e.date===t;})){c=state.hobbies[0];return ['hobby','Some time on '+c.name,'Hobby · nothing logged today'];}
     return ['habit','All caught up today','Nice work. Tomorrow starts fresh'];}
+  /* Weekly recap: shown on Sunday (this week) and Monday (last week), or on request. */
+  var recapOpen=false;
+  function recapEnd(force){var t=today(), dw=parse(t).getDay();if(dw===0)return t;if(dw===1)return addDays(t,-1);return force?addDays(t,-dw):null;}
+  function weekStats(end){
+    var days=[];for(var i=6;i>=0;i--)days.push(addDays(end,-i));var inW=function(d){return days.indexOf(d)>=0;}, prevEnd=addDays(end,-7);
+    var fit=state.fitness.filter(function(e){return inW(e.date);}), fm=sum(fit,function(e){return e.min;});
+    var pm=sum(state.fitness.filter(function(e){return diffDays(prevEnd,e.date)>=0&&diffDays(prevEnd,e.date)<7;}),function(e){return e.min;});
+    var hm=sum(state.hobbyLog.filter(function(e){return inW(e.date);}),function(e){return e.min;});
+    var ticks=0;state.habits.forEach(function(h){days.forEach(function(d){if(h.days[d])ticks++;});});
+    var hp=state.habits.length?Math.round(ticks/(state.habits.length*7)*100):null;
+    var done=state.school.filter(function(a){return a.done&&a.doneAt&&inW(a.doneAt);}).length, next=state.school.filter(function(a){return !a.done&&diffDays(a.due,end)>=1&&diffDays(a.due,end)<=7;}).length;
+    var wd=days.filter(function(d){return (state.water[d]||0)>=state.goals.water;}).length, md=days.filter(function(d){return state.meals.some(function(m){return m.date===d;});}).length;
+    return {days:days,fit:fit.length,fm:fm,pm:pm,hm:hm,hp:hp,done:done,next:next,wd:wd,md:md};
+  }
+  function vRecap(){
+    var end=recapEnd(recapOpen);if(!end)return '';
+    if(!recapOpen&&ls.get(KEY+'-recap-seen')===end)return '';
+    var w=weekStats(end), r=function(sec,label,val,extra){return '<li class="s-'+sec+'"><i></i><span>'+label+(extra?' <span class="delta">'+extra+'</span>':'')+'</span><b>'+val+'</b></li>';};
+    var diff=w.fm-w.pm, dl=w.pm||w.fm?(diff>0?'↑ '+diff+' min on the week before':diff<0?'↓ '+(-diff)+' min on the week before':'same as the week before'):'';
+    var o='<section class="recap" aria-label="Your week"><div class="head"><h3>Your week</h3><span class="sub">'+dayShort(w.days[0])+' to '+dayShort(end)+'</span></div><button class="x" type="button" data-act="recapX" data-end="'+end+'" aria-label="Close your week">×</button><ul>';
+    o+=r('fitness','Workouts: '+w.fit,w.fm+' min',dl);
+    o+=r('hobby','Time on hobbies',hrs(w.hm)+' hr');
+    if(w.hp!==null)o+=r('habit','Habits kept',w.hp+'%');
+    o+=r('school','Assignments done',w.done,w.next?w.next+' due in the next 7 days':'');
+    o+=r('nutrition','Days you hit your water goal',w.wd+' of 7',w.md?'Meals logged on '+w.md+' day'+(w.md===1?'':'s'):'');
+    return o+'</ul></section>';
+  }
   function vDock(){
     var items=[['home','Home']].concat(SECTIONS.map(function(x){return [x[0],SHORT[x[0]]];}));
     return items.map(function(x){return '<button type="button" class="s-'+(x[0]==='home'?'profile':x[0])+'" data-tab="'+x[0]+'"'+(active===x[0]?' aria-current="page"':'')+'>'+ICON[x[0]]+'<span>'+x[1]+'</span></button>';}).join('');
@@ -816,6 +917,7 @@ details.legal p{margin:0}
   var isNative=function(){return !!(window.Capacitor&&(window.Capacitor.isNativePlatform?window.Capacitor.isNativePlatform():window.Capacitor.platform&&window.Capacitor.platform!=='web'));};
   var isIOSApp=function(){var C=window.Capacitor;return isNative()&&((C.getPlatform&&C.getPlatform())||C.platform)==='ios';};
   var isIOSWeb=function(){return !isNative()&&/iphone|ipad|ipod/i.test(navigator.userAgent);};
+  (function(){var N=isNative()&&notifApi();if(N&&N.addListener)try{N.addListener('localNotificationActionPerformed',function(e){var tb=e&&e.notification&&e.notification.extra&&e.notification.extra.tab;if(tb&&user&&(tb==='home'||VIEWS[tb])){active=tb;render();window.scrollTo(0,0);}});}catch(e){}})();
   var healthP=null;
   function healthApi(){
     if(healthP)return healthP;
@@ -1063,12 +1165,13 @@ details.legal p{margin:0}
   }
   function tick(){var el=document.getElementById('tick');if(!el||!state||!state.timer)return;var s=Math.floor((Date.now()-state.timer.start)/1000),m=Math.floor(s/60);el.textContent=(m>=60?Math.floor(m/60)+':'+pad(m%60):m)+':'+pad(s%60);}
   setInterval(tick,1000);
-  function commit(){save();render();}
+  function commit(){save();render();remSync();}
   var eraseArmed=false;
 
   document.addEventListener('click',function(ev){
     var au=ev.target.closest('[data-auth]'); if(au){authMode(au.dataset.auth);return;}
     if(ev.target.id==='btnForgot'){doForgot();return;}
+    if(ev.target.id==='btnGuest'){doGuest();return;}
     if(!user)return;
     var tab=ev.target.closest('[data-tab]');
     if(tab){var from=active;active=tab.dataset.tab;adding=null;fitOpen=tab.id==='trophyChip';try{history.replaceState(null,'',active==='home'?location.pathname:'#'+active);}catch(e){}render();window.scrollTo(0,0);
@@ -1079,6 +1182,10 @@ details.legal p{margin:0}
     if(a!=='eraseYear')armedYear=false;
     if(a!=='delAcct')armedAcct=false;
     if(a==='signout'){doSignOut();return;}
+    if(a==='guestUp'||a==='guestIn'){leaveGuest(a==='guestUp'?'up':'in');return;}
+    if(a==='smart'){smartSet(b.dataset.k);return;}
+    if(a==='recapOpen'){recapOpen=true;render();var rc=panel.querySelector('.recap h3');if(rc){rc.setAttribute('tabindex','-1');try{rc.focus();}catch(e){}}return;}
+    if(a==='recapX'){recapOpen=false;ls.set(KEY+'-recap-seen',b.dataset.end);render();return;}
     if(a==='remOff'){remSet(false,remGet().time);return;}
     if(a==='scan'){foodScan();return;}
     if(a==='addOpen'){adding=b.dataset.k;render();var fe=panel.querySelector('.adder input:not([type=hidden]),.adder select');if(fe)try{fe.focus();}catch(e){}return;}
@@ -1099,7 +1206,7 @@ details.legal p{margin:0}
     else if(a==='start'){state.timer={hobbyId:id,start:Date.now()};}
     else if(a==='stop'){if(state.timer){state.hobbyLog.push({id:uid(),hobbyId:state.timer.hobbyId,date:t,min:Math.max(1,Math.round((Date.now()-state.timer.start)/60000)),note:'Timed session'});state.timer=null;}}
     else if(a==='tick'){var hb=state.habits.filter(function(x){return x.id===id;})[0];if(hb){if(hb.days[b.dataset.d])delete hb.days[b.dataset.d];else{hb.days[b.dataset.d]=true;haptic();}}}
-    else if(a==='done'){var as=state.school.filter(function(x){return x.id===id;})[0];if(as){as.done=!as.done;if(as.done)haptic();}}
+    else if(a==='done'){var as=state.school.filter(function(x){return x.id===id;})[0];if(as){as.done=!as.done;as.doneAt=as.done?t:null;if(as.done)haptic();}}
     else if(a==='water'){var n=Math.min(+b.dataset.n,30);var wasN=(state.water[t]||0)===n;state.water[t]=wasN?n-1:n;if(!wasN)haptic();}
     else if(a==='fresh'){var g=state.goals;state=blank();state.goals=g;}
     else if(a==='keep'){state.example=false;}
@@ -1133,8 +1240,11 @@ details.legal p{margin:0}
   render();
   document.getElementById('keepIn').checked=ls.get(KEY+'-keep')==='1';
   if(!window.Capacitor)fbReady().catch(function(){});
+  /* Someone using FiveArc without an account goes straight back in. */
+  document.getElementById('carryNote').hidden=!guestData();
+  if(ls.get(KEY+'-guest-on')==='1')enterGuest();
   /* If this device was told to stay signed in, pick the session back up. */
-  if(ls.get(KEY+'-keep')==='1'){
+  else if(ls.get(KEY+'-keep')==='1'){
     showErr('ssoMsg','Signing you in…');
     fbReady().then(function(){var stop=fb.auth().onAuthStateChanged(function(u){stop();if(u&&!user){enter(u).then(function(){showErr('ssoMsg','');});}else showErr('ssoMsg','');});},function(){showErr('ssoMsg','');});
   }
