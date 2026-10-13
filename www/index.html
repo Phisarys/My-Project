@@ -155,26 +155,32 @@ button{font:inherit}
 label.btn{display:inline-flex;align-items:center}
 
 /* ---- lists ---- */
-/* ---- workout icons ---- */
-.wico{flex:none;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;color:var(--c-fitness);background:rgba(255,106,69,.12);border:1px solid rgba(255,106,69,.22);cursor:pointer;-webkit-tap-highlight-color:transparent}
-.wico svg{width:40px;height:40px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;overflow:hidden}
-.wico *{transform-box:view-box}
-.wico .f{fill:currentColor;stroke:none} .wico .dim{opacity:.45} .wico .thin{stroke-width:1.4} .wico .plate{stroke-width:2.4} .wico .frame{stroke-width:2} .wico .glow{opacity:.1}
+/* ---- workout icons: neon figures on a small dark sign, each kind in its own colour ---- */
+.wico{--n:#ff6a45;flex:none;width:48px;height:48px;border-radius:14px;display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  background:radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--n) 16%,#0b0e22),#0b0e22 70%);border:1px solid color-mix(in srgb,var(--n) 40%,transparent);
+  box-shadow:inset 0 0 10px color-mix(in srgb,var(--n) 22%,transparent)}
+.wk-run,.wk-move{--n:#ff6a45} .wk-walk{--n:#a6ff3d} .wk-lift{--n:#ff45e6} .wk-bike{--n:#2ee6ff} .wk-yoga{--n:#b48cff} .wk-swim{--n:#3dbbff} .wk-ball{--n:#ffb21f} .wk-dance{--n:#ff4fa0}
+.wico svg{width:42px;height:42px;fill:none;stroke:color-mix(in srgb,var(--n) 50%,#fff);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;overflow:hidden;
+  filter:drop-shadow(0 0 1px var(--n)) drop-shadow(0 0 3px var(--n))}
+.wico.go svg{filter:drop-shadow(0 0 1.2px var(--n)) drop-shadow(0 0 4px var(--n)) drop-shadow(0 0 9px color-mix(in srgb,var(--n) 60%,transparent))}
+.wico *{transform-box:view-box;vector-effect:non-scaling-stroke}
+.wico .f{fill:color-mix(in srgb,var(--n) 50%,#fff);stroke:none} .wico .dim{opacity:.4} .wico .glow{fill:var(--n);opacity:.1}
+.wico .plate{stroke-width:3.4} .wico .tire{stroke-width:4.4} .wico .tread{stroke:#0b0e22;stroke-width:4.6;opacity:.7}
+.wico .water{fill:#0b0e22;stroke:none} .wico .cap{stroke-width:1.6}
 .wico:not(.go) *{animation-play-state:paused!important}
-.wico.go{box-shadow:0 0 0 3px rgba(255,106,69,.12)}
 @keyframes wkSw{0%,100%{transform:rotate(calc(-1*var(--a)))}50%{transform:rotate(var(--a))}}
 @keyframes wkRise{0%,100%{transform:rotate(var(--from))}50%{transform:rotate(var(--to))}}
-@keyframes wkBob{0%,50%,100%{transform:translateY(0)}25%,75%{transform:translateY(-1.5px)}}
+@keyframes wkFs{0%,100%{transform:scaleY(var(--from))}50%{transform:scaleY(var(--to))}}
+@keyframes wkBob{0%,50%,100%{transform:translateY(0)}25%,75%{transform:translateY(-1.2px)}}
 @keyframes wkHop{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
 @keyframes wkRoad{to{stroke-dashoffset:-18}}
+@keyframes wkTread{to{stroke-dashoffset:-4}}
 @keyframes wkSpin{to{transform:rotate(360deg)}}
-@keyframes wkPu{0%,15%,100%{transform:rotate(30deg)}50%,65%{transform:rotate(-84deg)}}
-@keyframes wkPf{0%,15%,100%{transform:rotate(-120deg)}50%,65%{transform:rotate(-2deg)}}
+@keyframes wkArms{0%,20%,100%{transform:scaleY(.12)}50%,70%{transform:scaleY(1)}}
+@keyframes wkBar{0%,20%,100%{transform:translateY(12.3px)}50%,70%{transform:translateY(0)}}
 @keyframes wkWave{to{transform:translateX(-12px)}}
-@keyframes wkGlow{0%,100%{transform:scale(.75);opacity:.06}50%{transform:scale(1.05);opacity:.18}}
-@keyframes wkBall{0%{transform:translateY(0);animation-timing-function:ease-in}50%{transform:translateY(10px);animation-timing-function:ease-out}100%{transform:translateY(0)}}
-@keyframes wkTh{0%{transform:rotate(28.6deg)}12.5%{transform:rotate(49.7deg)}25%{transform:rotate(63.5deg)}37.5%{transform:rotate(61.5deg)}50%{transform:rotate(51.5deg)}62.5%{transform:rotate(34.9deg)}75%{transform:rotate(16.7deg)}87.5%{transform:rotate(14.0deg)}100%{transform:rotate(28.6deg)}}
-@keyframes wkSh{0%{transform:rotate(70.7deg)}12.5%{transform:rotate(43.6deg)}25%{transform:rotate(35.0deg)}37.5%{transform:rotate(55.9deg)}50%{transform:rotate(84.3deg)}62.5%{transform:rotate(107.2deg)}75%{transform:rotate(112.9deg)}87.5%{transform:rotate(97.5deg)}100%{transform:rotate(70.7deg)}}
+@keyframes wkGlow{0%,100%{transform:scale(.75);opacity:.06}50%{transform:scale(1.05);opacity:.2}}
+@keyframes wkBall{0%{transform:translateY(0);animation-timing-function:ease-in}50%{transform:translateY(12px);animation-timing-function:ease-out}100%{transform:translateY(0)}}
 @media (prefers-reduced-motion:reduce){.wico *{animation:none!important}}
 ul.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 ul.list li{display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm)}
@@ -1223,36 +1229,42 @@ details.legal p{margin:0}
     var ln=function(a,b,c,d){return '<line x1="'+a+'" y1="'+b+'" x2="'+c+'" y2="'+d+'"/>';};
     var pl=function(p){return '<polyline points="'+p+'"/>';};
     var head=function(x,y,r){return '<circle class="f" cx="'+x+'" cy="'+y+'" r="'+(r||3.6)+'"/>';};
-    var road=function(d){return '<line class="dim" x1="2" y1="45" x2="46" y2="45" stroke-dasharray="4 5" style="animation:wkRoad '+d+' linear infinite"/>';};
-    var sw=function(o,amp,d,delay,body,cls){return '<g'+(cls?' class="'+cls+'"':'')+' style="--a:'+amp+'deg;transform-origin:'+o+';animation:wkSw '+d+' ease-in-out '+(delay||'0s')+' infinite">'+body+'</g>';};
-    var TH='wkTh .8s linear infinite', SH='wkSh .8s linear infinite';
-    var leg=function(delay,cls){return '<g'+(cls?' class="'+cls+'"':'')+' style="transform-origin:19.5px 22px;animation:'+TH+' '+delay+'">'+ln(19.5,22,28.1,22)+'<g style="transform-origin:28.1px 22px;animation:'+SH+' '+delay+'">'+ln(28.1,22,37.1,22)+'</g></g>';};
-    var spokes=function(x,y){return g(x+'px '+y+'px','wkSpin .8s linear infinite',ln(x-6,y,x+6,y)+ln(x-3,y-5.2,x+3,y+5.2)+ln(x-3,y+5.2,x+3,y-5.2),'thin');};
+    /* road running toward you: two edges and a centre line whose dashes slide down */
+    /* speed streaks either side, sliding down as if the figure comes toward you */
+    var road=function(d){return '<g class="dim" stroke-dasharray="3 6" style="animation:wkRoad '+d+' linear infinite">'+ln(7,6,7,44)+ln(41,6,41,44)+'</g>';};
+    /* foreshortening: a limb swinging toward or away from you looks shorter, so it scales on Y around its joint */
+    var fs=function(o,a,b,d,delay,body){return '<g style="--from:'+a+';--to:'+b+';transform-origin:'+o+';animation:wkFs '+d+' ease-in-out '+(delay||'0s')+' infinite">'+body+'</g>';};
+    var shadow=function(y){return '<ellipse class="f dim" cx="24" cy="'+y+'" rx="7" ry="1.3"/>';};
     return {
-      run:road('.35s')+g('0 0','wkBob .7s ease-in-out infinite',head(29,8.5)+ln(27,13.5,23,25)
-        +sw('23px 25px',32,'.7s','-.35s',pl('23,25 27,32 24.5,40'),'dim')+sw('27px 14.5px',40,'.7s','0s',pl('27,14.5 25,21 30,22.5'),'dim')
-        +sw('23px 25px',32,'.7s','0s',pl('23,25 27,32 24.5,40'))+sw('27px 14.5px',40,'.7s','-.35s',pl('27,14.5 25,21 30,22.5'))),
-      walk:road('.7s')+g('0 0','wkBob 1.1s ease-in-out infinite',head(24.5,8)+ln(24,13,24,26)
-        +sw('24px 26px',20,'1.1s','-.55s',pl('24,26 25,34 24,42'),'dim')+sw('24px 14.5px',22,'1.1s','0s',pl('24,14.5 24.5,21 24.5,27'),'dim')
-        +sw('24px 26px',20,'1.1s','0s',pl('24,26 25,34 24,42'))+sw('24px 14.5px',22,'1.1s','-.55s',pl('24,14.5 24.5,21 24.5,27'))),
-      lift:ln(6,44,42,44)+head(20.3,12.6)+ln(21.5,17,21.5,30)+pl('21.5,30 19,36.5 18,43')+pl('21.5,30 24,36.5 25.5,43')
-        +'<g style="transform-origin:21.5px 18.5px;animation:wkPu 2s ease-in-out infinite">'+ln(21.5,18.5,28.5,18.5)+'<g style="transform-origin:28.5px 18.5px;animation:wkPf 2s ease-in-out infinite">'+ln(28.5,18.5,35.5,18.5)+'<circle class="plate" cx="35.5" cy="18.5" r="4.4"/><circle class="f" cx="35.5" cy="18.5" r="1.4"/></g></g>',
-      bike:road('.4s')+'<g class="frame"><circle cx="10.5" cy="35" r="6.5"/><circle cx="37.5" cy="35" r="6.5"/>'+pl('10.5,35 22,35 18.5,23 10.5,35')+ln(22,35,31.5,23.5)+ln(18.5,23.5,31.5,23.5)+ln(31.5,23.5,37.5,35)+pl('31.5,23.5 32,19.5 35,19.5')+'</g>'
-        +spokes(10.5,35)+spokes(37.5,35)+leg('-.4s','dim')+g('22px 35px','wkSpin .8s linear infinite',ln(22,35,22,38.6),'thin')
-        +ln(16.5,22.5,22,22.5)+ln(19.5,22,28,13.5)+head(30.6,9.3,3.3)+pl('28,13.5 31,17 34.5,19.5')+leg('0s'),
+      run:road('.4s')+shadow(43)+g('0 0','wkBob .6s ease-in-out infinite',head(24,7,3.6)+ln(24,11.5,24,25)
+        +fs('24px 14px',1,.3,'.6s','0s',pl('24,14 17.5,19.5 18.5,13'))+fs('24px 14px',1,.3,'.6s','-.3s',pl('24,14 30.5,19.5 29.5,13'))
+        +fs('24px 25px',1,.55,'.6s','-.3s',pl('24,25 20.5,33 21,41'))+fs('24px 25px',1,.55,'.6s','0s',pl('24,25 27.5,33 27,41'))),
+      walk:road('.9s')+shadow(43)+g('0 0','wkBob 1.1s ease-in-out infinite',head(24,7,3.6)+ln(24,11.5,24,25.5)
+        +fs('24px 14px',1,.72,'1.1s','0s',pl('24,14 19.5,20 19,26'))+fs('24px 14px',1,.72,'1.1s','-.55s',pl('24,14 28.5,20 29,26'))
+        +fs('24px 25.5px',1,.8,'1.1s','-.55s',pl('24,25.5 21.5,33.5 21.5,41.5'))+fs('24px 25.5px',1,.8,'1.1s','0s',pl('24,25.5 26.5,33.5 26.5,41.5'))),
+      lift:'<line class="dim" x1="8" y1="45" x2="40" y2="45"/>'+head(24,13,3.4)+ln(24,17.5,24,31)+pl('24,31 20,37.5 18.5,44')+pl('24,31 28,37.5 29.5,44')
+        +'<g class="ns" style="transform-origin:24px 19px;animation:wkArms 2s ease-in-out infinite">'+pl('24,19 17,12 15,5')+pl('24,19 31,12 33,5')+'</g>'
+        +g('0 0','wkBar 2s ease-in-out infinite',ln(9,5,39,5)+'<g class="plate">'+ln(11.5,1.2,11.5,8.8)+ln(36.5,1.2,36.5,8.8)+'</g>'),
+      bike:'<g class="dim">'+ln(10,47,18,37)+ln(38,47,30,37)+'</g>'
+        +'<g style="--a:3deg;transform-origin:24px 45px;animation:wkSw 1.2s ease-in-out infinite">'+
+          '<line class="tire" x1="24" y1="31" x2="24" y2="44.5"/><line class="tread" x1="24" y1="31.5" x2="24" y2="44" stroke-dasharray="1.6 2.4" style="animation:wkTread .3s linear infinite"/>'
+          +ln(24,24.5,24,31)+pl('14.5,22.5 16,24.5 32,24.5 33.5,22.5')
+          +fs('24px 22px',1,.62,'.6s','0s',pl('22.5,22 18.5,28.5 20,35'))+fs('24px 22px',1,.62,'.6s','-.3s',pl('25.5,22 29.5,28.5 28,35'))
+          +head(24,8.5,3.4)+ln(24,12.8,24,22)+pl('24,15 18,19.5 16,24.5')+pl('24,15 30,19.5 32,24.5')+'</g>',
       yoga:'<circle class="f glow" cx="24" cy="22" r="17" style="transform-origin:24px 22px;animation:wkGlow 3.2s ease-in-out infinite"/>'
         +head(24,7.5)+ln(24,12,24,26)+ln(24,26,24,42)+pl('24,26 31,32 25,34.5')
         +'<g style="--from:-140deg;--to:-12deg;transform-origin:24px 14px;animation:wkRise 3.2s ease-in-out infinite">'+ln(24,14,24,4)+'</g>'
         +'<g style="--from:140deg;--to:12deg;transform-origin:24px 14px;animation:wkRise 3.2s ease-in-out infinite">'+ln(24,14,24,4)+'</g>',
-      swim:g('0 0','wkBob 1.6s ease-in-out infinite',ln(12,25,31,25)+head(35,23.5)
-        +g('30px 25px','wkSpin 1.6s linear -.8s infinite',ln(30,25,30,16),'dim')+g('30px 25px','wkSpin 1.6s linear infinite',ln(30,25,30,16))
-        +sw('12px 25px',12,'.4s','0s',ln(12,25,4,24))+sw('12px 25px',12,'.4s','-.2s',ln(12,25,4,26),'dim'))
-        +g('0 0','wkWave 1.2s linear infinite','<path d="M-10 31q3-3 6 0t6 0t6 0t6 0t6 0t6 0t6 0t6 0t6 0t6 0"/>'),
-      ball:ln(6,44,42,44)+head(23,8)+ln(22,13,20.5,27)+pl('20.5,27 23,34 22,43')+pl('20.5,27 17,34.5 14.5,42')+pl('22,15 17,21 13,20')
-        +sw('22px 15px',8,'.7s','0s',pl('22,15 26.5,21 29.5,25.5'))
-        +g('0 0','wkBall .7s infinite','<circle cx="31" cy="30" r="3.6"/>'+ln(27.4,30,34.6,30)),
-      dance:sw('24px 43px',7,'1s','0s',head(24,8)+ln(24,13,24,27)+pl('24,27 20,34 20.5,43')+pl('24,27 28,34 29,43')
-        +sw('24px 14.5px',22,'.5s','0s',pl('24,14.5 18,10 16,4'))+sw('24px 14.5px',22,'.5s','-.25s',pl('24,14.5 30,18 35.5,15'))),
+      swim:'<clipPath id="wkAir"><rect x="0" y="0" width="48" height="26.5"/></clipPath><g clip-path="url(#wkAir)">'+g('19px 26px','wkSpin 1.4s linear infinite reverse',ln(19,26,8.5,26))+g('29px 26px','wkSpin 1.4s linear -.7s infinite',ln(29,26,39.5,26))+'</g>'
+        +g('0 0','wkBob 1.4s ease-in-out infinite',head(24,21.5,3.8)+'<line class="cap" x1="20.6" y1="20.5" x2="27.4" y2="20.5"/>')
+        +g('0 0','wkWave 1.2s linear infinite','<path d="M-10 27q3-2.4 6 0t6 0t6 0t6 0t6 0t6 0t6 0t6 0t6 0t6 0"/>')
+        +g('0 0','wkWave 2s linear -.6s infinite','<path class="dim" d="M-10 34q3-2 6 0t6 0t6 0t6 0t6 0t6 0t6 0t6 0t6 0t6 0"/>'),
+      ball:'<line class="dim" x1="8" y1="44" x2="40" y2="44"/>'+head(24,8)+ln(24,12.5,24,27)+pl('24,27 20.5,35 19.5,43')+pl('24,27 27.5,35 28.5,43')+pl('24,14 19,19 17,24')
+        +'<g style="--a:10deg;transform-origin:24px 14px;animation:wkSw .7s ease-in-out infinite">'+pl('24,14 29.5,18.5 32,23')+'</g>'
+        +g('0 0','wkBall .7s infinite','<circle cx="33.5" cy="28" r="3.6"/>'+ln(29.9,28,37.1,28)),
+      dance:'<g style="--a:7deg;transform-origin:24px 43px;animation:wkSw 1s ease-in-out infinite">'+head(24,8)+ln(24,13,24,27)+pl('24,27 20,34 20.5,43')+pl('24,27 28,34 29,43')
+        +'<g style="--a:22deg;transform-origin:24px 14.5px;animation:wkSw .5s ease-in-out infinite">'+pl('24,14.5 18,10 16,4')+'</g>'
+        +'<g style="--a:22deg;transform-origin:24px 14.5px;animation:wkSw .5s ease-in-out -.25s infinite">'+pl('24,14.5 30,18 35.5,15')+'</g></g>',
       move:g('0 0','wkHop .8s ease-in-out infinite',head(24,8)+ln(24,13,24,27)
         +'<g style="--from:20deg;--to:150deg;transform-origin:24px 15px;animation:wkRise .8s ease-in-out infinite">'+ln(24,15,24,26)+'</g>'
         +'<g style="--from:-20deg;--to:-150deg;transform-origin:24px 15px;animation:wkRise .8s ease-in-out infinite">'+ln(24,15,24,26)+'</g>'
