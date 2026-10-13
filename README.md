@@ -1,4 +1,4 @@
-# Daily Five (working name)
+# FiveArc
 
 One project that produces three things from the same files:
 
@@ -49,7 +49,7 @@ them. See "Accounts and online storage" below.
 ### 4. Get the Android app
 The "Android app" workflow runs automatically. When it finishes, open the
 repository's **Releases** page on an Android phone and download
-`daily-five.apk`, then open it. Android asks once for permission to install
+`fivearc.apk`, then open it. Android asks once for permission to install
 apps from your browser.
 
 New builds install over the old one and keep your entries.
@@ -93,9 +93,10 @@ Sign-in and saved data use the Firebase project `project-monarch1`.
 
 ## Names to change before a store release
 
-- `appName` in `capacitor.config.json`, and `short_name` in
-  `www/manifest.webmanifest`: the name under the icon. "Daily Five" is a
-  placeholder; about 12 characters fit.
+- `appName` in `capacitor.config.json`, `short_name` in
+  `www/manifest.webmanifest`, and `CFBundleDisplayName` in
+  `scripts/ios-setup.sh`: the name under the icon, now "FiveArc"; about 12
+  characters fit.
 - `appId` in `capacitor.config.json` and `bundle_identifier` in
   `codemagic.yaml`: set to `com.phisarys.dailyfive`. It becomes permanent
   once the app is uploaded to a store, so do not change it after that.

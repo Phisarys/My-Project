@@ -8,12 +8,12 @@
 <meta name="theme-color" content="#070d22">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Daily Five">
+<meta name="apple-mobile-web-app-title" content="FiveArc">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon-v6.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192-v6.png">
-<title>Daily Five</title>
+<title>FiveArc</title>
 <style>
 @font-face{font-family:'Barlow Condensed';font-style:normal;font-weight:600;font-display:swap;src:url('fonts/barlow-condensed-latin-600-normal.woff2') format('woff2')}
 @font-face{font-family:'Barlow Condensed';font-style:normal;font-weight:700;font-display:swap;src:url('fonts/barlow-condensed-latin-700-normal.woff2') format('woff2')}
@@ -294,7 +294,7 @@ details.legal p{margin:0}
   <header class="top">
     <button class="me" type="button" id="userChip" data-tab="profile" aria-label="Open your profile" hidden></button>
     <div class="hello">
-      <h1 id="appTitle"><img class="brandmark" src="icons/logo-water-v6.png" alt="Daily Five logo" width="128" height="128"><span class="brandname">Daily <em>Five</em></span></h1>
+      <h1 id="appTitle"><img class="brandmark" src="icons/logo-water-v6.png" alt="FiveArc logo" width="128" height="128"><span class="brandname">Five<em>Arc</em></span></h1>
       <p class="tagline" id="tagline"><span class="s-fitness">Fitness</span> · <span class="s-hobby">Hobby</span> · <span class="s-habit">Better Habit</span> · <span class="s-school">Schoolwork</span> · <span class="s-nutrition">Nutrition</span><br>Five parts of your day, one place to keep score.</p>
       <p id="greet" hidden></p>
       <div class="date" id="todayLabel"></div>
@@ -499,7 +499,7 @@ details.legal p{margin:0}
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return showErr('upErr','Enter a valid email address.');
     if(pw.length<8)return showErr('upErr','Use a password with 8 characters or more.');
     if(pw!==val('upPw2'))return showErr('upErr','The two passwords don\'t match.');
-    if(!document.getElementById('upAge').checked)return showErr('upErr','Daily Five is for people 13 and older. Please confirm your age to continue.');
+    if(!document.getElementById('upAge').checked)return showErr('upErr','FiveArc is for people 13 and older. Please confirm your age to continue.');
     showErr('upErr','');busy(true);
     try{await prep();var r=await fb.auth().createUserWithEmailAndPassword(email,pw);await enter(r.user);}
     catch(e){showErr('upErr',authMsg(e));}
@@ -550,9 +550,9 @@ details.legal p{margin:0}
     o+='<form class="add" data-form="profile">'+field('pfFirst','First name','required maxlength="40" autocomplete="given-name" value="'+esc(p.first)+'"')+field('pfLast','Last name','required maxlength="40" autocomplete="family-name" value="'+esc(p.last)+'"')+field('pfNick','Nickname','maxlength="24" autocomplete="nickname" placeholder="What should we call you?" value="'+esc(p.nick)+'"')+'<button class="btn">Save profile</button></form>';
     o+='<div class="block"><h3>Account</h3><span class="sub">Signed in as '+esc(user)+'</span>'+(acctErr?'<p class="err" role="alert">'+esc(acctErr)+'</p>':'')+'<div class="row"><button class="btn small ghost" type="button" data-act="signout" id="btnSignOut">Sign out</button><button class="btn small ghost" type="button" data-act="delAcct" id="btnDelAcct">'+(armedAcct?'Tap again to delete your account and entries':'Delete account')+'</button></div></div>';
     o+='<details class="block legal"><summary><h3>Legal and credits</h3></summary>'
-      +'<p class="sub">Daily Five is a personal tracking app. It does not give medical, dietary or professional advice.</p>'
+      +'<p class="sub">FiveArc is a personal tracking app. It does not give medical, dietary or professional advice.</p>'
       +'<p class="sub">Your profile and entries are stored in Google Firebase, private to your account. Delete account above erases them. In the iPhone app, workouts are read from Apple Health only with your permission, are never written back, and are never used for advertising or shared.</p>'
-      +'<p class="sub"><strong>Open-source software used:</strong> Barlow Condensed and Atkinson Hyperlegible fonts (SIL Open Font License 1.1); Firebase JavaScript SDK (Apache License 2.0); Capacitor (MIT License); Capgo Capacitor Health (Mozilla Public License 2.0). Logo, icons and illustrations are original to Daily Five.</p>'
+      +'<p class="sub"><strong>Open-source software used:</strong> Barlow Condensed and Atkinson Hyperlegible fonts (SIL Open Font License 1.1); Firebase JavaScript SDK (Apache License 2.0); Capacitor (MIT License); Capgo Capacitor Health (Mozilla Public License 2.0). Logo, icons and illustrations are original to FiveArc.</p>'
       +'</details>';
     acctErr='';
     return o;

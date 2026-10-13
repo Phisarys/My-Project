@@ -1,6 +1,6 @@
 # Third-party notices
 
-Daily Five includes the following third-party software and fonts. Their
+FiveArc includes the following third-party software and fonts. Their
 licences permit use in free and commercial apps under the terms below.
 
 | Component | Licence | Source |
@@ -20,5 +20,5 @@ MPL-2.0 note: @capgo/capacitor-health is used unmodified. If its source
 files are ever modified, those modified files must be published under
 MPL-2.0.
 
-The Daily Five name, logo, icons, background illustration and all app
+The FiveArc name, logo, icons, background illustration and all app
 code outside the packages above are original to this project.

@@ -7,6 +7,8 @@ PLIST="ios/App/App/Info.plist"
 set_string () {
   /usr/libexec/PlistBuddy -c "Add :$1 string $2" "$PLIST" 2>/dev/null || /usr/libexec/PlistBuddy -c "Set :$1 $2" "$PLIST"
 }
+# Name shown under the icon on the home screen.
+set_string CFBundleDisplayName FiveArc
 set_string NSCameraUsageDescription "'Take a photo to use as your profile picture.'"
 set_string NSPhotoLibraryUsageDescription "'Choose a photo to use as your profile picture.'"
 set_string NSHealthShareUsageDescription "'Reads your workouts from Apple Health and Apple Watch so they are logged in Fitness automatically.'"
