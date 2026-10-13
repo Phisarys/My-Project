@@ -36,6 +36,11 @@ if ! grep -q "CODE_SIGN_ENTITLEMENTS" "$PBX"; then
 fi
 grep -c "CODE_SIGN_ENTITLEMENTS = App/App.entitlements" "$PBX" | xargs echo "HealthKit entitlement set in build configurations:"
 
+# iPhone only: no iPad version (device family 1 = iPhone, 2 = iPad).
+perl -pi -e 's/TARGETED_DEVICE_FAMILY = "?[0-9,]+"?;/TARGETED_DEVICE_FAMILY = 1;/g' "$PBX"
+/usr/libexec/PlistBuddy -c "Delete :UISupportedInterfaceOrientations~ipad" "$PLIST" 2>/dev/null || true
+grep -c "TARGETED_DEVICE_FAMILY = 1;" "$PBX" | xargs echo "iPhone-only set in build configurations:"
+
 ICONSET="ios/App/App/Assets.xcassets/AppIcon.appiconset"
 if [ -d "$ICONSET" ]; then
   for f in "$ICONSET"/*.png; do
