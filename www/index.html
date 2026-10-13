@@ -269,6 +269,9 @@ details.legal summary::-webkit-details-marker{display:none}
 details.legal summary::after{content:"+";color:var(--muted);font-size:1.2rem}
 details.legal[open] summary::after{content:"\2212"}
 details.legal p{margin:0}
+.agree{color:var(--muted);font-size:.86rem;margin:0}
+.agree a,.doclinks a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
+.doclinks a{font-weight:700}
 
 /* ---- dock ---- */
 .dock{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));width:min(560px,calc(100% - 24px));border-radius:24px;padding:6px;display:grid;grid-template-columns:repeat(6,1fr);gap:2px;z-index:20;box-shadow:0 14px 40px rgba(0,3,16,.6);background:rgba(10,17,42,.82)}
@@ -321,6 +324,7 @@ details.legal p{margin:0}
         <div class="f"><label for="upPw">Password (8 characters or more)</label><input id="upPw" type="password" autocomplete="new-password" minlength="8" required></div>
         <div class="f"><label for="upPw2">Password again</label><input id="upPw2" type="password" autocomplete="new-password" required></div>
         <label class="keep" for="upAge"><input type="checkbox" id="upAge" required> I am 13 or older</label>
+        <p class="agree">By creating an account you agree to the <a href="https://fivearc.app/terms" target="_blank" rel="noopener">Terms of Use</a> and <a href="https://fivearc.app/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</p>
         <p class="err" id="upErr" role="alert" hidden></p>
         <button class="btn">Create account</button>
       </form>
@@ -551,6 +555,7 @@ details.legal p{margin:0}
     o+='<div class="block"><h3>Account</h3><span class="sub">Signed in as '+esc(user)+'</span>'+(acctErr?'<p class="err" role="alert">'+esc(acctErr)+'</p>':'')+'<div class="row"><button class="btn small ghost" type="button" data-act="signout" id="btnSignOut">Sign out</button><button class="btn small ghost" type="button" data-act="delAcct" id="btnDelAcct">'+(armedAcct?'Tap again to delete your account and entries':'Delete account')+'</button></div></div>';
     o+='<details class="block legal"><summary><h3>Legal and credits</h3></summary>'
       +'<p class="sub">FiveArc is a personal tracking app. It does not give medical, dietary or professional advice.</p>'
+      +'<p class="sub doclinks"><a href="https://fivearc.app/privacy" target="_blank" rel="noopener">Privacy Policy</a> · <a href="https://fivearc.app/terms" target="_blank" rel="noopener">Terms of Use</a></p>'
       +'<p class="sub">Your profile and entries are stored in Google Firebase, private to your account. Delete account above erases them. In the iPhone app, workouts are read from Apple Health only with your permission, are never written back, and are never used for advertising or shared.</p>'
       +'<p class="sub"><strong>Open-source software used:</strong> Barlow Condensed and Atkinson Hyperlegible fonts (SIL Open Font License 1.1); Firebase JavaScript SDK (Apache License 2.0); Capacitor (MIT License); Capgo Capacitor Health (Mozilla Public License 2.0). Logo, icons and illustrations are original to FiveArc.</p>'
       +'</details>';
