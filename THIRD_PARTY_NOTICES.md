@@ -9,6 +9,7 @@ licences permit use in free and commercial apps under the terms below.
 | Atkinson Hyperlegible (font) | SIL Open Font License 1.1 | https://brailleinstitute.org/freefont |
 | Firebase JavaScript SDK | Apache License 2.0 | https://github.com/firebase/firebase-js-sdk |
 | Capacitor | MIT License | https://github.com/ionic-team/capacitor |
+| @capacitor/haptics | MIT License | https://github.com/ionic-team/capacitor-plugins |
 | @capacitor/local-notifications | MIT License | https://github.com/ionic-team/capacitor-plugins |
 | @capacitor/barcode-scanner (with OSBarcodeLib) | MIT License | https://github.com/ionic-team/capacitor-barcode-scanner |
 | @capgo/capacitor-health | Mozilla Public License 2.0 | https://github.com/Cap-go/capacitor-health |
