@@ -12,8 +12,9 @@ set_string CFBundleDisplayName FiveArc
 set_string NSCameraUsageDescription "'Take a profile photo and scan food barcodes to fill in calories.'"
 set_string NSPhotoLibraryUsageDescription "'Choose a photo to use as your profile picture.'"
 set_string NSHealthShareUsageDescription "'Reads your workouts from Apple Health and Apple Watch so they are logged in Fitness automatically.'"
-# The app only reads from Apple Health, so it asks for no permission to write.
-/usr/libexec/PlistBuddy -c "Delete :NSHealthUpdateUsageDescription" "$PLIST" 2>/dev/null || true
+# The app only reads from Apple Health, but Apple rejects uploads (ITMS-90683)
+# when the HealthKit entitlement is present without this message.
+set_string NSHealthUpdateUsageDescription "'FiveArc does not write to Apple Health. It only reads your workouts to log them in Fitness.'"
 # Only standard HTTPS encryption is used, so TestFlight needs no export paperwork.
 /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST" 2>/dev/null || /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PLIST"
 
