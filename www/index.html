@@ -637,7 +637,7 @@ details.legal p{margin:0}
 
   var state=null, canSave=true, user=null, uidv=null, prof=null, dataKey=null, mem={}, flash='', photoErr='', acctErr='', armedAcct=false;
   var guest=false, GKEY=KEY+'-guest';
-  var fb=null, fbP=null, cloudOk=true, pushT=null, pushing=false, dirty=false, syncMsg='';
+  var fb=null, fbP=null, cloudOk=true, pushT=null, pushing=false, dirty=false, syncMsg='', base=0;
   var FB_CONFIG={apiKey:"AIzaSyBclq-OPz_Ubs0e9PTwSmBeXWsT7uftCsE",authDomain:"project-monarch1.firebaseapp.com",projectId:"project-monarch1",storageBucket:"project-monarch1.firebasestorage.app",messagingSenderId:"196203054964",appId:"1:196203054964:web:59ed45a4bd5dfaf63fce21"};
   var FB_FILES=['firebase-app-compat.js','firebase-auth-compat.js','firebase-firestore-compat.js'], FB_CDN='https://www.gstatic.com/firebasejs/10.14.1/';
   var ls={get:function(k){try{return localStorage.getItem(k);}catch(e){canSave=false;return null;}},set:function(k,v){try{localStorage.setItem(k,v);}catch(e){canSave=false;}},del:function(k){try{localStorage.removeItem(k);}catch(e){}}};
@@ -648,21 +648,31 @@ details.legal p{margin:0}
     if(st&&st.example&&!st.seed2){st.fitness=seedFitness();st.seed2=true;}
     return st;
   }
-  function cachePut(){if(!dataKey)return;var j=JSON.stringify({state:state,profile:prof});mem[dataKey]=j;ls.set(dataKey,j);}
+  /* pending marks changes not yet in the cloud; base is the cloud copy's "updated" time this device last loaded or wrote. */
+  function cachePut(){if(!dataKey)return;var j=JSON.stringify({state:state,profile:prof,pending:!!(uidv&&cloudOk&&dirty),base:base,saved:Date.now()});mem[dataKey]=j;ls.set(dataKey,j);}
   function setNote(){document.getElementById('saveNote').textContent=syncMsg||(guest?'Your entries are saved on this device only. Create an account in Profile to back them up.':'Your profile and entries are saved to your account.');var f=document.getElementById('acctFooter');if(f)f.hidden=!((active==='profile'&&pset==='account')||syncMsg);}
   function schedulePush(){dirty=true;clearTimeout(pushT);pushT=setTimeout(pushNow,1200);}
   function pushNow(){
     clearTimeout(pushT);
     if(!uidv||!fb||!cloudOk||!dirty||pushing)return Promise.resolve();
-    pushing=true;dirty=false;
-    return fb.firestore().collection('users').doc(uidv).set({profile:prof,data:JSON.stringify(state),updated:Date.now()})
-      .then(function(){syncMsg='';},function(){dirty=true;syncMsg='Your latest changes could not be saved to your account yet. They are kept on this device and will be sent when the connection is back.';})
+    pushing=true;dirty=false;var at=Date.now(), me=uidv;
+    return fb.firestore().collection('users').doc(uidv).set({profile:prof,data:JSON.stringify(state),updated:at})
+      .then(function(){syncMsg='';if(me===uidv){base=at;cachePut();}},function(){dirty=true;syncMsg='Your latest changes could not be saved to your account yet. They are kept on this device and will be sent when the connection is back.';})
       .then(function(){pushing=false;setNote();if(dirty){clearTimeout(pushT);pushT=setTimeout(pushNow,syncMsg?15000:1200);}});
   }
-  function saveAccounts(){cachePut();schedulePush();if(pt.mine)ptPublish();}
-  function save(){if(!state)return;cachePut();schedulePush();setNote();if(pt.mine)ptPublish();}
+  function saveAccounts(){if(uidv)dirty=true;cachePut();schedulePush();if(pt.mine)ptPublish();}
+  function save(){if(!state)return;if(uidv)dirty=true;cachePut();schedulePush();setNote();if(pt.mine)ptPublish();}
   window.addEventListener('online',function(){if(dirty)pushNow();});
-  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'&&dirty)pushNow();});
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'){if(dirty)pushNow();}else refresh();});
+  /* Coming back to the app: load changes made on another device since this one last synced. */
+  function refresh(){
+    if(!uidv||!fb||!cloudOk||!state||dirty||pushing)return;var me=uidv;
+    withTimeout(fb.firestore().collection('users').doc(me).get(),9000).then(function(doc){
+      if(me!==uidv||!doc.exists||dirty||pushing||editing)return;var d=doc.data()||{};
+      if(!((d.updated||0)>base))return;var st=parseState(d.data);if(!st)return;
+      base=d.updated;state=st;prof=Object.assign({first:'',last:'',nick:'',photo:''},d.profile||{});cachePut();render();setNote();
+    }).catch(function(){});
+  }
 
   /* ---------- accounts (Firebase) ---------- */
   function loadScript(src){return new Promise(function(res,rej){var el=document.createElement('script');el.src=src;el.onload=res;el.onerror=function(){el.remove();rej(new Error('load'));};document.head.appendChild(el);});}
@@ -697,14 +707,17 @@ details.legal p{margin:0}
   async function enter(u){
     guest=false;ls.set(KEY+'-guest-on','0');
     motionReset();
-    uidv=u.uid;user=u.email||'your account';dataKey=KEY+'-c-'+uidv;prof={first:'',last:'',nick:'',photo:''};state=null;cloudOk=true;syncMsg='';dirty=false;
-    var doc=null, reached=true, create=false, carried=false;
+    uidv=u.uid;user=u.email||'your account';dataKey=KEY+'-c-'+uidv;prof={first:'',last:'',nick:'',photo:''};state=null;cloudOk=true;syncMsg='';dirty=false;base=0;
+    var doc=null, reached=true, create=false, carried=false, resend=false;
     try{doc=await withTimeout(fb.firestore().collection('users').doc(uidv).get(),9000);}catch(e){reached=false;}
-    if(doc&&doc.exists){var d=doc.data()||{};state=parseState(d.data);Object.assign(prof,d.profile||{});}
+    var c=null;try{c=JSON.parse(ls.get(dataKey)||mem[dataKey]||'null');}catch(e){c=null;}
+    if(doc&&doc.exists){var d=doc.data()||{};base=d.updated||0;
+      /* Changes saved on this device that never reached the cloud win over an older cloud copy. */
+      if(c&&c.state&&c.pending&&(c.saved||0)>base){state=parseState(JSON.stringify(c.state));Object.assign(prof,c.profile||{});resend=true;}
+      else{state=parseState(d.data);Object.assign(prof,d.profile||{});}}
     else{
-      var c=null;try{c=JSON.parse(ls.get(dataKey)||mem[dataKey]||'null');}catch(e){c=null;}
       var o=old[(u.email||'').toLowerCase()];
-      var gd=guestData();
+      var gd=reached?guestData():null;
       if(c){state=parseState(JSON.stringify(c.state));Object.assign(prof,c.profile||{});}
       else if(gd){state=parseState(JSON.stringify(gd.state));Object.assign(prof,gd.profile||{});carried=true;}
       else if(o){state=parseState(ls.get(KEY+'-u-'+o.id));Object.assign(prof,o.profile||{});}
@@ -713,9 +726,10 @@ details.legal p{margin:0}
     }
     if(!state){state=seed();if(create)state.onboard=true;}
     if(!reached){cloudOk=false;syncMsg='Your account could not be reached, so changes made now will not be saved. Check your connection and reload.';}
-    if(!prof.first&&!prof.nick)active='profile';
+    if(!prof.first&&!prof.nick)active='profile';else if(pendingTab)active=pendingTab;pendingTab=null;
     ['formIn','formUp'].forEach(function(id){document.getElementById(id).reset();});
-    cachePut();if(create)schedulePush();
+    if(resend)dirty=true;
+    cachePut();if(create||resend)schedulePush();
     if(carried){ls.del(GKEY);flash='The entries from this device are now in your account.';}
     render();setNote();
     maybeAutoHealth();remSync();ptStart();
@@ -729,6 +743,7 @@ details.legal p{margin:0}
     if(c&&c.state){state=parseState(JSON.stringify(c.state));Object.assign(prof,c.profile||{});}
     if(!state){state=seed();state.onboard=true;}
     ls.set(KEY+'-guest-on','1');
+    if(pendingTab){active=pendingTab;pendingTab=null;}
     cachePut();render();setNote();maybeAutoHealth();remSync();
   }
   async function doGuest(){
@@ -788,7 +803,7 @@ details.legal p{margin:0}
     try{await fbReady();await fb.auth().sendPasswordResetEmail(email);showErr('inErr','If there is an account for that email, a reset link is on its way. Check your spam folder too.');}
     catch(e){showErr('inErr',authMsg(e));}
   }
-  function leave(mode){ptReset();active='home';user=null;uidv=null;state=null;prof=null;dataKey=null;dirty=false;clearTimeout(pushT);authMode(mode);render();}
+  function leave(mode){ptReset();try{var N=isNative()&&notifApi();if(N)N.cancel({notifications:SMART_IDS}).catch(function(){});}catch(e){}base=0;active='home';user=null;uidv=null;state=null;prof=null;dataKey=null;dirty=false;clearTimeout(pushT);authMode(mode);render();}
   async function doSignOut(){
     try{await withTimeout(pushNow(),6000);}catch(e){}
     try{await fb.auth().signOut();}catch(e){}
@@ -1032,10 +1047,11 @@ details.legal p{margin:0}
   function ptReset(){pt.subs.forEach(function(u){try{u();}catch(e){}});clearTimeout(pt.pubT);pt=ptBlank();}
   function ptName(){var p=profile()||{};return String(p.nick||p.first||'Your partner').slice(0,40);}
   function ptDays(){var o={},t=today();for(var i=0;i<7;i++){var d=addDays(t,-i);o[d]=SECTIONS.map(function(x){return Math.round(todayPct(x[0],d)*100);});}return o;}
+  function ptClean(days){var o={};if(days&&typeof days==='object')Object.keys(days).forEach(function(k){if(Array.isArray(days[k]))o[k]=days[k].slice(0,SECTIONS.length).map(function(n){return +n||0;});});return o;}
   function ptRef(id){return fb.firestore().collection('shares').doc(id);}
   function ptFV(){return firebase.firestore.FieldValue;}
   function ptViewers(){return (pt.mine&&pt.mine.viewers)||[];}
-  function ptPublish(){clearTimeout(pt.pubT);pt.pubT=setTimeout(function(){if(!pt.mine||!uidv||!fb||!state)return;ptRef(uidv).set({name:ptName(),days:ptDays(),updated:Date.now()},{merge:true}).catch(function(){});},1500);}
+  function ptPublish(){clearTimeout(pt.pubT);pt.pubT=setTimeout(function(){if(!pt.mine||!uidv||!fb||!state)return;ptRef(uidv).update({name:ptName(),days:ptDays(),updated:Date.now()}).catch(function(){});},1500);}
   async function ptStart(){
     ptReset();if(guest||!uidv||!cloudOk)return;
     try{await fbReady();}catch(e){return;}
@@ -1047,7 +1063,7 @@ details.legal p{margin:0}
       if(pt.code&&!first&&ptViewers().length>before){pt.code=null;ls.del(KEY+'-inv-'+me);}
       if(first&&pt.mine)ptPublish();first=false;ptSync();ptPaint();},function(){}));
     pt.subs.push(fb.firestore().collection('shares').where('viewers','array-contains',me).onSnapshot(function(q){if(me!==uidv)return;
-      pt.raw=q.docs.map(function(x){var v=x.data()||{};return {id:x.id,name:String(v.name||'Partner').slice(0,40),days:v.days||{}};}).sort(function(a,b){return a.name.localeCompare(b.name);});
+      pt.raw=q.docs.map(function(x){var v=x.data()||{};return {id:x.id,name:String(v.name||'Partner').slice(0,40),days:ptClean(v.days)};}).sort(function(a,b){return a.name.localeCompare(b.name);});
       ptSync();ptPaint();},function(){}));
   }
   /* Only mutual links are shown: someone appears here only while you also share with them, so nobody can add themselves to your Home. */
@@ -1056,14 +1072,20 @@ details.legal p{margin:0}
   function ptPaint(){if(!user||!state)return;if(active==='home'&&!state.onboard){render();return;}
     if(active==='profile'){var ps=document.querySelector('#ps-partners .sub');if(ps)ps.textContent=ptSummary();var b=document.getElementById('ptList');if(b)b.innerHTML=ptListHtml();var j=document.getElementById('btnPtJoin');if(j)j.disabled=pt.busy;}}
   function ptCodeOk(){return pt.code&&pt.codeExp>Date.now();}
+  /* Loads this account's shared summary, creating it only when there is none, so an existing partner list is never replaced. */
+  async function ptEnsure(viewers){
+    var cur=await ptRef(uidv).get();
+    if(cur.exists){pt.mine=cur.data();if(!Array.isArray(pt.mine.viewers))pt.mine.viewers=[];return;}
+    var m={name:ptName(),days:ptDays(),updated:Date.now(),viewers:viewers};await ptRef(uidv).set(m);pt.mine=m;
+  }
   async function ptInvite(){
     if(pt.busy)return;pt.busy=true;pt.msg='';pt.copied=false;ptPaint();
     try{await fbReady();
       if(ptViewers().length>=PT_MAX)throw {msg:'You already share with '+PT_MAX+' people, the most FiveArc allows. Stop sharing with someone first.'};
-      if(!pt.mine){var m={name:ptName(),days:ptDays(),updated:Date.now(),viewers:[]};await ptRef(uidv).set(m);pt.mine=m;}
+      if(!pt.mine)await ptEnsure([]);
       if(pt.code){try{await fb.firestore().collection('invites').doc(pt.code).delete();}catch(e){}}
       var a=new Uint32Array(8);crypto.getRandomValues(a);
-      var code=Array.prototype.map.call(a,function(n){return CODE_ABC.charAt(n%CODE_ABC.length);}).join(''), exp=Date.now()+7*864e5;
+      var code=Array.prototype.map.call(a,function(n){return CODE_ABC.charAt(n%CODE_ABC.length);}).join(''), exp=Date.now()+7*864e5-6e5;
       await fb.firestore().collection('invites').doc(code).set({from:uidv,name:ptName(),expires:exp});
       pt.code=code;pt.codeExp=exp;ls.set(KEY+'-inv-'+uidv,JSON.stringify({code:code,exp:exp}));
     }catch(e){pt.ok=false;pt.msg=(e&&e.msg)||'The invite code couldn\'t be made. Check your internet connection and try again.';}
@@ -1083,17 +1105,17 @@ details.legal p{margin:0}
       if(d.from===uidv)throw {msg:'That\'s your own code. Send it to your partner, and they enter it in their app.'};
       if(pt.list.some(function(x){return x.id===d.from;}))throw {msg:'You already share with '+String(d.name||'them')+'.'};
       if(ptViewers().length>=PT_MAX)throw {msg:'You already share with '+PT_MAX+' people, the most FiveArc allows. Stop sharing with someone first.'};
-      await ptRef(d.from).update({viewers:ptFV().arrayUnion(uidv),via:code});
-      if(pt.mine)await ptRef(uidv).update({viewers:ptFV().arrayUnion(d.from)});
-      else{var m={name:ptName(),days:ptDays(),updated:Date.now(),viewers:[d.from]};await ptRef(uidv).set(m);pt.mine=m;}
-      try{await fb.firestore().collection('invites').doc(code).delete();}catch(e){}
+      /* Joining and using up the invite happen together, so a code works only once (see firestore.rules). */
+      var bt=fb.firestore().batch();bt.update(ptRef(d.from),{viewers:ptFV().arrayUnion(uidv),via:code});bt.delete(fb.firestore().collection('invites').doc(code));await bt.commit();
+      if(!pt.mine)await ptEnsure([d.from]);
+      if(pt.mine.viewers.indexOf(d.from)<0)await ptRef(uidv).update({name:ptName(),days:ptDays(),updated:Date.now(),viewers:ptFV().arrayUnion(d.from)});
       ptPublish();pt.ok=true;pt.msg='You and '+String(d.name||'your partner').slice(0,40)+' now see each other\'s rings.';haptic('success');done=true;
     }catch(e){pt.ok=false;pt.msg=(e&&e.msg)||(/permission/.test((e&&e.code)||'')?bad:'Couldn\'t connect. Check your internet connection and try again.');}
     pt.busy=false;ptPaint();return done;
   }
   async function ptStop(id){
     pt.armed=null;pt.busy=true;ptPaint();var ok=true;
-    try{await ptRef(uidv).update({viewers:ptFV().arrayRemove(id)});}catch(e){ok=!ptViewers().includes(id);}
+    try{await ptRef(uidv).update({name:ptName(),days:ptDays(),updated:Date.now(),viewers:ptFV().arrayRemove(id)});}catch(e){ok=!ptViewers().includes(id);}
     try{await ptRef(id).update({viewers:ptFV().arrayRemove(uidv)});}catch(e){}
     pt.busy=false;pt.ok=ok;pt.msg=ok?'You\'ve stopped sharing with each other.':'That didn\'t go through. Check your internet connection and try again.';
     if(pt.open===id)pt.open=null;ptPaint();
@@ -1128,7 +1150,7 @@ details.legal p{margin:0}
     if(pt.list.length)o+='<ul class="ptlist">'+pt.list.map(function(p){var a=ptAvg(p.days[today()]);
       return '<li class="ptrow">'+ptRings(p.days[today()])+'<span class="grow"><strong>'+esc(p.name)+'</strong><span class="sub">'+(a===null?'No update yet today':a+'% today')+'</span></span><button class="btn small ghost" type="button" data-act="ptStop" data-id="'+esc(p.id)+'" id="ptStop-'+esc(p.id)+'">'+(pt.armed===p.id?'Tap again to stop':'Stop sharing')+'</button></li>';}).join('')+'</ul>';
     if(only.length)o+='<div class="ptrow"><span class="grow sub">'+only.length+(only.length===1?' person can':' people can')+' see your rings but isn\'t sharing back.</span><button class="btn small ghost" type="button" data-act="ptStop" data-id="'+esc(only[0])+'" id="ptStopOnly">'+(pt.armed===only[0]?'Tap again to stop':'Stop')+'</button></div>';
-    if(ptCodeOk())o+='<div class="ptcode"><span class="label">Your invite code</span><b id="ptCodeText">'+pt.code.slice(0,4)+' '+pt.code.slice(4)+'</b><span class="sub">Send it to your partner. It works once, until '+dayShort(new Date(pt.codeExp).toISOString().slice(0,10))+'. They enter it in their FiveArc app under Profile, then Partners.</span><div class="row"><button class="btn small" type="button" data-act="ptCopy" id="btnPtCopy">'+(pt.copied?'Copied':'Copy code')+'</button><button class="btn small ghost" type="button" data-act="ptInvite" id="btnPtNew"'+(pt.busy?' disabled':'')+'>New code</button></div></div>';
+    if(ptCodeOk())o+='<div class="ptcode"><span class="label">Your invite code</span><b id="ptCodeText">'+pt.code.slice(0,4)+' '+pt.code.slice(4)+'</b><span class="sub">Send it to your partner. It works once, until '+dayShort(iso(new Date(pt.codeExp)))+'. They enter it in their FiveArc app under Profile, then Partners.</span><div class="row"><button class="btn small" type="button" data-act="ptCopy" id="btnPtCopy">'+(pt.copied?'Copied':'Copy code')+'</button><button class="btn small ghost" type="button" data-act="ptInvite" id="btnPtNew"'+(pt.busy?' disabled':'')+'>New code</button></div></div>';
     else if(ptViewers().length<PT_MAX)o+='<div class="row"><button class="btn small" type="button" data-act="ptInvite" id="btnPtInvite"'+(pt.busy?' disabled':'')+'>'+(pt.busy?'Making a code…':'Invite a partner')+'</button></div>';
     return o;
   }
@@ -1213,7 +1235,8 @@ details.legal p{margin:0}
   var isNative=function(){return !!(window.Capacitor&&(window.Capacitor.isNativePlatform?window.Capacitor.isNativePlatform():window.Capacitor.platform&&window.Capacitor.platform!=='web'));};
   var isIOSApp=function(){var C=window.Capacitor;return isNative()&&((C.getPlatform&&C.getPlatform())||C.platform)==='ios';};
   var isIOSWeb=function(){return !isNative()&&/iphone|ipad|ipod/i.test(navigator.userAgent);};
-  (function(){var N=isNative()&&notifApi();if(N&&N.addListener)try{N.addListener('localNotificationActionPerformed',function(e){var tb=e&&e.notification&&e.notification.extra&&e.notification.extra.tab;if(tb&&user&&(tb==='home'||VIEWS[tb])){active=tb;render();window.scrollTo(0,0);}});}catch(e){}})();
+  var pendingTab=null;
+  (function(){var N=isNative()&&notifApi();if(N&&N.addListener)try{N.addListener('localNotificationActionPerformed',function(e){var tb=e&&e.notification&&e.notification.extra&&e.notification.extra.tab;if(!tb||!(tb==='home'||VIEWS[tb]))return;if(user&&state){active=tb;render();window.scrollTo(0,0);}else pendingTab=tb;});}catch(e){}})();
   var healthP=null;
   function healthApi(){
     if(healthP)return healthP;
@@ -1243,7 +1266,7 @@ details.legal p{margin:0}
       var since=h.last?new Date(new Date(h.last).getTime()-3*864e5):new Date(now.getFullYear(),0,1);
       var found=[], anchor, pages=0;
       do{var r=await H.queryWorkouts({startDate:since.toISOString(),endDate:now.toISOString(),limit:200,ascending:true,anchor:anchor});found=found.concat((r&&r.workouts)||[]);anchor=r&&r.anchor;pages++;}while(anchor&&pages<25);
-      var have={};state.fitness.forEach(function(e){if(e.hid)have[e.hid]=1;});
+      var have={};state.fitness.forEach(function(e){if(e.hid)have[e.hid]=1;});(h.skip||[]).forEach(function(x){have[x]=1;});
       var yr=now.getFullYear(), had={};badges(yr).forEach(function(x){if(x.won)had[x.id]=1;});
       var added=0;
       found.forEach(function(w){
@@ -1253,7 +1276,7 @@ details.legal p{margin:0}
         if(w.totalDistance)e.km=Math.round(w.totalDistance/100)/10;
         state.fitness.push(e);have[hid]=1;added++;
       });
-      state.health={on:true,last:now.toISOString()};
+      state.health={on:true,last:now.toISOString(),skip:h.skip||[]};
       var fresh=badges(yr).filter(function(x){return x.won&&!had[x.id];}).map(function(x){return x.name;});
       if(fresh.length)state.congrats=fresh;
       healthMsg=added?'Added '+added+' workout'+(added===1?'':'s')+' from Apple Health.':(firstTime?'Connected. No new workouts yet. If you expected some, allow access in the Health app: Sharing, Apps, then this app.':'You are up to date.');
@@ -1455,7 +1478,11 @@ details.legal p{margin:0}
     (kind==='success'?H.notification({type:'SUCCESS'}):H.impact({style:'LIGHT'})).catch(function(){});}catch(e){}}
   /* ---------- Undo for deletes ---------- */
   var undo=null, undoT=null;
-  function offerUndo(msg,snap){undo={msg:msg,snap:snap};clearTimeout(undoT);undoT=setTimeout(function(){undo=null;drawUndo();},5000);drawUndo();}
+  /* Apple Health workouts the person deleted are remembered so the next sync doesn't bring them back. */
+  function healthSkip(list){var h=state.health=state.health||{}, sk=h.skip||[];list.forEach(function(e){if(e.hid&&sk.indexOf(e.hid)<0)sk.push(e.hid);});h.skip=sk.slice(-300);}
+  function healthUnskip(list){var h=state.health;if(!h||!h.skip)return;var rm={};list.forEach(function(e){if(e.hid)rm[e.hid]=1;});h.skip=h.skip.filter(function(x){return !rm[x];});}
+  /* fn puts back only what was removed, so anything logged in the next few seconds is kept. */
+  function offerUndo(msg,fn){var st=state;undo={msg:msg,fn:function(){if(state===st)fn();}};clearTimeout(undoT);undoT=setTimeout(function(){undo=null;drawUndo();},5000);drawUndo();}
   function drawUndo(){var el=document.getElementById('undoToast');
     if(!undo||!user){if(el)el.remove();return;}
     if(!el){el=document.createElement('div');el.id='undoToast';el.className='toast';el.setAttribute('role','status');document.body.appendChild(el);}
@@ -1689,7 +1716,7 @@ details.legal p{margin:0}
     if(a==='addClose'){adding=null;food.msg='';render();var ob=document.getElementById('add-'+active)||panel.querySelector('.addbtn');if(ob)try{ob.focus({preventScroll:true});}catch(e){}return;}
     if(a==='theme'){themeSet(b.dataset.v);render();var tb=document.getElementById('theme-'+b.dataset.v);if(tb)try{tb.focus({preventScroll:true});}catch(e){}return;}
     if(a==='fitOpen'){fitOpen=!fitOpen;if(!fitOpen)fitYear=+t.slice(0,4),fitMonth=null;render();var fb=document.getElementById('btnFitYear');if(fb)try{fb.focus({preventScroll:true});}catch(e){}return;}
-    if(a==='undo'){if(undo){state=JSON.parse(undo.snap);undo=null;clearTimeout(undoT);drawUndo();commit();}return;}
+    if(a==='undo'){if(undo){undo.fn();undo=null;clearTimeout(undoT);drawUndo();commit();}return;}
     if(a==='healthConnect'){healthSync(true,false);return;}
     if(a==='healthSync'){healthSync(false,false);return;}
     if(a==='delAcct'){if(!armedAcct){armedAcct=true;render();return;}armedAcct=false;doDelete();return;}
@@ -1697,12 +1724,18 @@ details.legal p{margin:0}
     if(a==='month'){fitMonth=+b.dataset.m;render();var mb=document.getElementById('mon-'+fitMonth);if(mb)mb.focus();return;}
     if(a==='year'){if(b.dataset.y){fitYear=+b.dataset.y;fitMonth=null;}render();return;}
     if(a==='dismiss'){state.congrats=null;}
-    else if(a==='eraseYear'){if(!armedYear){armedYear=true;render();return;}armedYear=false;offerUndo(fitYear+' workouts erased.',JSON.stringify(state));state.fitness=state.fitness.filter(function(e){return yearOf(e)!==fitYear;});state.congrats=null;}
-    else if(a==='del'){editing=null;offerUndo('Deleted.',JSON.stringify(state));state[b.dataset.k]=state[b.dataset.k].filter(function(x){return x.id!==id;});}
-    else if(a==='delHobby'){editing=null;hobOpen=null;offerUndo('Hobby deleted.',JSON.stringify(state));state.hobbies=state.hobbies.filter(function(x){return x.id!==id;});state.hobbyLog=state.hobbyLog.filter(function(x){return x.hobbyId!==id;});if(state.timer&&state.timer.hobbyId===id)state.timer=null;}
+    else if(a==='eraseYear'){if(!armedYear){armedYear=true;render();return;}armedYear=false;var gone=state.fitness.filter(function(e){return yearOf(e)===fitYear;}), cg=state.congrats;
+      offerUndo(fitYear+' workouts erased.',function(){var ids={};state.fitness.forEach(function(e){ids[e.id]=1;});state.fitness=state.fitness.concat(gone.filter(function(e){return !ids[e.id];}));if(!state.congrats)state.congrats=cg;healthUnskip(gone);});
+      healthSkip(gone);state.fitness=state.fitness.filter(function(e){return yearOf(e)!==fitYear;});state.congrats=null;}
+    else if(a==='del'){editing=null;var dk=b.dataset.k, di=state[dk].findIndex(function(x){return x.id===id;}), it=state[dk][di];
+      if(it){offerUndo('Deleted.',function(){if(!state[dk].some(function(x){return x.id===it.id;}))state[dk].splice(Math.min(di,state[dk].length),0,it);if(dk==='fitness')healthUnskip([it]);});
+        if(dk==='fitness')healthSkip([it]);state[dk]=state[dk].filter(function(x){return x.id!==id;});}}
+    else if(a==='delHobby'){editing=null;hobOpen=null;var hi=state.hobbies.findIndex(function(x){return x.id===id;}), hb=state.hobbies[hi], hl=state.hobbyLog.filter(function(x){return x.hobbyId===id;}), ht=state.timer;
+      offerUndo('Hobby deleted.',function(){if(hb&&!state.hobbies.some(function(x){return x.id===hb.id;}))state.hobbies.splice(Math.min(hi,state.hobbies.length),0,hb);var ids={};state.hobbyLog.forEach(function(x){ids[x.id]=1;});state.hobbyLog=state.hobbyLog.concat(hl.filter(function(x){return !ids[x.id];}));if(!state.timer&&ht&&ht.hobbyId===id)state.timer=ht;});
+      state.hobbies=state.hobbies.filter(function(x){return x.id!==id;});state.hobbyLog=state.hobbyLog.filter(function(x){return x.hobbyId!==id;});if(state.timer&&state.timer.hobbyId===id)state.timer=null;}
     else if(a==='start'){state.timer={hobbyId:id,start:Date.now()};}
     else if(a==='wkStop'){var wt=state.wtimer;if(wt){if(WK_PICK.indexOf(wt.activity)>=0)wkLast=wt.activity;var sd=iso(new Date(wt.start));if(sd>t)sd=t;addWorkout({id:uid(),date:sd,activity:wt.activity,min:Math.min(600,Math.max(1,Math.round((Date.now()-wt.start)/60000))),effort:'Moderate'});state.wtimer=null;haptic('success');}}
-    else if(a==='wkCancel'){if(state.wtimer){offerUndo('Workout cancelled.',JSON.stringify(state));state.wtimer=null;}}
+    else if(a==='wkCancel'){if(state.wtimer){var wt=state.wtimer;offerUndo('Workout cancelled.',function(){if(!state.wtimer)state.wtimer=wt;});state.wtimer=null;}}
     else if(a==='stop'){if(state.timer){state.hobbyLog.push({id:uid(),hobbyId:state.timer.hobbyId,date:t,min:Math.max(1,Math.round((Date.now()-state.timer.start)/60000)),note:'Timed session'});state.timer=null;}}
     else if(a==='tick'){var hb=state.habits.filter(function(x){return x.id===id;})[0];if(hb){if(hb.days[b.dataset.d])delete hb.days[b.dataset.d];else{hb.days[b.dataset.d]=true;haptic();}}}
     else if(a==='done'){var as=state.school.filter(function(x){return x.id===id;})[0];if(as){as.done=!as.done;as.doneAt=as.done?t:null;if(as.done)haptic();}}
