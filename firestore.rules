@@ -30,7 +30,9 @@ service cloud.firestore {
           && request.resource.data.via is string
           && exists(/databases/$(database)/documents/invites/$(request.resource.data.via))
           && invite().from == uid
-          && invite().expires > request.time.toMillis();
+          && invite().expires > request.time.toMillis()
+          // The invite must be deleted in the same write, so each code works only once.
+          && !existsAfter(/databases/$(database)/documents/invites/$(request.resource.data.via));
       }
       // A partner may always take themselves off the list.
       function leaving() {
@@ -54,7 +56,10 @@ service cloud.firestore {
         && request.resource.data.name is string && request.resource.data.name.size() <= 40
         && request.resource.data.expires is int
         && request.resource.data.expires <= request.time.toMillis() + 7 * 24 * 60 * 60 * 1000 + 60000;
-      allow delete: if signedIn();
+      // The person who made the code can withdraw it; a partner can use it up only while joining with it.
+      allow delete: if signedIn() && (resource.data.from == request.auth.uid
+        || (getAfter(/databases/$(database)/documents/shares/$(resource.data.from)).data.via == code
+            && request.auth.uid in getAfter(/databases/$(database)/documents/shares/$(resource.data.from)).data.viewers));
     }
   }
 }
