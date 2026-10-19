@@ -110,6 +110,11 @@ h3 .sub{text-transform:none;letter-spacing:0;font-family:var(--body);font-weight
 
 /* ---- numbers ---- */
 .meters{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:16px}
+.stepcard{gap:12px}.steprow{display:flex;align-items:flex-end;gap:12px}.steprow .fig{display:block;color:var(--sec);margin-top:4px}.steprow .fig i{font-style:normal;font-size:1rem;color:var(--muted)}
+.stepdone{font-weight:700;color:var(--sec);white-space:nowrap}.stepcard .track{height:10px}
+.stepweek{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;height:84px;align-items:end}.stepweek span{display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.stepweek b{width:100%;max-width:28px;border-radius:6px;background:color-mix(in srgb,var(--sec) 35%,transparent)}.stepweek .hit b{background:var(--sec)}.stepweek .now b{outline:2px solid var(--sec);outline-offset:1px}
+.stepweek i{font-style:normal;font-size:.75rem;opacity:.7}.stepcard .row{display:flex;gap:18px;flex-wrap:wrap}
 .meter,.stat{display:flex;flex-direction:column;gap:6px;min-width:0}
 .meter .fig,.stat .fig{font-family:var(--display);font-weight:700;font-size:2.4rem;line-height:.9;font-variant-numeric:tabular-nums}
 .meter .fig i,.stat .fig i{font-style:normal;font-size:.9rem;font-weight:400;color:var(--muted);font-family:var(--body)}
@@ -974,7 +979,7 @@ details.legal p{margin:0}
   /* Share of today's target reached in each section, 0 to 1. */
   function todayPct(id,day){
     var t=day||today(), c=function(v){return Math.max(0,Math.min(1,v||0));};
-    if(id==='fitness')return c(sum(state.fitness.filter(function(e){return e.date===t;}),function(e){return e.min;})/Math.max(1,Math.round(state.goals.fitMin/7)));
+    if(id==='fitness')return Math.max(c(sum(state.fitness.filter(function(e){return e.date===t;}),function(e){return e.min;})/Math.max(1,Math.round(state.goals.fitMin/7))),c(stepsOn()?stepsOn().days[t]/stepsOn().goal:0));
     if(id==='hobby')return c(sum(state.hobbyLog.filter(function(e){return e.date===t;}),function(e){return e.min;})/30);
     if(id==='habit')return state.habits.length?c(state.habits.filter(function(x){return x.days[t];}).length/state.habits.length):0;
     if(id==='school'){var near=state.school.filter(function(a){return Math.abs(diffDays(a.due,t))<=7;});return near.length?c(near.filter(function(a){return a.done;}).length/near.length):0;}
@@ -1002,7 +1007,7 @@ details.legal p{margin:0}
     var open=state.school.filter(function(a){return !a.done;}).sort(function(a,b){return a.due<b.due?-1:a.due>b.due?1:0;});
     if(open[0]&&diffDays(open[0].due,t)<=1)return ['school',open[0].title,(open[0].subject?open[0].subject+' · ':'')+dueLabel(open[0],t)[1]];
     var fit=sum(state.fitness.filter(function(e){return e.date===t;}),function(e){return e.min;}), fg=Math.max(1,Math.round(state.goals.fitMin/7));
-    if(fit<fg)return ['fitness',fit?(fg-fit)+' more active minutes':'Get moving today',fit?'Fitness · '+fit+' of '+fg+' min so far':'Fitness · '+fg+' min is your daily share'];
+    if(fit<fg&&todayPct('fitness')<1)return ['fitness',fit?(fg-fit)+' more active minutes':'Get moving today',fit?'Fitness · '+fit+' of '+fg+' min so far':'Fitness · '+fg+' min is your daily share'];
     var left=state.habits.filter(function(x){return !x.days[t];});
     if(left.length)return ['habit',left[0].name,'Habit · not checked off yet'+(left.length>1?', '+(left.length-1)+' more after it':'')];
     if(open[0]&&diffDays(open[0].due,t)<=7)return ['school',open[0].title,(open[0].subject?open[0].subject+' · ':'')+dueLabel(open[0],t)[1]];
@@ -1173,7 +1178,7 @@ details.legal p{margin:0}
   function openSoon(){var t=today();return state.school.filter(function(a){return !a.done&&diffDays(a.due,t)<=7;}).length;}
   function glance(id){var t=today();
     if(id==='profile')return displayName();
-    if(id==='fitness')return sum(state.fitness.filter(function(e){return e.date===t;}),function(e){return e.min;})+' min today';
+    if(id==='fitness')return sum(state.fitness.filter(function(e){return e.date===t;}),function(e){return e.min;})+' min today'+(stepsOn()?', '+fmtN(stepsOn().days[t]||0)+' steps':'');
     if(id==='hobby')return sum(state.hobbyLog.filter(function(e){return e.date===t;}),function(e){return e.min;})+' min today';
     if(id==='habit')return habitsToday()+' of '+state.habits.length+' today';
     if(id==='school')return openSoon()+' due this week';
@@ -1244,7 +1249,7 @@ details.legal p{margin:0}
       var C=window.Capacitor;if(!C)return null;
       if(C.Plugins&&C.Plugins.Health&&C.Plugins.Health.queryWorkouts)return C.Plugins.Health;
       if(C.registerPlugin)return C.registerPlugin('Health');
-      if(C.nativePromise)return {isAvailable:function(o){return C.nativePromise('Health','isAvailable',o||{});},requestAuthorization:function(o){return C.nativePromise('Health','requestAuthorization',o);},queryWorkouts:function(o){return C.nativePromise('Health','queryWorkouts',o);}};
+      if(C.nativePromise)return {isAvailable:function(o){return C.nativePromise('Health','isAvailable',o||{});},requestAuthorization:function(o){return C.nativePromise('Health','requestAuthorization',o);},queryWorkouts:function(o){return C.nativePromise('Health','queryWorkouts',o);},queryAggregated:function(o){return C.nativePromise('Health','queryAggregated',o);}};
       return null;
     });
     return healthP;
@@ -1286,6 +1291,44 @@ details.legal p{margin:0}
   }
   function maybeAutoHealth(){
     if(isIOSApp()&&state&&state.health&&state.health.on&&Date.now()-healthLastAuto>5*60000){healthLastAuto=Date.now();healthSync(false,true);}
+    if(isIOSApp()&&stepsOn()&&Date.now()-stepsLastAuto>60000){stepsLastAuto=Date.now();stepsSync(false);}
+  }
+  /* ---------- Steps: the iPhone counts steps by itself (no Watch needed) and keeps them in Apple Health.
+     FiveArc reads the daily totals; walking to the step goal fills the Fitness ring just like workout minutes do. ---------- */
+  var stepsBusy=false, stepsMsg='', stepsLastAuto=0;
+  function stepsOn(){return state&&state.steps&&state.steps.on?state.steps:null;}
+  function fmtN(n){return String(Math.round(n||0)).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+  async function stepsSync(first){
+    if(stepsBusy||!state)return;
+    var H=await healthApi();
+    if(!H||!H.queryAggregated){if(first){stepsMsg='Step counting needs the latest version of the app.';render();}return;}
+    stepsBusy=true;if(first){stepsMsg='';render();}
+    try{
+      if(first){var av=await H.isAvailable();if(av&&av.available===false)throw {msg:'Apple Health is not available on this device.'};await H.requestAuthorization({read:['steps']});}
+      var start=parse(addDays(today(),-6)), r=await H.queryAggregated({dataType:'steps',startDate:start.toISOString(),endDate:new Date().toISOString(),bucket:'day',aggregation:'sum'});
+      var st=state.steps=state.steps||{goal:7000,days:{}}, got={};
+      ((r&&r.samples)||[]).forEach(function(x){var d=iso(new Date(x.startDate)), n=Math.max(0,Math.round(+x.value||0));got[d]=(got[d]||0)+n;});
+      Object.keys(got).forEach(function(d){st.days[d]=got[d];});
+      var keep=addDays(today(),-13);Object.keys(st.days).forEach(function(d){if(d<keep)delete st.days[d];});
+      st.on=true;st.last=new Date().toISOString();
+      if(first)stepsMsg=got[today()]?'Connected. Your steps will update each time you open FiveArc.':'Connected. If your steps stay at 0, allow access in the Health app: Sharing, Apps, FiveArc, then turn on Steps.';
+      save();
+    }catch(e){if(first)stepsMsg=(e&&e.msg)||'Steps could not be read. Check access in the Health app: Sharing, Apps, FiveArc.';}
+    stepsBusy=false;render();
+  }
+  function vSteps(){
+    if(!isIOSApp())return '';
+    var st=stepsOn(), msg=stepsMsg?'<p class="sub" role="status">'+esc(stepsMsg)+'</p>':'';
+    if(!st)return '<div class="card s-fitness stepcard"><div class="head"><span class="hk">'+ICON.fitness+'</span><div class="grow"><strong>Count your steps</strong><span class="sub">Your iPhone counts steps on its own, no Apple Watch needed. Reaching your step goal fills the Fitness ring.</span></div></div>'
+      +'<div class="row"><button class="btn small" type="button" data-act="stepsOn" id="btnSteps"'+(stepsBusy?' disabled':'')+'>'+(stepsBusy?'Connecting…':'Turn on steps')+'</button></div>'+msg+'</div>';
+    var t=today(), n=st.days[t]||0, pct=Math.min(100,Math.round(n/st.goal*100)), days=[];for(var i=6;i>=0;i--)days.push(addDays(t,-i));
+    var mx=Math.max.apply(null,days.map(function(d){return st.days[d]||0;}).concat([st.goal]));
+    var o='<div class="card s-fitness stepcard"><div class="steprow"><div class="grow"><span class="label">Steps today</span><span class="fig" id="stepsToday">'+fmtN(n)+' <i>of '+fmtN(st.goal)+'</i></span></div>'
+      +(n>=st.goal?'<span class="stepdone">Goal reached</span>':'')+'</div><div class="track" role="img" aria-label="'+pct+' percent of your step goal"><div style="width:'+pct+'%"></div></div>'
+      +'<div class="stepweek" role="img" aria-label="Steps over the last 7 days">'+days.map(function(d){var v=st.days[d]||0;return '<span class="'+(d===t?'now':'')+(v>=st.goal?' hit':'')+'"><b style="height:'+Math.max(4,Math.round(v/mx*100))+'%"></b><i>'+DOW[parse(d).getDay()].charAt(0)+'</i></span>';}).join('')+'</div>';
+    o+=(adding==='stepGoal'?'<form class="add" data-form="stepGoal">'+field('stepGoalIn','Daily step goal','type="number" min="1000" max="50000" step="500" required inputmode="numeric" value="'+st.goal+'"')+'<button class="btn small">Save</button><button class="btn small ghost" type="button" data-act="stepGoalX" id="stepGoalX">Cancel</button></form>'
+      :'<div class="row"><button class="link" type="button" data-act="stepGoal" id="btnStepGoal">Change goal</button><button class="link" type="button" data-act="stepsSync" id="btnStepsSync"'+(stepsBusy?' disabled':'')+'>'+(stepsBusy?'Updating…':'Update')+'</button></div>');
+    return o+msg+'</div>';
   }
   document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&user)maybeAutoHealth();});
   function healthHidden(){try{return localStorage.getItem('fivearc-health-hide')==='1';}catch(e){return false;}}
@@ -1387,6 +1430,7 @@ details.legal p{margin:0}
     var o='<div><h2>Fitness</h2><p class="lede">Log workouts and watch your year add up.</p></div>';
     if(state.congrats&&state.congrats.length)o+='<div class="congrats" role="status">'+TROPHY+'<p><strong>Congratulations!</strong> You earned '+state.congrats.map(function(n){return '<strong>'+esc(n)+'</strong>';}).join(' and ')+'.</p><button class="x" type="button" data-act="dismiss" aria-label="Dismiss">×</button></div>';
     if(fitYear===cy)o+='<div class="meters">'+meter('This week: active minutes, last 7 days',fitWeek(),state.goals.fitMin,'min')+'</div>';
+    if(fitYear===cy)o+=vSteps();
     if(fitYear===cy)o+=vWorkoutTimer();
     o+=adder('fitness','Log a workout','<form class="add" data-form="fitness">'+field('fitActivity','Activity','required maxlength="40" list="fitList" placeholder="Run, swim, yoga"','wide')+'<datalist id="fitList"><option>Run</option><option>Walk</option><option>Bike ride</option><option>Strength training</option><option>Swim</option><option>Yoga</option><option>Basketball</option></datalist>'
       +field('fitMin','Minutes','type="number" min="1" max="600" required inputmode="numeric"')+sel('fitEffort','Effort',['Easy','Moderate','Hard'])+field('fitDate','Date','type="date" value="'+t+'" max="'+t+'" required')+'<button class="btn">Log workout</button></form>')+vHealth();
@@ -1717,6 +1761,10 @@ details.legal p{margin:0}
     if(a==='theme'){themeSet(b.dataset.v);render();var tb=document.getElementById('theme-'+b.dataset.v);if(tb)try{tb.focus({preventScroll:true});}catch(e){}return;}
     if(a==='fitOpen'){fitOpen=!fitOpen;if(!fitOpen)fitYear=+t.slice(0,4),fitMonth=null;render();var fb=document.getElementById('btnFitYear');if(fb)try{fb.focus({preventScroll:true});}catch(e){}return;}
     if(a==='undo'){if(undo){undo.fn();undo=null;clearTimeout(undoT);drawUndo();commit();}return;}
+    if(a==='stepsOn'){stepsSync(true);return;}
+    if(a==='stepsSync'){stepsSync(false);return;}
+    if(a==='stepGoal'){adding='stepGoal';render();var sg=document.getElementById('stepGoalIn');if(sg)try{sg.focus();}catch(e){}return;}
+    if(a==='stepGoalX'){adding=null;render();return;}
     if(a==='healthConnect'){healthSync(true,false);return;}
     if(a==='healthSync'){healthSync(false,false);return;}
     if(a==='delAcct'){if(!armedAcct){armedAcct=true;render();return;}armedAcct=false;doDelete();return;}
@@ -1776,6 +1824,7 @@ details.legal p{margin:0}
     else if(kind==='habit'){if(!v('habName'))return;state.habits.push({id:uid(),name:v('habName'),days:{}});}
     else if(kind==='school'){if(!v('schTitle')||!v('schDue'))return;state.school.push({id:uid(),title:v('schTitle'),subject:v('schSubject'),due:v('schDue'),done:false});}
     else if(kind==='meal'){if(!v('mealName'))return;food.msg='';state.meals.push({id:uid(),date:t,name:v('mealName'),type:v('mealType'),kcal:num(v('mealKcal'),5000),protein:num(v('mealProtein'),300),produce:num(v('mealProduce'),20)});}
+    else if(kind==='stepGoal'){if(state.steps)state.steps.goal=Math.max(1000,Math.min(50000,num(v('stepGoalIn'),50000)||7000));adding=null;haptic('success');}
     else if(kind==='goals'){state.goals={water:Math.max(1,num(v('goalWater'),20)),protein:Math.max(1,num(v('goalProtein'),300)),produce:Math.max(1,num(v('goalProduce'),20)),fitMin:Math.max(10,num(v('goalFit'),2000))};}
     if(/^(fitness|hobby|habit|school|meal|goals)$/.test(kind)){adding=null;haptic('success');}
     commit();
