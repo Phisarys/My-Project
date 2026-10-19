@@ -11,7 +11,7 @@ set_string () {
 set_string CFBundleDisplayName FiveArc
 set_string NSCameraUsageDescription "'Take a profile photo and scan food barcodes to fill in calories.'"
 set_string NSPhotoLibraryUsageDescription "'Choose a photo to use as your profile picture.'"
-set_string NSHealthShareUsageDescription "'Reads your workouts from Apple Health and Apple Watch so they are logged in Fitness automatically.'"
+set_string NSHealthShareUsageDescription "'Reads your workouts and daily step count from Apple Health so they are logged in Fitness automatically. Steps are counted by your iPhone, no Apple Watch needed.'"
 # The app only reads from Apple Health, but Apple rejects uploads (ITMS-90683)
 # when the HealthKit entitlement is present without this message.
 set_string NSHealthUpdateUsageDescription "'FiveArc does not write to Apple Health. It only reads your workouts to log them in Fitness.'"
