@@ -12,6 +12,7 @@ licences permit use in free and commercial apps under the terms below.
 | @capacitor/app | MIT License | https://github.com/ionic-team/capacitor-plugins |
 | @capacitor/haptics | MIT License | https://github.com/ionic-team/capacitor-plugins |
 | @capacitor/local-notifications | MIT License | https://github.com/ionic-team/capacitor-plugins |
+| @capacitor-community/in-app-review | MIT License | https://github.com/capacitor-community/in-app-review |
 | @capacitor/barcode-scanner (with OSBarcodeLib) | MIT License | https://github.com/ionic-team/capacitor-barcode-scanner |
 | @capgo/capacitor-health | Mozilla Public License 2.0 | https://github.com/Cap-go/capacitor-health |
 | @capgo/capacitor-age-range | Mozilla Public License 2.0 | https://github.com/Cap-go/capacitor-age-range |

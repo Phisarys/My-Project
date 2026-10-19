@@ -195,6 +195,10 @@ ul.list li{display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px;
 .x:hover{background:rgba(255,122,110,.14);color:var(--warn)}
 .pill{font-size:.74rem;border:1px solid var(--line);border-radius:99px;padding:2px 9px;color:var(--muted);white-space:nowrap}
 .pill.late{color:var(--warn);border-color:var(--warn);font-weight:700}
+.pill.medal{display:inline-flex;align-items:center;gap:3px;align-self:center;font-weight:700;color:#f0a068;border-color:rgba(240,160,104,.55);background:rgba(240,160,104,.1)}
+.pill.medal svg{width:13px;height:13px}.pill.medal.m30{color:#d4dcf0;border-color:rgba(212,220,240,.6);background:rgba(212,220,240,.1)}.pill.medal.m100{color:#07122c;border-color:transparent;background:linear-gradient(120deg,#ffc23d,#ff6a45 35%,#b58cff 65%,#4da6ff)}
+:root[data-theme="light"] .pill.medal{color:#9a4a16;border-color:rgba(154,74,22,.45)}:root[data-theme="light"] .pill.medal.m30{color:#3d4a6b;border-color:rgba(61,74,107,.45)}:root[data-theme="light"] .pill.medal.m100{color:#07122c;border-color:transparent}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .pill.medal{color:#9a4a16;border-color:rgba(154,74,22,.45)}:root:not([data-theme="dark"]) .pill.medal.m30{color:#3d4a6b;border-color:rgba(61,74,107,.45)}:root:not([data-theme="dark"]) .pill.medal.m100{color:#07122c;border-color:transparent}}
 .empty{color:var(--muted);border:1px dashed var(--line);border-radius:var(--r-sm);padding:18px;margin:0;text-align:center}
 .check{width:40px;height:40px;border-radius:10px;border:2px solid rgba(255,255,255,.22);background:transparent;cursor:pointer;flex:none;color:var(--on-sec);font-weight:800;line-height:1;padding:0;transition:transform .12s ease}
 .check.on{background:var(--sec);border-color:var(--sec);box-shadow:0 0 14px color-mix(in srgb,var(--sec) 55%,transparent)}
@@ -862,8 +866,8 @@ details.legal p{margin:0}
   }
   /* Smarter reminders (iPhone app only; kept on this device). Notifications can't check anything
      when they fire, so they are rebuilt from the entries every time something changes. */
-  var SMART=[['due','Homework due tomorrow','7 pm the evening before an assignment is due','school'],['habits','Habits still unchecked','Each evening, only while some are left','habit'],['recap','Sunday recap','6 pm Sunday, a look back at your week','profile']];
-  function smartGet(){var d={due:false,habits:false,recap:false,habitTime:'20:00'};try{return Object.assign(d,JSON.parse(ls.get(KEY+'-smart')||'{}')||{});}catch(e){return d;}}
+  var SMART=[['due','Homework due tomorrow','7 pm the evening before an assignment is due','school'],['habits','Habits still unchecked','Each evening, only while some are left','habit'],['recap','Sunday recap','6 pm Sunday, a look back at your week','profile'],['walk','Walk nudge','7 pm, only while you are under your step goal','fitness']];
+  function smartGet(){var d={due:false,habits:false,recap:false,walk:false,habitTime:'20:00'};try{return Object.assign(d,JSON.parse(ls.get(KEY+'-smart')||'{}')||{});}catch(e){return d;}}
   async function smartSet(k){
     var N=notifApi();if(!N){remMsg='Reminders are not available in this version of the app.';return render();}
     var sm=smartGet();
@@ -871,7 +875,7 @@ details.legal p{margin:0}
     sm[k]=!sm[k];ls.set(KEY+'-smart',JSON.stringify(sm));remSync(true);render();
   }
   var remT=null, SMART_IDS=[];
-  for(var si=100;si<140;si++)SMART_IDS.push({id:si});for(si=200;si<207;si++)SMART_IDS.push({id:si});SMART_IDS.push({id:300});
+  for(var si=100;si<140;si++)SMART_IDS.push({id:si});for(si=200;si<207;si++)SMART_IDS.push({id:si});SMART_IDS.push({id:300});for(si=310;si<317;si++)SMART_IDS.push({id:si});
   function remSync(now){clearTimeout(remT);if(!isNative()||!state)return;remT=setTimeout(remBuild,now?0:700);}
   async function remBuild(){
     var N=notifApi();if(!N||!state)return;
@@ -884,6 +888,12 @@ details.legal p{margin:0}
       var left=state.habits.filter(function(h){return !h.days[d];});if(!left.length)continue;
       list.push({id:200+i,title:'Habits',body:'Still to check off today: '+left.slice(0,3).map(function(h){return h.name;}).join(', ')+(left.length>3?' and '+(left.length-3)+' more':''),schedule:{at:w,allowWhileIdle:true},extra:{tab:'habit'}});}}
     if(sm.recap)list.push({id:300,title:'Your week in FiveArc',body:'Your Sunday recap is ready. See how the week went.',schedule:{on:{weekday:1,hour:18,minute:0},allowWhileIdle:true},extra:{tab:'home'}});
+    /* Walk nudge: today's uses the step count from the last time the app was open; later days can't know yet, so they always come. */
+    var st=stepsOn();if(sm.walk&&st){for(var j=0;j<7;j++){var wd=addDays(t,j), ww=at(wd,'19:00');if(ww.getTime()<=nowMs)continue;
+      var body='A short walk can still fill your Fitness ring. Open FiveArc to see your steps.';
+      if(j===0){var have=st.days[t]||0;if(have>=st.goal||todayPct('fitness')>=1)continue;
+        if(st.last&&iso(new Date(st.last))===t)body=fmtN(st.goal-have)+' steps to go to reach '+fmtN(st.goal)+' (count from '+new Date(st.last).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})+'). A 15 minute walk is about 1,500 steps.';}
+      list.push({id:310+j,title:'Time for a walk?',body:body,schedule:{at:ww,allowWhileIdle:true},extra:{tab:'fitness'}});}}
     try{await N.cancel({notifications:SMART_IDS});if(list.length)await N.schedule({notifications:list});}catch(e){}
   }
   function vReminder(){
@@ -892,7 +902,7 @@ details.legal p{margin:0}
     var o='<div class="block"><span class="sub">Only on this phone. The daily nudge reminds you to log your five areas.</span>';
     o+='<form class="add" data-form="reminder">'+field('remTime','Time','type="time" value="'+esc(r.time)+'" required')+'<button class="btn small">'+(r.on?'Update time':'Turn on')+'</button>'+(r.on?'<button class="btn small ghost" type="button" data-act="remOff" id="btnRemOff">Turn off</button>':'')+'</form>';
     var sm=smartGet();
-    o+='<span class="label">Smart reminders</span><div class="switches">'+SMART.map(function(x){return '<button class="switch s-'+x[3]+'" type="button" data-act="smart" data-k="'+x[0]+'" id="smart-'+x[0]+'" aria-pressed="'+!!sm[x[0]]+'"><span class="grow"><strong>'+x[1]+'</strong><span class="sub">'+x[2]+'</span></span><span class="tog" aria-hidden="true"></span></button>';}).join('')+'</div>';
+    o+='<span class="label">Smart reminders</span><div class="switches">'+SMART.filter(function(x){return x[0]!=='walk'||stepsOn();}).map(function(x){return '<button class="switch s-'+x[3]+'" type="button" data-act="smart" data-k="'+x[0]+'" id="smart-'+x[0]+'" aria-pressed="'+!!sm[x[0]]+'"><span class="grow"><strong>'+x[1]+'</strong><span class="sub">'+x[2]+'</span></span><span class="tog" aria-hidden="true"></span></button>';}).join('')+'</div>';
     if(remMsg){o+='<p class="sub" role="status">'+esc(remMsg)+'</p>';remMsg='';}
     return o+'</div>';
   }
@@ -1175,6 +1185,11 @@ details.legal p{margin:0}
   function fitWeek(){var w=last7();return sum(state.fitness.filter(function(e){return w.indexOf(e.date)>=0;}),function(e){return e.min;});}
   function habitsToday(){var t=today();return state.habits.filter(function(x){return x.days[t];}).length;}
   function streak(hb){var d=today(),n=0;if(!hb.days[d])d=addDays(d,-1);while(hb.days[d]){n++;d=addDays(d,-1);}return n;}
+  /* Streak badges at 7, 30 and 100 days in a row. Once earned a badge stays, even if the streak later breaks. */
+  var MILESTONES=[100,30,7];
+  function bestRun(hb){var ks=Object.keys(hb.days||{}).filter(function(k){return hb.days[k];}).sort(), best=0, run=0, prev=null;
+    ks.forEach(function(k){run=prev&&addDays(prev,1)===k?run+1:1;if(run>best)best=run;prev=k;});return best;}
+  function badgeOf(hb){var b=bestRun(hb);for(var i=0;i<MILESTONES.length;i++)if(b>=MILESTONES[i])return Math.max(MILESTONES[i],+hb.badge||0);return +hb.badge||0;}
   function openSoon(){var t=today();return state.school.filter(function(a){return !a.done&&diffDays(a.due,t)<=7;}).length;}
   function glance(id){var t=today();
     if(id==='profile')return displayName();
@@ -1312,7 +1327,7 @@ details.legal p{margin:0}
       var keep=addDays(today(),-13);Object.keys(st.days).forEach(function(d){if(d<keep)delete st.days[d];});
       st.on=true;st.last=new Date().toISOString();
       if(first)stepsMsg=got[today()]?'Connected. Your steps will update each time you open FiveArc.':'Connected. If your steps stay at 0, allow access in the Health app: Sharing, Apps, FiveArc, then turn on Steps.';
-      save();
+      save();remSync();
     }catch(e){if(first)stepsMsg=(e&&e.msg)||'Steps could not be read. Check access in the Health app: Sharing, Apps, FiveArc.';}
     stepsBusy=false;render();
   }
@@ -1486,7 +1501,7 @@ details.legal p{margin:0}
     o+='<div class="hlist"><div class="hweek hdays" aria-hidden="true">'+w.map(function(d){return '<span class="'+(d===t?'now':'')+'">'+(d===t?'Today':DOW[parse(d).getDay()])+'<b>'+parse(d).getDate()+'</b></span>';}).join('')+'</div>'
       +state.habits.map(function(hb){var s=streak(hb);
         var top=isEd('habits',hb.id)?edForm('habits',hb.id,field('edName','Habit','required maxlength="50" value="'+esc(hb.name)+'"','wide'),'del','habit')
-          :'<button class="rowbtn" type="button" data-act="edit" data-k="habits" data-id="'+hb.id+'" id="ed-'+hb.id+'" aria-label="'+esc(hb.name)+'. Tap to rename or delete"><span class="grow"><strong>'+esc(hb.name)+'</strong><span class="sub">'+(s?s+'-day streak':'No streak yet')+'</span></span></button>';
+          :'<button class="rowbtn" type="button" data-act="edit" data-k="habits" data-id="'+hb.id+'" id="ed-'+hb.id+'" aria-label="'+esc(hb.name)+'. Tap to rename or delete"><span class="grow"><strong>'+esc(hb.name)+'</strong><span class="sub">'+(s?s+'-day streak':'No streak yet')+'</span></span>'+(badgeOf(hb)?'<span class="pill medal m'+badgeOf(hb)+'" aria-label="'+badgeOf(hb)+' day badge">'+MEDAL+badgeOf(hb)+'</span>':'')+'</button>';
         return '<div class="hcard">'+top+'<div class="hweek">'+w.map(function(d){var on=!!hb.days[d];return '<button class="check'+(on?' on':'')+'" type="button" data-act="tick" data-id="'+hb.id+'" data-d="'+d+'" aria-pressed="'+on+'" aria-label="'+esc(hb.name)+', '+dayLong(d)+'">'+(on?'✓':'')+'</button>';}).join('')+'</div></div>';}).join('')+'</div>';
     return o;
   }
@@ -1649,9 +1664,16 @@ details.legal p{margin:0}
     var all=ringSet.length===SECTIONS.length;
     fresh.forEach(function(id){var el=panel.querySelector('.ringwrap .ring[data-k="'+id+'"]');if(el){el.classList.remove('closed-now');void el.getBoundingClientRect();el.classList.add('closed-now');}});
     cheer(all?'profile':fresh[0],all?'All five rings closed. That\'s a full day.':SHORT[fresh[0]]+' ring closed. Nice work.',all?140:70);
+    if(all)askReview();
+  }
+  /* Apple's own rating box, asked once on this phone, right after the first full day. Apple decides whether it actually shows. */
+  function askReview(){
+    if(!isIOSApp()||ls.get(KEY+'-review'))return;ls.set(KEY+'-review',String(Date.now()));
+    setTimeout(function(){try{var C=window.Capacitor, R=C.Plugins&&C.Plugins.InAppReview&&C.Plugins.InAppReview.requestReview?C.Plugins.InAppReview:(C.registerPlugin?C.registerPlugin('InAppReview'):null);if(R)R.requestReview().catch(function(){});}catch(e){}},3200);
   }
   function secColor(id){var cs=getComputedStyle(document.documentElement);return (cs.getPropertyValue('--c-'+id)||'').trim()||'#ffc23d';}
-  var cheerT=null;
+  var cheerT=null, msHit=null;
+  var MEDAL='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4l-5.2 2.7 1-5.8L3.5 9.2l5.9-.9z" fill="currentColor"/></svg>';
   function cheer(sec,msg,n){
     haptic('success');
     var old=document.getElementById('cheer');if(old)old.remove();clearTimeout(cheerT);
@@ -1785,7 +1807,7 @@ details.legal p{margin:0}
     else if(a==='wkStop'){var wt=state.wtimer;if(wt){if(WK_PICK.indexOf(wt.activity)>=0)wkLast=wt.activity;var sd=iso(new Date(wt.start));if(sd>t)sd=t;addWorkout({id:uid(),date:sd,activity:wt.activity,min:Math.min(600,Math.max(1,Math.round((Date.now()-wt.start)/60000))),effort:'Moderate'});state.wtimer=null;haptic('success');}}
     else if(a==='wkCancel'){if(state.wtimer){var wt=state.wtimer;offerUndo('Workout cancelled.',function(){if(!state.wtimer)state.wtimer=wt;});state.wtimer=null;}}
     else if(a==='stop'){if(state.timer){state.hobbyLog.push({id:uid(),hobbyId:state.timer.hobbyId,date:t,min:Math.max(1,Math.round((Date.now()-state.timer.start)/60000)),note:'Timed session'});state.timer=null;}}
-    else if(a==='tick'){var hb=state.habits.filter(function(x){return x.id===id;})[0];if(hb){if(hb.days[b.dataset.d])delete hb.days[b.dataset.d];else{hb.days[b.dataset.d]=true;haptic();}}}
+    else if(a==='tick'){var hb=state.habits.filter(function(x){return x.id===id;})[0];if(hb){if(hb.days[b.dataset.d])delete hb.days[b.dataset.d];else{var bw=badgeOf(hb);hb.days[b.dataset.d]=true;haptic();var bn=badgeOf(hb);if(bn>bw){hb.badge=bn;msHit={name:hb.name,n:bn};}}}}
     else if(a==='done'){var as=state.school.filter(function(x){return x.id===id;})[0];if(as){as.done=!as.done;as.doneAt=as.done?t:null;if(as.done)haptic();}}
     else if(a==='water'){var n=Math.min(+b.dataset.n,30);var wasN=(state.water[t]||0)===n;state.water[t]=wasN?n-1:n;if(!wasN)haptic();}
     else if(a==='fresh'){var g=state.goals;state=blank();state.goals=g;}
@@ -1793,6 +1815,7 @@ details.legal p{margin:0}
     else if(a==='erase'){if(!eraseArmed){eraseArmed=true;b.textContent='Tap again to erase all my entries';return;}eraseArmed=false;b.textContent='Erase my entries';state=blank();}
     commit();
     if(a==='tick'||a==='done'||a==='water')justPop(b);
+    if(msHit){var mh=msHit;msHit=null;cheer(mh.n>=100?'profile':'habit',mh.n+' days in a row: '+mh.name+'. Badge earned!',mh.n>=100?180:mh.n>=30?130:90);}
   });
   document.addEventListener('input',function(ev){if(ev.target.id==='obHobby'&&obs)obs.hobby=ev.target.value;if(ev.target.id==='obName'&&obs)obs.name=ev.target.value;});
 
