@@ -449,6 +449,12 @@ body.touring{overflow:hidden}
 .tdots{display:flex;gap:6px;margin:10px 0 6px}.tdots i{width:7px;height:7px;border-radius:99px;background:var(--line);transition:width .25s}.tdots i.on{width:22px;background:var(--sec)}.tcard.s-profile .tdots i.on{background:var(--ink)}
 .trow{display:flex;gap:10px;width:100%}.trow .btn{flex:1}.tcard.s-profile .trow .btn:not(.ghost){--sec:var(--ink)}
 @media (prefers-reduced-motion:no-preference){.tcard{animation:tIn .35s cubic-bezier(.3,1.3,.5,1)}@keyframes tIn{from{opacity:0;transform:translateY(24px) scale(.97)}}.tring{animation:tring 1.1s cubic-bezier(.2,.8,.2,1) both}@keyframes tring{from{stroke-dashoffset:var(--len)}}}
+.fsearch{gap:8px}.fsearch .f,.fspick .f{flex:none}.fslist{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;background:var(--surface-2)}
+.fsrow{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:8px 12px;background:none;border:0;border-top:1px solid var(--line);font:inherit;color:var(--ink);text-align:left;cursor:pointer}
+.fslist li:first-child .fsrow{border-top:0}.fsrow .num{white-space:nowrap;color:var(--sec);font-weight:700}
+.fspick{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface-2)}
+.fschips{display:flex;flex-wrap:wrap;gap:6px}.fsg{max-width:160px}.fstot{margin:0;font-size:1.05rem}.fstot b{font-family:var(--display);font-size:1.6rem;color:var(--sec)}
+.fscredit{font-size:.75rem;opacity:.75}
 ul.settings{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface-2);overflow:hidden}
 ul.settings li + li{border-top:1px solid var(--line)}
 .setrow{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 14px;background:none;border:0;font:inherit;color:var(--ink);text-align:left;cursor:pointer;text-decoration:none}
@@ -1637,6 +1643,55 @@ details.legal p{margin:0}
     catch(e){var m=String((e&&(e.message||e.code))||'');if(/cancel/i.test(m))return;food.ok=false;food.msg=/permission|denied|authori/i.test(m)?'FiveArc needs the camera to scan. Turn it on in Settings, FiveArc, Camera.':'The scanner couldn\'t start. Try again, or type the barcode number.';return render();}
     if(r&&r.ScanResult)foodLookup(r.ScanResult);
   }
+  /* ---------- Food search: ~6,000 everyday foods (USDA FoodData Central, per 100 g) kept in the app,
+     plus an online search of packaged foods in Open Food Facts. Picking one fills in the Log food form. ---------- */
+  var fs={q:'',list:null,loading:false,pick:null,grams:100,web:null,webBusy:false,webMsg:''};
+  function fsLoad(){if(fs.list||fs.loading)return;fs.loading=true;
+    fetch('foods.json').then(function(r){return r.json();}).then(function(a){fs.list=a.map(function(x){return {n:x[0],k:x[1],p:x[2],c:x[3],l:x[0].toLowerCase()};});}).catch(function(){fs.list=[];}).then(function(){fs.loading=false;fsPaint();});}
+  function fsToks(q){return q.toLowerCase().replace(/[^a-z0-9' ]+/g,' ').split(' ').filter(Boolean).map(function(w){return w.length<4?w:/ies$/.test(w)?w.slice(0,-3):/oes$/.test(w)?w.slice(0,-2):/[^s]s$/.test(w)?w.slice(0,-1):w;});}
+  function fsFind(q){
+    var tk=fsToks(q);if(!tk.length||!fs.list)return [];
+    var re=tk.map(function(w){return new RegExp('(^|[^a-z])'+w.replace(/[^a-z0-9']/g,''));}), out=[];
+    fs.list.forEach(function(f){for(var i=0;i<re.length;i++)if(!re[i].test(f.l))return;
+      var head=f.l.split(',')[0], sc=f.n.length*.25+(f.n.split(',').length-1)*3;
+      if(re[0].test(head))sc-=40;if(head.indexOf(tk[0])===0)sc-=20;if(new RegExp('^'+tk[0]+'(s|es)?$').test(head.replace(/[^a-z ]/g,'')))sc-=30;if(/\b[A-Z][A-Z'&]{2,}/.test(f.n))sc+=35;if(/, raw\b|, cooked\b/.test(f.l))sc-=6;if(f.c)sc-=35;
+      out.push([sc,f]);});
+    return out.sort(function(a,b){return a[0]-b[0];}).slice(0,8).map(function(x){return x[1];});
+  }
+  function fsAmt(f){var g=Math.max(1,Math.min(2000,+fs.grams||100));return {g:g,k:Math.round(f.k*g/100),p:Math.round(f.p*g/10)/10};}
+  function fsRes(){
+    if(fs.pick){var f=fs.pick, a=fsAmt(f), chips=(f.sq?[[f.sq,'1 serving']]:[]).concat([[50,'50 g'],[100,'100 g'],[150,'150 g'],[250,'250 g']]);
+      return '<div class="fspick"><strong>'+esc(f.n)+'</strong><span class="sub">'+f.k+' cal and '+f.p+' g protein per 100 g'+(f.src?' · '+f.src:'')+'</span>'
+        +'<div class="fschips">'+chips.map(function(c){return '<button type="button" class="chip" data-act="fsG" data-g="'+c[0]+'" aria-pressed="'+(+fs.grams===+c[0])+'">'+esc(c[1])+'</button>';}).join('')+'</div>'
+        +field('fsGrams','Amount (g)','type="number" min="1" max="2000" inputmode="numeric" value="'+a.g+'"','fsg')
+        +'<p class="fstot" id="fsTot"><b>'+fmtN(a.k)+'</b> cal · '+a.p+' g protein</p>'
+        +'<div class="row"><button class="btn small" type="button" data-act="fsUse" id="fsUse">Use this</button><button class="btn small ghost" type="button" data-act="fsBack" id="fsBack">Back to results</button></div></div>';}
+    var q=fs.q.trim();if(q.length<2)return '';
+    if(!fs.list)return '<p class="sub">Loading foods…</p>';
+    var r=fsFind(q), o='';
+    if(r.length)o+='<ul class="fslist">'+r.map(function(f,i){return '<li><button type="button" class="fsrow" data-act="fsPick" data-i="'+i+'"><span class="grow">'+esc(f.n)+'</span><span class="num">'+f.k+' cal</span></button></li>';}).join('')+'</ul><p class="sub fsnote">Calories per 100 g. Tap a food to set the amount.</p>';
+    else o+='<p class="sub">No everyday food matches "'+esc(q)+'". Try fewer words, or search packaged foods.</p>';
+    if(fs.web&&fs.web.q===q){o+=fs.web.items.length?'<span class="label">Packaged foods</span><ul class="fslist">'+fs.web.items.map(function(f,i){return '<li><button type="button" class="fsrow" data-act="fsPickW" data-i="'+i+'"><span class="grow">'+esc(f.n)+'</span><span class="num">'+f.k+' cal</span></button></li>';}).join('')+'</ul>':'<p class="sub">No packaged foods found online.</p>';}
+    else o+='<button class="link" type="button" data-act="fsWeb" id="fsWeb"'+(fs.webBusy?' disabled':'')+'>'+(fs.webBusy?'Searching…':'Search packaged foods online')+'</button>';
+    if(fs.webMsg)o+='<p class="err" role="status">'+esc(fs.webMsg)+'</p>';
+    return o;
+  }
+  function fsPaint(){var el=document.getElementById('fsRes');if(el)el.innerHTML=fsRes();}
+  async function fsWeb(){
+    var q=fs.q.trim();if(q.length<2||fs.webBusy)return;fs.webBusy=true;fs.webMsg='';fsPaint();
+    try{
+      var r=await withTimeout(fetch('https://world.openfoodfacts.org/cgi/search.pl?search_terms='+encodeURIComponent(q)+'&search_simple=1&action=process&json=1&page_size=12&fields=product_name,product_name_en,brands,nutriments,serving_quantity,serving_size'),12000);
+      var j=await r.json(), items=[];
+      ((j&&j.products)||[]).forEach(function(pr){var n=pr.nutriments||{}, k=numOf(n['energy-kcal_100g']);if(k==null)return;
+        var pn=(pr.product_name_en||pr.product_name||'').trim(), br=(pr.brands||'').split(',')[0].trim();if(!pn)return;
+        items.push({n:((br&&pn.toLowerCase().indexOf(br.toLowerCase())<0?br+' ':'')+pn).slice(0,60),k:Math.round(k),p:Math.round((numOf(n.proteins_100g)||0)*10)/10,sq:numOf(pr.serving_quantity)?Math.round(numOf(pr.serving_quantity)):null,src:'Open Food Facts'});});
+      fs.web={q:q,items:items.slice(0,8)};
+    }catch(e){fs.webMsg='Packaged foods couldn\'t be searched. Check your connection and try again.';}
+    fs.webBusy=false;fsPaint();
+  }
+  function vFoodSearch(){fsLoad();
+    return '<div class="block fsearch">'+field('foodQ','Search foods for calories','type="search" autocomplete="off" maxlength="60" placeholder="Banana, oatmeal, chicken breast" value="'+esc(fs.q)+'"','wide')
+      +'<div id="fsRes" aria-live="polite">'+fsRes()+'</div><p class="sub fscredit">Everyday foods: USDA FoodData Central. Packaged foods: Open Food Facts.</p></div>';}
   function vFood(){
     var o='<div class="block"><span class="label">Packaged food? Look it up by barcode.</span>'
       +'<form class="add" data-form="barcode">'+field('barcode',isNative()?'Or type the barcode number':'Barcode number','inputmode="numeric" autocomplete="off" maxlength="80" placeholder="012345678905"')
@@ -1654,7 +1709,7 @@ details.legal p{margin:0}
     o+='<div class="block"><span class="label">Tap a glass each time you finish one</span><div class="glasses" style="--n:'+Math.min(gn,10)+'">'+gl+'</div></div>';
     var fl=food.fill||{};food.fill=null;
     if(adding!=='nutrition'&&food.msg&&!food.ok)o+='<p class="err" role="status">'+esc(food.msg)+'</p>';
-    o+=adder('nutrition','Log food',vFood()+'<form class="add" data-form="meal">'+field('mealName','Food','required maxlength="60" placeholder="Turkey sandwich and an apple"'+(fl.name?' value="'+esc(fl.name)+'"':''),'wide')+sel('mealType','Meal',['Breakfast','Lunch','Dinner','Snack'])+field('mealKcal','Calories','type="number" min="0" max="5000" inputmode="numeric" placeholder="Optional"'+(fl.kcal!==undefined&&fl.kcal!==''?' value="'+fl.kcal+'"':''))+field('mealProtein','Protein (g)','type="number" min="0" max="300" inputmode="numeric" placeholder="Optional"'+(fl.protein!==undefined&&fl.protein!==''?' value="'+fl.protein+'"':''))+field('mealProduce','Fruit/veg servings','type="number" min="0" max="20" inputmode="numeric" placeholder="0"')+'<button class="btn">Log food</button></form>'+(isNative()?'<div class="row">'+scanBtn()+'</div>':''),scanBtn());
+    o+=adder('nutrition','Log food',vFoodSearch()+vFood()+'<form class="add" data-form="meal">'+field('mealName','Food','required maxlength="60" placeholder="Turkey sandwich and an apple"'+(fl.name?' value="'+esc(fl.name)+'"':''),'wide')+sel('mealType','Meal',['Breakfast','Lunch','Dinner','Snack'])+field('mealKcal','Calories','type="number" min="0" max="5000" inputmode="numeric" placeholder="Optional"'+(fl.kcal!==undefined&&fl.kcal!==''?' value="'+fl.kcal+'"':''))+field('mealProtein','Protein (g)','type="number" min="0" max="300" inputmode="numeric" placeholder="Optional"'+(fl.protein!==undefined&&fl.protein!==''?' value="'+fl.protein+'"':''))+field('mealProduce','Fruit/veg servings','type="number" min="0" max="20" inputmode="numeric" placeholder="0"')+'<button class="btn">Log food</button></form>'+(isNative()?'<div class="row">'+scanBtn()+'</div>':''),scanBtn());
     o+='<div class="block"><h3>Today <span class="sub">'+(kcal?kcal+' calories logged':'')+'</span></h3>'+(meals.length?'<ul class="list">'+meals.map(function(m){
       if(isEd('meals',m.id))return '<li class="editing">'+edForm('meals',m.id,field('edName','Food','required maxlength="60" value="'+esc(m.name)+'"','wide')+selV('edType','Meal',['Breakfast','Lunch','Dinner','Snack'],m.type)+field('edKcal','Calories','type="number" min="0" max="5000" inputmode="numeric" value="'+(m.kcal||'')+'"')+field('edProtein','Protein (g)','type="number" min="0" max="300" inputmode="numeric" value="'+(m.protein||'')+'"')+field('edProduce','Fruit/veg servings','type="number" min="0" max="20" inputmode="numeric" value="'+(m.produce||'')+'"'),'del','food')+'</li>';
       var bits=[esc(m.type)];if(m.protein)bits.push(m.protein+' g protein');if(m.produce)bits.push(m.produce+' fruit/veg');return edRow('meals',m,'<span class="grow"><strong>'+esc(m.name)+'</strong><span class="sub">'+bits.join(' · ')+'</span></span>'+(m.kcal?'<span class="num">'+m.kcal+' cal</span>':''),esc(m.name));}).join('')+'</ul>':'<p class="empty">Nothing logged today. Tap Log food to add your first meal.</p>')+'</div>';
@@ -1871,6 +1926,11 @@ details.legal p{margin:0}
     if(a==='undo'){if(undo){undo.fn();undo=null;clearTimeout(undoT);drawUndo();commit();}return;}
     if(a==='stepsOn'){stepsSync(true);return;}
     if(a==='calOn'){calSync(true);return;}
+    if(a==='fsPick'||a==='fsPickW'){var lst=a==='fsPick'?fsFind(fs.q):(fs.web?fs.web.items:[]);fs.pick=lst[+b.dataset.i]||null;fs.grams=fs.pick&&fs.pick.sq?fs.pick.sq:100;fsPaint();var gi=document.getElementById('fsGrams');if(gi)try{gi.focus({preventScroll:true});gi.select();}catch(e){}return;}
+    if(a==='fsG'){fs.grams=+b.dataset.g;fsPaint();return;}
+    if(a==='fsBack'){fs.pick=null;fsPaint();return;}
+    if(a==='fsWeb'){fsWeb();return;}
+    if(a==='fsUse'&&fs.pick){var am=fsAmt(fs.pick);food.fill={name:(fs.pick.n.slice(0,60-(' ('+am.g+' g)').length)+' ('+am.g+' g)'),kcal:am.k,protein:Math.round(am.p)};food.ok=true;food.msg='Filled in from the food search. Pick the meal, then tap Log food.';fs.pick=null;fs.q='';fs.web=null;adding='nutrition';haptic();render();var mk=document.getElementById('mealKcal');if(mk)mk.scrollIntoView({block:'center'});return;}
     if(a==='calSync'){calSync(false);return;}
     if(a==='calOff'){if(state.cal)state.cal.on=false;calMsg='';commit();return;}
     if(a==='stepsSync'){stepsSync(false);return;}
@@ -1906,7 +1966,9 @@ details.legal p{margin:0}
     if(a==='tick'||a==='done'||a==='water')justPop(b);
     if(msHit){var mh=msHit;msHit=null;cheer(mh.n>=100?'profile':'habit',mh.n+' days in a row: '+mh.name+'. Badge earned!',mh.n>=100?180:mh.n>=30?130:90);}
   });
-  document.addEventListener('input',function(ev){if(ev.target.id==='obHobby'&&obs)obs.hobby=ev.target.value;if(ev.target.id==='obName'&&obs)obs.name=ev.target.value;});
+  document.addEventListener('input',function(ev){
+    if(ev.target.id==='foodQ'){fs.q=ev.target.value;fs.pick=null;fs.webMsg='';fsPaint();return;}
+    if(ev.target.id==='fsGrams'){fs.grams=ev.target.value;var tt=document.getElementById('fsTot');if(tt&&fs.pick){var a=fsAmt(fs.pick);tt.innerHTML='<b>'+fmtN(a.k)+'</b> cal · '+a.p+' g protein';}document.querySelectorAll('.fschips .chip').forEach(function(c){c.setAttribute('aria-pressed',String(+c.dataset.g===+fs.grams));});return;}if(ev.target.id==='obHobby'&&obs)obs.hobby=ev.target.value;if(ev.target.id==='obName'&&obs)obs.name=ev.target.value;});
 
   document.addEventListener('submit',function(ev){
     if(ev.target.id==='formIn'){ev.preventDefault();doSignIn();return;}

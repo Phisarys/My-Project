@@ -26,6 +26,11 @@ MPL-2.0 note: @capgo/capacitor-health and @capgo/capacitor-age-range are
 used unmodified. If their source files are ever modified, those modified
 files must be published under MPL-2.0.
 
+Food search uses everyday-food values from USDA FoodData Central, SR Legacy
+(https://fdc.nal.usda.gov, public domain), taken from the tempo-food-db
+dataset: "Food nutrition data from TempoLife (tempolife.app), CC-BY-4.0."
+See scripts/build-foods.py.
+
 Food lookups use data from Open Food Facts (https://world.openfoodfacts.org),
 available under the Open Database License (ODbL). The data is contributed
 by the public and may contain errors.
