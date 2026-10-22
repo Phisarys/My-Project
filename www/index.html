@@ -436,6 +436,19 @@ ul.list li.editing{display:block;padding:14px}
 .mecard{display:flex;align-items:center;gap:14px}
 .mecard .grow{display:flex;flex-direction:column;min-width:0}
 .mecard strong{font-family:var(--display);font-size:1.4rem;line-height:1.1}
+.tour{position:fixed;inset:0;z-index:90;display:flex;align-items:flex-end;justify-content:center;padding:16px 16px calc(16px + env(safe-area-inset-bottom));background:rgba(4,8,22,.72);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+body.touring{overflow:hidden}
+.tcard{position:relative;width:100%;max-width:440px;background:var(--night);border:1px solid var(--line);border-radius:28px;padding:22px 22px 20px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;box-shadow:0 24px 60px rgba(0,0,0,.5),0 0 80px color-mix(in srgb,var(--sec) 22%,transparent)}
+.tcard h2{font-family:var(--display);font-weight:800;font-style:italic;text-transform:uppercase;font-size:2rem;line-height:1;margin:0;color:var(--sec)}
+.tcard.s-profile h2{color:var(--ink)}.tcard p{margin:0;color:var(--muted);max-width:34ch;min-height:6em}
+.tskip{position:absolute;top:14px;right:18px}
+.tart{width:170px;height:170px;display:grid;place-items:center;margin:14px 0 6px}.tart svg{width:100%;height:100%}
+.tbig{width:150px;height:150px;border-radius:50%;display:grid;place-items:center;color:var(--sec);background:radial-gradient(circle,color-mix(in srgb,var(--sec) 26%,transparent),transparent 70%);border:2px solid color-mix(in srgb,var(--sec) 55%,transparent)}
+.tbig svg{width:68px;height:68px}
+.tduo{display:flex}.tduo .tav{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:2.4rem;color:var(--on-sec);background:var(--sec);border:4px solid var(--night)}.tduo .tav+.tav{margin-left:-22px}
+.tdots{display:flex;gap:6px;margin:10px 0 6px}.tdots i{width:7px;height:7px;border-radius:99px;background:var(--line);transition:width .25s}.tdots i.on{width:22px;background:var(--sec)}.tcard.s-profile .tdots i.on{background:var(--ink)}
+.trow{display:flex;gap:10px;width:100%}.trow .btn{flex:1}.tcard.s-profile .trow .btn:not(.ghost){--sec:var(--ink)}
+@media (prefers-reduced-motion:no-preference){.tcard{animation:tIn .35s cubic-bezier(.3,1.3,.5,1)}@keyframes tIn{from{opacity:0;transform:translateY(24px) scale(.97)}}.tring{animation:tring 1.1s cubic-bezier(.2,.8,.2,1) both}@keyframes tring{from{stroke-dashoffset:var(--len)}}}
 ul.settings{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface-2);overflow:hidden}
 ul.settings li + li{border-top:1px solid var(--line)}
 .setrow{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 14px;background:none;border:0;font:inherit;color:var(--ink);text-align:left;cursor:pointer;text-decoration:none}
@@ -965,6 +978,7 @@ details.legal p{margin:0}
     o+='<ul class="settings">'+(r?psRow('reminders',r.on?'Daily at '+esc(r.time):'Off'):'')+psRow('partners',ptSummary())+psRow('look',th==='auto'?'Automatic':th==='light'?'Light':'Dark');
     if(!appInfo)appVersion().then(function(){var a=document.getElementById('btnFeedback');if(a)a.href=feedbackHref();});
     o+='<li><a class="setrow" id="btnFeedback" href="'+esc(feedbackHref())+'"><span class="grow"><strong>Send feedback</strong><span class="sub">Email a bug or an idea</span></span>'+ICON.chev+'</a></li>';
+    o+='<li><button class="setrow" type="button" data-act="tourOpen" id="btnTour"><span class="grow"><strong>Take the tour</strong><span class="sub">See what FiveArc can do</span></span>'+ICON.chev+'</button></li>';
     o+=psRow('account',guest?'Not backed up yet':esc(user))+psRow('legal','Not medical advice')+'</ul>';
     return o;
   }
@@ -1766,10 +1780,45 @@ details.legal p{margin:0}
     else{state=blank();state.goals.fitMin=s.fit;state.goals.water=s.water;state.goals.produce=s.produce;
       state.habits=s.habits.map(function(n){return {id:uid(),name:n,days:{}};});
       if(s.hobby.trim())state.hobbies=[{id:uid(),name:s.hobby.trim().slice(0,40)}];}
-    state.onboard=false;obs=null;active='home';adding=null;
+    state.onboard=false;state.toured=true;obs=null;active='home';adding=null;
     commit();window.scrollTo(0,0);
-    if(!examples)cheer('profile','You\'re all set. Here\'s your first day.',110);
+    tourOpen(examples?null:function(){cheer('profile','You\'re all set. Here\'s your first day.',110);});
   }
+  /* ---------- Welcome tour: the main features, once after first-run setup, and again from Profile ---------- */
+  var tourAt=-1, tourDone=null, tourX=null;
+  function tourSlides(){
+    var app=isIOSApp();
+    return [
+      ['profile','Five rings, one day','Each ring is one part of your day. Log something and watch it fill. Tap a row on Home to jump into that section.'],
+      ['fitness','Move your way','Log a workout or time one as you go.'+(app?' Connect Apple Health to bring in workouts, count steps with just your iPhone, and show calories burned if you like.':' In the iPhone app, workouts and steps come in from Apple Health.')],
+      ['habit','Habits that stick','Tick a box each day you keep a habit. Earn streak badges at 7, 30 and 100 days in a row.'],
+      ['school','Never miss a due date','Add assignments by subject. See what is due next and what is late, with an optional reminder the evening before.'],
+      ['nutrition','Eat with intention','Log meals, scan a barcode to fill in the details, and tap a glass each time you drink water.'],
+      ['hobby','Make time for fun','Start a timer for guitar, drawing or anything you love, and add a quick note.'],
+      ['profile','Better together','Share your rings with a friend in Profile, Partners, and turn on reminders in Profile, Reminders. You can see this tour again in Profile.']];
+  }
+  function tourArt(sec,i){
+    if(i===0){var r=[78,62,46,30,14], ids=SECTIONS.map(function(x){return x[0];}), f=[.9,.7,1,.55,.8];
+      return '<svg viewBox="0 0 200 200" aria-hidden="true">'+ids.map(function(id,k){var c=2*Math.PI*r[k]+.1;return '<circle cx="100" cy="100" r="'+r[k]+'" fill="none" stroke="var(--c-'+id+')" stroke-opacity=".18" stroke-width="12"/><circle class="tring" cx="100" cy="100" r="'+r[k]+'" fill="none" stroke="var(--c-'+id+')" stroke-width="12" stroke-linecap="round" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+(c*(1-f[k])).toFixed(1)+'" transform="rotate(-90 100 100)" style="--len:'+c.toFixed(1)+'"/>';}).join('')+'</svg>';}
+    if(i===6)return '<div class="tduo"><span class="tav s-fitness">A</span><span class="tav s-habit">S</span></div>';
+    return '<div class="tbig s-'+sec+'">'+ICON[sec]+'</div>';
+  }
+  function tourOpen(done){tourAt=0;tourDone=done||null;tourPaint();}
+  function tourClose(){var el=document.getElementById('tour');if(el)el.remove();tourAt=-1;document.body.classList.remove('touring');var d=tourDone;tourDone=null;if(d)d();}
+  function tourGo(n){var sl=tourSlides();if(n<0)n=0;if(n>=sl.length)return tourClose();tourAt=n;tourPaint();}
+  function tourPaint(){
+    var sl=tourSlides(), x=sl[tourAt], last=tourAt===sl.length-1, el=document.getElementById('tour'), fresh=!el;
+    if(fresh){el=document.createElement('div');el.id='tour';el.className='tour';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-labelledby','tourTitle');document.body.appendChild(el);document.body.classList.add('touring');
+      el.addEventListener('touchstart',function(e){tourX=e.touches[0].clientX;},{passive:true});
+      el.addEventListener('touchend',function(e){if(tourX==null)return;var dx=e.changedTouches[0].clientX-tourX;tourX=null;if(Math.abs(dx)>50)tourGo(tourAt+(dx<0?1:-1));});}
+    el.innerHTML='<div class="tcard s-'+x[0]+'"><button class="link tskip" type="button" data-act="tourSkip" id="tourSkip">'+(last?'Close':'Skip')+'</button>'
+      +'<div class="tart" aria-hidden="true">'+tourArt(x[0],tourAt)+'</div>'
+      +'<span class="label">'+(tourAt+1)+' of '+sl.length+'</span><h2 id="tourTitle">'+esc(x[1])+'</h2><p>'+esc(x[2])+'</p>'
+      +'<div class="tdots" aria-hidden="true">'+sl.map(function(y,k){return '<i class="'+(k===tourAt?'on':'')+'"></i>';}).join('')+'</div>'
+      +'<div class="trow">'+(tourAt?'<button class="btn ghost" type="button" data-act="tourBack" id="tourBack">Back</button>':'')+'<button class="btn" type="button" data-act="tourNext" id="tourNext">'+(last?'Let\'s go':'Next')+'</button></div></div>';
+    var nb=document.getElementById('tourNext');try{nb.focus({preventScroll:true});}catch(e){}
+  }
+  document.addEventListener('keydown',function(e){if(tourAt<0)return;if(e.key==='Escape')tourClose();else if(e.key==='ArrowRight')tourGo(tourAt+1);else if(e.key==='ArrowLeft')tourGo(tourAt-1);});
   function clock(ms){var s=Math.max(0,Math.floor(ms/1000)),m=Math.floor(s/60);return (m>=60?Math.floor(m/60)+':'+pad(m%60):m)+':'+pad(s%60);}
   function tick(){if(!state)return;var el=document.getElementById('tick');if(el&&state.timer)el.textContent=clock(Date.now()-state.timer.start);
     var w=document.getElementById('wtick');if(w&&state.wtimer)w.textContent=clock(Date.now()-state.wtimer.start);}
@@ -1781,6 +1830,7 @@ details.legal p{margin:0}
     var au=ev.target.closest('[data-auth]'); if(au){authMode(au.dataset.auth);return;}
     if(ev.target.id==='btnForgot'){doForgot();return;}
     if(ev.target.id==='btnGuest'){doGuest();return;}
+    var ta=ev.target.closest('[data-act^="tour"]');if(ta){var k=ta.dataset.act;if(k==='tourNext')tourGo(tourAt+1);else if(k==='tourBack')tourGo(tourAt-1);else if(k==='tourSkip')tourClose();else if(k==='tourOpen')tourOpen();return;}
     if(!user)return;
     var wi=ev.target.closest('.wico');if(wi){if(!wi.dataset.live){wi.classList.remove('go');void wi.offsetWidth;wi.classList.add('go');clearTimeout(wi._t);wi._t=setTimeout(function(){wi.classList.remove('go');},4000);}haptic();return;}
     var tab=ev.target.closest('[data-tab]');
