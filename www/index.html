@@ -1193,7 +1193,7 @@ details.legal p{margin:0}
   function openSoon(){var t=today();return state.school.filter(function(a){return !a.done&&diffDays(a.due,t)<=7;}).length;}
   function glance(id){var t=today();
     if(id==='profile')return displayName();
-    if(id==='fitness')return sum(state.fitness.filter(function(e){return e.date===t;}),function(e){return e.min;})+' min today'+(stepsOn()?', '+fmtN(stepsOn().days[t]||0)+' steps':'');
+    if(id==='fitness')return sum(state.fitness.filter(function(e){return e.date===t;}),function(e){return e.min;})+' min today'+(stepsOn()?', '+fmtN(stepsOn().days[t]||0)+' steps':'')+(calOn()?', '+fmtN(calOn().days[t]||0)+' cal':'');
     if(id==='hobby')return sum(state.hobbyLog.filter(function(e){return e.date===t;}),function(e){return e.min;})+' min today';
     if(id==='habit')return habitsToday()+' of '+state.habits.length+' today';
     if(id==='school')return openSoon()+' due this week';
@@ -1271,7 +1271,7 @@ details.legal p{margin:0}
   }
   var WORKOUT_NAMES={running:'Run',walking:'Walk',hiking:'Hike',cycling:'Bike ride',bikingStationary:'Indoor cycling',swimming:'Swim',swimmingPool:'Swim',swimmingOpenWater:'Open water swim',yoga:'Yoga',pilates:'Pilates',traditionalStrengthTraining:'Strength training',functionalStrengthTraining:'Strength training',strengthTraining:'Strength training',weightlifting:'Strength training',coreTraining:'Core training',highIntensityIntervalTraining:'HIIT',crossTraining:'Cross training',mixedCardio:'Cardio',elliptical:'Elliptical',rowing:'Rowing',stairClimbing:'Stair climbing',stairs:'Stair climbing',dance:'Dance',cardioDance:'Dance',socialDance:'Dance',dancing:'Dance',jumpRope:'Jump rope',boxing:'Boxing',kickboxing:'Kickboxing',basketball:'Basketball',soccer:'Soccer',tennis:'Tennis',pickleball:'Pickleball',golf:'Golf',climbing:'Climbing',martialArts:'Martial arts',cooldown:'Cooldown',flexibility:'Stretching'};
   function workoutName(t){if(WORKOUT_NAMES[t])return WORKOUT_NAMES[t];var w=String(t||'Workout').replace(/([a-z])([A-Z])/g,'$1 $2').toLowerCase();return w.charAt(0).toUpperCase()+w.slice(1);}
-  async function healthSync(firstTime,quiet){
+  async function healthSync(firstTime,quiet,full){
     if(healthBusy||!state)return;
     var H=await healthApi();
     if(!H){if(!quiet){healthMsg='Apple Health is not available in this version of the app.';render();}return;}
@@ -1283,17 +1283,20 @@ details.legal p{margin:0}
         await H.requestAuthorization({read:['workouts']});
       }
       var h=state.health||{}, now=new Date();
-      var since=h.last?new Date(new Date(h.last).getTime()-3*864e5):new Date(now.getFullYear(),0,1);
+      var since=h.last&&!full?new Date(new Date(h.last).getTime()-3*864e5):new Date(now.getFullYear(),0,1);
       var found=[], anchor, pages=0;
       do{var r=await H.queryWorkouts({startDate:since.toISOString(),endDate:now.toISOString(),limit:200,ascending:true,anchor:anchor});found=found.concat((r&&r.workouts)||[]);anchor=r&&r.anchor;pages++;}while(anchor&&pages<25);
-      var have={};state.fitness.forEach(function(e){if(e.hid)have[e.hid]=1;});(h.skip||[]).forEach(function(x){have[x]=1;});
+      var have={}, byHid={};state.fitness.forEach(function(e){if(e.hid){have[e.hid]=1;byHid[e.hid]=e;}});(h.skip||[]).forEach(function(x){have[x]=1;});
       var yr=now.getFullYear(), had={};badges(yr).forEach(function(x){if(x.won)had[x.id]=1;});
       var added=0;
       found.forEach(function(w){
         var hid=w.platformId||(w.startDate+'|'+w.workoutType), mins=Math.round((+w.duration||0)/60);
+        var kc=Math.round(+w.totalEnergyBurned||0);
+        if(byHid[hid]&&kc>0&&byHid[hid].kcal==null)byHid[hid].kcal=kc;
         if(have[hid]||mins<1||!w.startDate)return;
         var e={id:uid(),date:iso(new Date(w.startDate)),activity:workoutName(w.workoutType),min:Math.min(mins,600),effort:'Moderate',src:'health',hid:hid};
         if(w.totalDistance)e.km=Math.round(w.totalDistance/100)/10;
+        if(kc>0)e.kcal=kc;
         state.fitness.push(e);have[hid]=1;added++;
       });
       state.health={on:true,last:now.toISOString(),skip:h.skip||[]};
@@ -1307,6 +1310,39 @@ details.legal p{margin:0}
   function maybeAutoHealth(){
     if(isIOSApp()&&state&&state.health&&state.health.on&&Date.now()-healthLastAuto>5*60000){healthLastAuto=Date.now();healthSync(false,true);}
     if(isIOSApp()&&stepsOn()&&Date.now()-stepsLastAuto>60000){stepsLastAuto=Date.now();stepsSync(false);}
+    if(isIOSApp()&&calOn()&&Date.now()-calLastAuto>60000){calLastAuto=Date.now();calSync(false);}
+  }
+  /* ---------- Calories burned (optional): active calories from Apple Health, counted by the iPhone or Apple Watch,
+     plus the calories each imported workout recorded. Shown only while the person has turned them on. ---------- */
+  var calBusy=false, calMsg='', calLastAuto=0;
+  function calOn(){return state&&state.cal&&state.cal.on?state.cal:null;}
+  async function calSync(first){
+    if(calBusy||!state)return;
+    var H=await healthApi();
+    if(!H||!H.queryAggregated){if(first){calMsg='Calories need the latest version of the app.';render();}return;}
+    calBusy=true;if(first){calMsg='';render();}
+    try{
+      if(first){var av=await H.isAvailable();if(av&&av.available===false)throw {msg:'Apple Health is not available on this device.'};await H.requestAuthorization({read:['calories','workouts']});}
+      var start=parse(addDays(today(),-6)), r=await H.queryAggregated({dataType:'calories',startDate:start.toISOString(),endDate:new Date().toISOString(),bucket:'day',aggregation:'sum'});
+      var c=state.cal=state.cal||{days:{}}, got={};c.days=c.days||{};
+      ((r&&r.samples)||[]).forEach(function(x){var d=iso(new Date(x.startDate)), n=Math.max(0,Math.round(+x.value||0));got[d]=(got[d]||0)+n;});
+      Object.keys(got).forEach(function(d){c.days[d]=got[d];});
+      var keep=addDays(today(),-13);Object.keys(c.days).forEach(function(d){if(d<keep)delete c.days[d];});
+      c.on=true;c.last=new Date().toISOString();
+      if(first)calMsg=got[today()]?'Calories are on. They update each time you open FiveArc.':'Calories are on. If they stay at 0, allow access in the Health app: Sharing, Apps, FiveArc, then turn on Active Energy.';
+      save();
+      if(first&&state.health&&state.health.on){calBusy=false;await healthSync(false,true,true);}
+    }catch(e){if(first)calMsg=(e&&e.msg)||'Calories could not be read. Check access in the Health app: Sharing, Apps, FiveArc.';}
+    calBusy=false;render();
+  }
+  function vCalories(){
+    if(!isIOSApp())return '';
+    var c=calOn(), msg=calMsg?'<p class="sub" role="status">'+esc(calMsg)+'</p>':'';
+    if(!c)return '<div class="slimrow">'+ICON.fitness+'<span class="grow">Show calories burned from Apple Health</span><button class="link" type="button" data-act="calOn" id="btnCalOn"'+(calBusy?' disabled':'')+'>'+(calBusy?'Connecting…':'Show')+'</button></div>'+msg;
+    var t=today(), n=c.days[t]||0, wk=0;for(var i=0;i<7;i++)wk+=c.days[addDays(t,-i)]||0;
+    return '<div class="card s-fitness stepcard calcard"><div class="steprow"><div class="grow"><span class="label">Calories burned today</span><span class="fig" id="calToday">'+fmtN(n)+' <i>cal</i></span></div></div>'
+      +'<span class="sub">Active calories from Apple Health. Last 7 days: '+fmtN(wk)+' cal.</span>'
+      +'<div class="row"><button class="link" type="button" data-act="calSync" id="btnCalSync"'+(calBusy?' disabled':'')+'>'+(calBusy?'Updating…':'Update')+'</button><button class="link" type="button" data-act="calOff" id="btnCalOff">Hide calories</button></div>'+msg+'</div>';
   }
   /* ---------- Steps: the iPhone counts steps by itself (no Watch needed) and keeps them in Apple Health.
      FiveArc reads the daily totals; walking to the step goal fills the Fitness ring just like workout minutes do. ---------- */
@@ -1445,7 +1481,7 @@ details.legal p{margin:0}
     var o='<div><h2>Fitness</h2><p class="lede">Log workouts and watch your year add up.</p></div>';
     if(state.congrats&&state.congrats.length)o+='<div class="congrats" role="status">'+TROPHY+'<p><strong>Congratulations!</strong> You earned '+state.congrats.map(function(n){return '<strong>'+esc(n)+'</strong>';}).join(' and ')+'.</p><button class="x" type="button" data-act="dismiss" aria-label="Dismiss">×</button></div>';
     if(fitYear===cy)o+='<div class="meters">'+meter('This week: active minutes, last 7 days',fitWeek(),state.goals.fitMin,'min')+'</div>';
-    if(fitYear===cy)o+=vSteps();
+    if(fitYear===cy)o+=vSteps()+vCalories();
     if(fitYear===cy)o+=vWorkoutTimer();
     o+=adder('fitness','Log a workout','<form class="add" data-form="fitness">'+field('fitActivity','Activity','required maxlength="40" list="fitList" placeholder="Run, swim, yoga"','wide')+'<datalist id="fitList"><option>Run</option><option>Walk</option><option>Bike ride</option><option>Strength training</option><option>Swim</option><option>Yoga</option><option>Basketball</option></datalist>'
       +field('fitMin','Minutes','type="number" min="1" max="600" required inputmode="numeric"')+sel('fitEffort','Effort',['Easy','Moderate','Hard'])+field('fitDate','Date','type="date" value="'+t+'" max="'+t+'" required')+'<button class="btn">Log workout</button></form>')+vHealth();
@@ -1463,7 +1499,7 @@ details.legal p{margin:0}
     o+='<div class="block"><h3>'+MON[fitMonth]+' '+fitYear+' <span class="sub">'+list.length+' workout'+(list.length===1?'':'s')+', '+hrs(per[fitMonth])+' hr</span></h3>'+(list.length?'<ul class="list">'+list.map(function(e){
       if(isEd('fitness',e.id))return '<li class="editing">'+edForm('fitness',e.id,field('edAct','Activity','required maxlength="40" list="edFitList" value="'+esc(e.activity)+'"','wide')+'<datalist id="edFitList"><option>Run</option><option>Walk</option><option>Bike ride</option><option>Strength training</option><option>Swim</option><option>Yoga</option><option>Basketball</option></datalist>'
         +field('edMin','Minutes','type="number" min="1" max="600" required inputmode="numeric" value="'+e.min+'"')+(e.src==='health'?'':selV('edEffort','Effort',['Easy','Moderate','Hard'],e.effort))+field('edDate','Date','type="date" value="'+e.date+'" max="'+t+'" required'),'del','workout')+'</li>';
-      return edRow('fitness',e,wkIcon(e.activity,e.date===t)+'<span class="grow"><strong>'+esc(e.activity)+'</strong><span class="sub">'+(e.date===t?'Today':dayShort(e.date))+' · '+(e.src==='health'?'Apple Health'+(e.km?' · '+e.km+' km':''):esc(e.effort))+'</span></span><span class="num">'+e.min+' min</span>',esc(e.activity)+', '+e.min+' minutes, '+dayLong(e.date));}).join('')+'</ul>':'<p class="empty">No workouts logged in '+MON[fitMonth]+' '+fitYear+'.</p>')+'</div>';
+      return edRow('fitness',e,wkIcon(e.activity,e.date===t)+'<span class="grow"><strong>'+esc(e.activity)+'</strong><span class="sub">'+(e.date===t?'Today':dayShort(e.date))+' · '+(e.src==='health'?'Apple Health'+(e.km?' · '+e.km+' km':'')+(calOn()&&e.kcal?' · '+fmtN(e.kcal)+' cal':''):esc(e.effort))+'</span></span><span class="num">'+e.min+' min</span>',esc(e.activity)+', '+e.min+' minutes, '+dayLong(e.date));}).join('')+'</ul>':'<p class="empty">No workouts logged in '+MON[fitMonth]+' '+fitYear+'.</p>')+'</div>';
     var M=o;o='';
     if(E.length)o+='<div><button class="btn small ghost" type="button" data-act="eraseYear" id="btnYear">'+(armedYear?'Tap again to erase all '+fitYear+' workouts':'Reset the '+fitYear+' log')+'</button></div>';
     var open=fitOpen||fitYear!==cy, tg='<button class="btn ghost yeartoggle" type="button" data-act="fitOpen" id="btnFitYear" aria-expanded="'+open+'">'+(open?'Hide your year':'See your year<span>'+hrs(mins)+' hr · '+won+' of '+bs.length+' trophies</span>')+'</button>';
@@ -1784,6 +1820,9 @@ details.legal p{margin:0}
     if(a==='fitOpen'){fitOpen=!fitOpen;if(!fitOpen)fitYear=+t.slice(0,4),fitMonth=null;render();var fb=document.getElementById('btnFitYear');if(fb)try{fb.focus({preventScroll:true});}catch(e){}return;}
     if(a==='undo'){if(undo){undo.fn();undo=null;clearTimeout(undoT);drawUndo();commit();}return;}
     if(a==='stepsOn'){stepsSync(true);return;}
+    if(a==='calOn'){calSync(true);return;}
+    if(a==='calSync'){calSync(false);return;}
+    if(a==='calOff'){if(state.cal)state.cal.on=false;calMsg='';commit();return;}
     if(a==='stepsSync'){stepsSync(false);return;}
     if(a==='stepGoal'){adding='stepGoal';render();var sg=document.getElementById('stepGoalIn');if(sg)try{sg.focus();}catch(e){}return;}
     if(a==='stepGoalX'){adding=null;render();return;}
